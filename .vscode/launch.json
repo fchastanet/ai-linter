@@ -1,0 +1,50 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug AI Linter - Pendulum Guide",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "src/aiLinter.py",
+      "args": [
+        "../pendulum-guide",
+        "--log-level",
+        "DEBUG"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": false,
+      "stopOnEntry": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    },
+    {
+      "name": "Debug AI Linter - Current Directory",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "src/aiLinter.py",
+      "args": [
+        ".",
+        "--skills",
+        "--log-level",
+        "DEBUG"
+      ],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": false,
+      "stopOnEntry": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/src"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "debugDirectory",
+      "description": "Directory to debug",
+      "default": "../pendulum-guide",
+      "type": "promptString"
+    }
+  ]
+}

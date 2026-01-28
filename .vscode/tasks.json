@@ -1,0 +1,195 @@
+{
+  "version": "2.0.0",
+  "presentation": {
+    "echo": true,
+    "reveal": "always",
+    "focus": false,
+    "panel": "shared",
+    "showReuseMessage": false,
+    "clear": false
+  },
+  "tasks": [
+    {
+      "label": "AI Linter: Validate Skills",
+      "type": "shell",
+      "command": "ai-linter",
+      "args": ["--skills", "."],
+      "group": "test",
+      "problemMatcher": {
+        "owner": "ai-linter",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
+          "file": 3,
+          "line": 4,
+          "severity": 1,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "AI Linter: Validate Directory",
+      "type": "shell",
+      "command": "ai-linter",
+      "args": ["${input:directory}"],
+      "group": "test",
+      "problemMatcher": {
+        "owner": "ai-linter",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
+          "file": 3,
+          "line": 4,
+          "severity": 1,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "Python: Format with Black",
+      "type": "shell",
+      "command": "black",
+      "args": ["src", "--line-length=120"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Python: Sort Imports (isort)",
+      "type": "shell",
+      "command": "isort",
+      "args": ["src/"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Python: Lint with Flake8",
+      "type": "shell",
+      "command": "flake8",
+      "args": ["src/", "--max-line-length=120", "--extend-ignore=E203,W503"],
+      "group": "test",
+      "problemMatcher": {
+        "owner": "flake8",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(\\w+)\\d+\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "Python: Type Check (MyPy)",
+      "type": "shell",
+      "command": "mypy",
+      "args": ["src"],
+      "group": "test",
+      "problemMatcher": [
+        {
+          "owner": "mypy",
+          "fileLocation": "relative",
+          "pattern": {
+            "regexp": "^([^:]+?):(\\d+):\\s+(error|warning|note):\\s+(.+?)\\s\\s\\[(.+?)\\]$",
+            "file": 1,
+            "line": 2,
+            "severity": 3,
+            "message": 4,
+            "code": 5
+          }
+        },
+        {
+          "owner": "mypy",
+          "fileLocation": "relative",
+          "pattern": {
+            "regexp": "^([^:]+?):(\\d+):\\s+(error|warning|note):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "severity": 3,
+            "message": 4
+          }
+        },
+        {
+          "owner": "mypy",
+          "fileLocation": "relative",
+          "pattern": {
+            "regexp": "^([^:]+?):\\s+(error|warning|note):\\s+(.+?)\\s\\s\\[(.+?)\\]$",
+            "file": 1,
+            "severity": 2,
+            "message": 3,
+            "code": 4
+          }
+        }
+      ]
+    },
+    {
+      "label": "Python: Run Tests",
+      "type": "shell",
+      "command": "pytest",
+      "args": ["--cov=src", "--cov-report=term-missing"],
+      "group": "test",
+      "problemMatcher": {
+        "owner": "pytest",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "message": 4
+        }
+      }
+    },
+    {
+      "label": "Pre-commit: Run All Hooks",
+      "type": "shell",
+      "command": "pre-commit",
+      "args": ["run", "--all-files"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build: Package",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "build"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build: Clean",
+      "type": "shell",
+      "command": "make",
+      "args": ["clean"],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "AI Linter: Debug Pendulum Guide",
+      "type": "shell",
+      "command": "python",
+      "args": ["src/aiLinter.py", ".", "--skills", "--log-level", "DEBUG"],
+      "group": "test",
+      "problemMatcher": {
+        "owner": "ai-linter",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
+          "file": 3,
+          "line": 4,
+          "severity": 1,
+          "message": 5
+        }
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "directory",
+      "description": "Directory to validate",
+      "default": ".",
+      "type": "promptString"
+    }
+  ]
+}

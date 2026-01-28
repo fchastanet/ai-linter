@@ -1,0 +1,71 @@
+---
+name: CI/CD
+
+"on":
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+  release:
+    types:
+      - published
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.11"
+          - "3.12"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          make install
+          make install-dev
+
+      - name: Test and lint
+        run: |
+          make check-all
+
+      - uses: pre-commit-ci/lite-action@v1.1.0
+        if: always()
+
+  build:
+    needs:
+      - test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build package
+        run: make build
+
+      - name: Check build
+        run: twine check dist/*
+
+      - name: Publish to PyPI
+        if: github.event_name == 'release'
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*

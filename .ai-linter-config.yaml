@@ -1,0 +1,24 @@
+---
+# AI Linter Configuration File
+# Place this file in your project root as .ai-linter-config.yaml
+
+# Logging configuration
+# Options: DEBUG, INFO, WARNING, ERROR
+log_level: INFO
+
+# Maximum warnings before the linter fails
+# Set to a number or use 'inf' for unlimited warnings
+max_warnings: 10
+
+# Directories to ignore during validation
+# These patterns will be ignored when scanning for AGENTS.md files
+ignore_dirs:
+  - ".git"
+  - "__pycache__"
+  - "node_modules"
+  - "build"
+  - "dist"
+  - ".vscode"
+  - ".pytest_cache"
+  - "venv"
+  - "env"
