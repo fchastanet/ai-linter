@@ -28,6 +28,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![CI/CD](https://github.com/fchastanet/ai-linter/actions/workflows/ci.yml/badge.svg)](https://github.com/fchastanet/ai-linter/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/github/fchastanet/ai-linter/graph/badge.svg?token=V1IPNT3YFM)](https://codecov.io/github/fchastanet/ai-linter)
 
 ## 1. Purpose
 

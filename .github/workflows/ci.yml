@@ -40,6 +40,30 @@ jobs:
         run: |
           make check-all
 
+      - name: Upload coverage reports to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Publish coverage report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: code-coverage-${{ github.job }}-${{ github.run_number }}-${{ matrix.python-version }}
+          path: |
+            .coverage
+            coverage.xml
+            htmlcov/
+          include-hidden-files: true
+          if-no-files-found: ignore
+
       - uses: pre-commit-ci/lite-action@v1.1.0
         if: always()
 
@@ -63,9 +87,15 @@ jobs:
       - name: Check build
         run: twine check dist/*
 
+      - name: Attach binaries to release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "dist/*"
+          tag: ${{ github.ref_name }}
+
       - name: Publish to PyPI
         if: github.event_name == 'release'
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: twine upload dist/*
