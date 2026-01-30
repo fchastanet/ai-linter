@@ -46,12 +46,6 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Publish coverage report
         if: always()
         uses: actions/upload-artifact@v6
@@ -70,6 +64,9 @@ jobs:
   build:
     needs:
       - test
+    permissions:
+      contents: write # needed by svenstaro/upload-release-action
+    environment: Python
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
 
@@ -87,15 +84,29 @@ jobs:
       - name: Check build
         run: twine check dist/*
 
-      - name: Attach binaries to release
-        uses: ncipollo/release-action@v1
+      - name: Upload wheel to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          artifacts: "dist/*"
-          tag: ${{ github.ref_name }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file:
+            dist/ai_linter-${{ github.ref_name }}-py3-none-any.whl
+          tag: ${{ github.ref }}
+          overwrite: true
+          asset_name: ai_linter-${{ github.ref_name }}-py3.12.whl
+
+      - name: Upload source tarball to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/ai_linter-${{ github.ref_name }}.tar.gz
+          tag: ${{ github.ref }}
+          overwrite: true
+          asset_name: ai_linter-src-${{ github.ref_name }}-py3.12.tar.gz
 
       - name: Publish to PyPI
         if: github.event_name == 'release'
+        continue-on-error: true
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_USERNAME: ${{ vars.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload dist/*
+        run: twine upload dist/* --verbose --non-interactive --skip-existing

@@ -13,7 +13,9 @@ class TestAILinter(unittest.TestCase):
 
     def test_version(self) -> None:
         """Test that version is defined"""
-        self.assertEqual(AI_LINTER_VERSION, "0.1.0")
+        self.assertIsNotNone(AI_LINTER_VERSION)
+        self.assertTrue(isinstance(AI_LINTER_VERSION, str))
+        self.assertTrue(len(AI_LINTER_VERSION) > 0)
 
     def test_import(self) -> None:
         """Test that main modules can be imported"""

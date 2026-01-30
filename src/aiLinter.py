@@ -18,8 +18,12 @@ from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
 from validators.skill_validator import SkillValidator
 
+try:
+    from _version import version as AI_LINTER_VERSION
+except ImportError:
+    AI_LINTER_VERSION = "dev"
+
 AI_LINTER_CONFIG_FILE = ".ai-linter-config.yaml"
-AI_LINTER_VERSION = "0.1.0"
 
 logger = Logger(LogLevel.INFO)
 parser = Parser(logger)
