@@ -136,10 +136,11 @@ make install-dev
 pre-commit install
 
 # Code quality checks
-make format          # Format with black & isort
+make format         # Format with black & isort
 make lint           # Run flake8 & mypy
 make test           # Run pytest
 make check-all      # Run all checks
+pre-commit run -a   # Run pre-commit hooks on all files
 
 # Package management
 make clean          # Clean build artifacts
