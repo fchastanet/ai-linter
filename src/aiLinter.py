@@ -14,9 +14,12 @@ from lib.parser import Parser
 from processors.process_agents import ProcessAgents
 from processors.process_skills import ProcessSkills
 from validators.agent_validator import AgentValidator
+from validators.code_snippet_validator import CodeSnippetValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
+from validators.prompt_agent_validator import PromptAgentValidator
 from validators.skill_validator import SkillValidator
+from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 try:
     from _version import version as AI_LINTER_VERSION
@@ -95,7 +98,16 @@ def main() -> None:
 
     # Load configuration file if it exists
     config_path = os.path.join(Path.cwd(), config_file)
-    ignore_dirs, log_level, max_warnings = load_config(args, logger, config_path, log_level, ignore_dirs, max_warnings)
+    ignore_dirs, log_level, max_warnings, config = load_config(
+        args, logger, config_path, log_level, ignore_dirs, max_warnings
+    )
+
+    # Initialize new validators with config
+    code_snippet_validator = CodeSnippetValidator(logger, config.code_snippet_max_lines)
+    unreferenced_file_validator = UnreferencedFileValidator(logger, config.unreferenced_file_level)
+    prompt_agent_validator = PromptAgentValidator(
+        logger, parser, file_reference_validator, config.missing_agents_file_level
+    )
 
     # collect skill directories
     skill_directories = {}
@@ -159,6 +171,35 @@ def main() -> None:
     nb_warnings, nb_errors = process_agents.process_agents(list(project_dirs), ignore_dirs)
     total_warnings += nb_warnings
     total_errors += nb_errors
+
+    # Process each project directory with new validators
+    for project_dir in project_dirs:
+        logger.log(
+            LogLevel.INFO,
+            "validating-project",
+            f"Running additional validations for project: {project_dir}",
+        )
+
+        # Validate code snippets in all markdown files
+        snippet_warnings, snippet_errors = code_snippet_validator.validate_all_markdown_files(
+            project_dir, config.ignore_dirs
+        )
+        total_warnings += snippet_warnings
+        total_errors += snippet_errors
+
+        # Validate unreferenced files in resource directories
+        unref_warnings, unref_errors = unreferenced_file_validator.validate_unreferenced_files(
+            project_dir, config.resource_dirs, config.ignore_dirs
+        )
+        total_warnings += unref_warnings
+        total_errors += unref_errors
+
+        # Validate prompt and agent directories
+        prompt_warnings, prompt_errors = prompt_agent_validator.validate_prompt_agent_directories(
+            project_dir, config.prompt_dirs, config.agent_dirs
+        )
+        total_warnings += prompt_warnings
+        total_errors += prompt_errors
 
     print(
         f"Total warnings: {total_warnings}, Total errors: {total_errors}",

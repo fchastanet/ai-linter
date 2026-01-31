@@ -15,7 +15,8 @@ We welcome contributions to the AI Linter project! This document provides guidel
 
    ```bash
    python -m venv venv
-   source venv/bin/activate # On Windows: venv\Scripts\activate
+   # On Windows: venv\Scripts\activate
+   source venv/bin/activate
    ```
 
 3. **Install in development mode**

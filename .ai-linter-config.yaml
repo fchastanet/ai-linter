@@ -22,3 +22,31 @@ ignore_dirs:
   - ".pytest_cache"
   - "venv"
   - "env"
+
+# Code snippet validation
+# Maximum number of lines allowed in a code snippet before warning
+# Helps prevent bloated AI context by encouraging externalization of large code blocks
+code_snippet_max_lines: 3
+
+# Prompt and agent directories to validate
+# These directories will be checked for token count, references, skills, and tools
+prompt_dirs:
+  - ".github/prompts"
+
+agent_dirs:
+  - ".github/agents"
+
+# Resource directories to check for unreferenced files
+# All files in these directories should be referenced somewhere in markdown files
+resource_dirs:
+  - "references"
+  - "assets"
+  - "scripts"
+
+# Log level for unreferenced files in resource directories
+# Options: ERROR, WARNING, INFO
+unreferenced_file_level: ERROR
+
+# Log level for missing AGENTS.md file in project root
+# Options: ERROR, WARNING, INFO
+missing_agents_file_level: WARNING

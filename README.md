@@ -57,6 +57,13 @@ linting and validation for:
 - 🎯 **Selective Processing**: Can process specific directories or auto-discover skills
 - 📋 **Detailed Logging**: Multiple log levels with structured error reporting
 - 🔧 **Pre-commit Integration**: Easy integration with pre-commit hooks
+- 📦 **Code Snippet Detection**: Warns about large code blocks that should be externalized
+- 🔗 **Unreferenced File Detection**: Ensures all resource files are referenced in documentation
+- 🤖 **Prompt/Agent Validation**: Validates `.github/prompts` and `.github/agents` directories
+- 📄 **AGENTS.md Requirement**: Checks for project-level AI assistant guidance
+
+> **New in this version**: Enhanced validation rules for maintaining clean AI context. See
+> [Enhanced Linting Rules](docs/ENHANCED_LINTING_RULES.md) for details.
 
 ## 3. Installation
 
