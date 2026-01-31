@@ -1,36 +1,23 @@
 ---
-- id: ai-linter
+- id: ai-linter-changed-files
   name: AI Linter
-  description: Validate AI skills and agent configurations
-  entry: python src/aiLinter.py
-  language: python
+  description: Validate committed AI skills and agent configurations
+  entry: ai-linter
+  language: system
   types: [markdown]
   files: ^(.*/)?(SKILL|AGENTS)\.md$
   require_serial: true
+  pass_filenames: true
   additional_dependencies: [tiktoken, pyyaml]
   minimum_pre_commit_version: 4.5.0
 
-- id: ai-linter-skills
-  name: AI Linter (Skills Mode)
-  description: Auto-discover and validate AI skills in directories
-  entry: python src/aiLinter.py --skills
-  language: python
+- id: ai-linter-workspace
+  name: AI Linter (Workspace)
+  description: Validate AI skills and agents in the workspace
+  entry: ai-linter
+  language: system
   types: [markdown]
-  files: ^.*SKILL\.md$
   require_serial: true
-  additional_dependencies: [tiktoken, pyyaml]
   pass_filenames: false
-  args: [.]
-  minimum_pre_commit_version: 4.5.0
-
-- id: ai-linter-custom
-  name: AI Linter (Custom Config)
-  description: Validate AI skills and agents with custom configuration
-  entry: python src/aiLinter.py
-  language: python
-  types: [markdown]
-  files: ^(.*/)?(SKILL|AGENTS)\.md$
-  require_serial: true
   additional_dependencies: [tiktoken, pyyaml]
-  pass_filenames: false
   minimum_pre_commit_version: 4.5.0

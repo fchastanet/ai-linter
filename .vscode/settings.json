@@ -20,5 +20,10 @@
     "**/.mypy_cache": true,
     ".coverage": true
   },
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "file": "../copilot-prompts/.github/commit-message.instructions.md"
+    }
+  ],
   "python.analysis.extraPaths": ["src"]
 }

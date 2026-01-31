@@ -220,12 +220,36 @@ compatibility: object
 See [.pre-commit-hooks.yaml](.pre-commit-hooks.yaml) for ready-to-use pre-commit hooks. Add to your
 `.pre-commit-config.yaml`:
 
+Lint entire workspace:
+
 ```yaml
 repos:
   - repo: https://github.com/fchastanet/ai-linter
-    rev: v0.1.0
+    rev: 0.2.0
     hooks:
-      - id: ai-linter-skills
+      - id: ai-linter-workspace
+        args: [--max-warnings, '5']
+```
+
+Lint entire workspace including skills:
+
+```yaml
+repos:
+  - repo: https://github.com/fchastanet/ai-linter
+    rev: 0.2.0
+    hooks:
+      - id: ai-linter-workspace
+        args: [--skills, --max-warnings, '5']
+```
+
+Lint only changed files:
+
+```yaml
+repos:
+  - repo: https://github.com/fchastanet/ai-linter
+    rev: 0.2.0
+    hooks:
+      - id: ai-linter-changed-files
         args: [--max-warnings, '5']
 ```
 
