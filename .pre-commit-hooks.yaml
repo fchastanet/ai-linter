@@ -2,7 +2,7 @@
 - id: ai-linter-changed-files
   name: AI Linter
   description: Validate committed AI skills and agent configurations
-  entry: ai-linter
+  entry: ai-linter .
   language: python
   types: [markdown]
   files: ^(.*/)?(SKILL|AGENTS)\.md$
@@ -14,7 +14,7 @@
 - id: ai-linter-workspace
   name: AI Linter (Workspace)
   description: Validate AI skills and agents in the workspace
-  entry: ai-linter
+  entry: ai-linter .
   language: python
   types: [markdown]
   require_serial: true
