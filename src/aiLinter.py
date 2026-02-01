@@ -165,7 +165,7 @@ def main() -> None:
         file=sys.stderr,
     )
 
-    sys.exit(0 if total_errors == 0 or total_warnings <= max_warnings else 1)
+    sys.exit(0 if total_errors == 0 and total_warnings <= max_warnings else 1)
 
 
 if __name__ == "__main__":
