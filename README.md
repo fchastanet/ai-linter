@@ -22,17 +22,23 @@
   - [5.2. Advanced Options](#52-advanced-options)
   - [5.3. Configuration File](#53-configuration-file)
 - [6. Validation Rules](#6-validation-rules)
-  - [6.1. Skills Validation](#61-skills-validation)
-  - [6.2. Agents Validation](#62-agents-validation)
-  - [6.3. Allowed Frontmatter Properties](#63-allowed-frontmatter-properties)
-- [7. Exit Codes](#7-exit-codes)
-- [8. Development](#8-development)
-  - [8.1. Installation](#81-installation)
-  - [8.2. Pre-commit](#82-pre-commit)
-  - [8.3. Development Workflow](#83-development-workflow)
-- [9. Inspiration](#9-inspiration)
-- [10. Contributing](#10-contributing)
-- [11. License](#11-license)
+  - [6.1. Code Snippet Size Validation](#61-code-snippet-size-validation)
+  - [6.2. Unreferenced Resource File Detection](#62-unreferenced-resource-file-detection)
+  - [6.3. Prompt and Agent Directory Validation](#63-prompt-and-agent-directory-validation)
+  - [6.4. AGENTS.md Requirement](#64-agentsmd-requirement)
+  - [6.5. Skills Validation](#65-skills-validation)
+  - [6.6. Agents Validation](#66-agents-validation)
+  - [6.7. Allowed Frontmatter Properties](#67-allowed-frontmatter-properties)
+  - [6.8. Error Codes](#68-error-codes)
+- [7. FAQ](#7-faq)
+- [8. Exit Codes](#8-exit-codes)
+- [9. Development](#9-development)
+  - [9.1. Installation](#91-installation)
+  - [9.2. Pre-commit](#92-pre-commit)
+  - [9.3. Development Workflow](#93-development-workflow)
+- [10. Inspiration](#10-inspiration)
+- [11. Contributing](#11-contributing)
+- [12. License](#12-license)
 
 <!--TOC-->
 
@@ -61,9 +67,6 @@ linting and validation for:
 - 🔗 **Unreferenced File Detection**: Ensures all resource files are referenced in documentation
 - 🤖 **Prompt/Agent Validation**: Validates `.github/prompts` and `.github/agents` directories
 - 📄 **AGENTS.md Requirement**: Checks for project-level AI assistant guidance
-
-> **New in this version**: Enhanced validation rules for maintaining clean AI context. See
-> [Enhanced Linting Rules](docs/ENHANCED_LINTING_RULES.md) for details.
 
 ## 3. Installation
 
@@ -271,24 +274,94 @@ ignore_dirs:
 
 ## 6. Validation Rules
 
-### 6.1. Skills Validation
+### 6.1. Code Snippet Size Validation
 
-- ✅ `SKILL.md` file must exist
-- ✅ Valid YAML frontmatter with required properties
-- ✅ Content length must not exceed 500 lines
-- ✅ Token count must not exceed 5000 tokens
-- ✅ All file references must exist and be accessible
-- ✅ Frontmatter must contain valid metadata
+Code blocks in markdown files should not exceed a configurable line limit (default: 3 lines). Large code snippets should
+be moved to external files and referenced from documentation.
 
-### 6.2. Agents Validation
+**Configuration:**
 
-- ✅ `AGENTS.md` file structure validation
-- ✅ No frontmatter allowed in agent files
-- ✅ Content length must not exceed 500 lines
-- ✅ Token count must not exceed 5000 tokens
-- ✅ All file references must be valid
+```yaml
+# .ai-linter-config.yaml
+code_snippet_max_lines: 3  # Adjust as needed
+```
 
-### 6.3. Allowed Frontmatter Properties
+**Example:**
+
+```markdown
+See the implementation in [process.py](scripts/process.py)
+```
+
+### 6.2. Unreferenced Resource File Detection
+
+All files in `references/`, `assets/`, and `scripts/` directories must be referenced in at least one markdown file. This
+prevents accumulation of unused files and ensures documentation stays synchronized with resources.
+
+**Configuration:**
+
+```yaml
+resource_dirs:
+  - references
+  - assets
+  - scripts
+unreferenced_file_level: ERROR  # or WARNING, INFO
+```
+
+**Detection Methods:**
+
+- Markdown links: `[text](path/to/file)`
+- Images: `![alt](path/to/image.png)`
+- HTML tags: `<img src="path">`
+- Attachments: `<attachment filePath="path">`
+- Code comments: `source: path/to/file`
+
+### 6.3. Prompt and Agent Directory Validation
+
+**Prompt and agent files are validated for:**
+
+- Content size (≤ 500 lines)
+- Token count (≤ 5000 tokens)
+- All referenced files must exist
+- Tool and skill references are extracted and logged
+
+**Configuration:**
+
+```yaml
+prompt_dirs:
+  - .github/prompts
+agent_dirs:
+  - .github/agents
+```
+
+### 6.4. AGENTS.md Requirement
+
+Projects should have an `AGENTS.md` file in the root directory to provide AI assistants with project context and
+guidance.
+
+**Configuration:**
+
+```yaml
+missing_agents_file_level: WARNING  # or ERROR, INFO
+```
+
+### 6.5. Skills Validation
+
+- `SKILL.md` file must exist
+- Valid YAML frontmatter with required properties
+- Content length ≤ 500 lines
+- Token count ≤ 5000 tokens
+- All file references must exist and be accessible
+- Frontmatter must contain valid metadata
+
+### 6.6. Agents Validation
+
+- `AGENTS.md` file structure validation
+- No frontmatter allowed in agent files
+- Content length ≤ 500 lines
+- Token count ≤ 5000 tokens
+- All file references must be valid
+
+### 6.7. Allowed Frontmatter Properties
 
 ```yaml
 name: string
@@ -299,14 +372,35 @@ metadata: object
 compatibility: object
 ```
 
-## 7. Exit Codes
+### 6.8. Error Codes
+
+- `code-snippet-too-large`: Code block exceeds maximum line count
+- `unreferenced-resource-file`: File in resource directory not referenced in any markdown
+- `prompt-content-too-long`: File exceeds maximum line count
+- `prompt-token-count-exceeded`: File exceeds maximum token count
+- `agents-file-missing`: AGENTS.md not found in root directory
+
+## 7. FAQ
+
+- **Why limit code snippets to 3 lines?** This is configurable. The goal is to keep markdown focused on documentation
+  while encouraging proper code organization in external files.
+- **What if I have many small, rarely-used resource files?** Create an index document that lists all resources with
+  their purposes. This satisfies the reference requirement and improves discoverability.
+- **Can I disable specific validators?** Yes, set severity to `INFO` in config, or use `--ignore-dirs` to skip
+  directories.
+- **How are tokens counted?** Currently a simple whitespace split approximation. Actual AI tokenization may differ
+  slightly. The limit provides a reasonable guideline.
+- **Do I need AGENTS.md if my project is tiny?** Even small projects benefit from basic documentation. A minimal
+  AGENTS.md can be just a few lines explaining the project's purpose.
+
+## 8. Exit Codes
 
 - **0**: Success (no errors, warnings within limits)
 - **1**: Failure (errors found or too many warnings)
 
-## 8. Development
+## 9. Development
 
-### 8.1. Installation
+### 9.1. Installation
 
 ```bash
 # Clone and install for development
@@ -320,7 +414,7 @@ pip install -e ".[dev]"
 pre-commit install
 ```
 
-### 8.2. Pre-commit
+### 9.2. Pre-commit
 
 - ✅ **[.pre-commit-hooks.yaml](.pre-commit-hooks.yaml)** - Hook definitions for external use
 - ✅ **[.pre-commit-config.yaml](.pre-commit-config.yaml)** - Local development configuration with:
@@ -332,7 +426,7 @@ pre-commit install
   - bandit security scanning
   - YAML/Markdown validation
 
-### 8.3. Development Workflow
+### 9.3. Development Workflow
 
 ```bash
 # Setup development environment
@@ -345,16 +439,16 @@ make check-all
 make validate
 ```
 
-## 9. Inspiration
+## 10. Inspiration
 
 This tool was inspired by
 [Anthropic's skill validation script](https://github.com/anthropics/skills/blob/ef740771ac901e03fbca3ce4e1c453a96010f30a/skills/skill-creator/scripts/quick_validate.py)
 and adapted for broader AI development workflows.
 
-## 10. Contributing
+## 11. Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 11. License
+## 12. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
