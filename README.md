@@ -12,9 +12,10 @@
 - [1. Purpose](#1-purpose)
 - [2. Features](#2-features)
 - [3. Installation](#3-installation)
-  - [3.1. From PyPI (Coming Soon)](#31-from-pypi-coming-soon)
+  - [3.1. From PyPI](#31-from-pypi)
   - [3.2. From Source](#32-from-source)
-  - [3.3. Development Installation](#33-development-installation)
+  - [3.3. Pre-commit Integration (Recommended)](#33-pre-commit-integration-recommended)
+  - [3.4. Vscode Task Integration](#34-vscode-task-integration)
 - [4. Command help](#4-command-help)
 - [5. Usage](#5-usage)
   - [5.1. Basic Usage](#51-basic-usage)
@@ -24,12 +25,14 @@
   - [6.1. Skills Validation](#61-skills-validation)
   - [6.2. Agents Validation](#62-agents-validation)
   - [6.3. Allowed Frontmatter Properties](#63-allowed-frontmatter-properties)
-  - [6.4. Pre-commit Integration](#64-pre-commit-integration)
 - [7. Exit Codes](#7-exit-codes)
-  - [7.1. Development Workflow](#71-development-workflow)
-- [8. Inspiration](#8-inspiration)
-- [9. Contributing](#9-contributing)
-- [10. License](#10-license)
+- [8. Development](#8-development)
+  - [8.1. Installation](#81-installation)
+  - [8.2. Pre-commit](#82-pre-commit)
+  - [8.3. Development Workflow](#83-development-workflow)
+- [9. Inspiration](#9-inspiration)
+- [10. Contributing](#10-contributing)
+- [11. License](#11-license)
 
 <!--TOC-->
 
@@ -57,7 +60,7 @@ linting and validation for:
 
 ## 3. Installation
 
-### 3.1. From PyPI (Coming Soon)
+### 3.1. From PyPI
 
 ```bash
 pip install ai-linter
@@ -74,18 +77,102 @@ cd ai-linter
 pip install .
 ```
 
-### 3.3. Development Installation
+### 3.3. Pre-commit Integration (Recommended)
 
-```bash
-# Clone and install for development
-git clone git@github.com:fchastanet/ai-linter.git
-cd ai-linter
+See [.pre-commit-hooks.yaml](.pre-commit-hooks.yaml) for ready-to-use pre-commit hooks. Add to your
+`.pre-commit-config.yaml`:
 
-# Install in development mode with all dev dependencies
-pip install -e ".[dev]"
+Lint entire workspace:
 
-# Set up pre-commit hooks
-pre-commit install
+```yaml
+repos:
+  - repo: https://github.com/fchastanet/ai-linter
+    rev: 0.3.3
+    hooks:
+      - id: ai-linter-workspace
+        args: [--max-warnings, '5']
+```
+
+Lint entire workspace including skills:
+
+```yaml
+repos:
+  - repo: https://github.com/fchastanet/ai-linter
+    rev: 0.3.3
+    hooks:
+      - id: ai-linter-workspace
+        args: [--skills, --max-warnings, '5']
+```
+
+Lint only changed files:
+
+```yaml
+repos:
+  - repo: https://github.com/fchastanet/ai-linter
+    rev: 0.3.3
+    hooks:
+      - id: ai-linter-changed-files
+        args: [--max-warnings, '5']
+```
+
+### 3.4. Vscode Task Integration
+
+Add the following task to your `.vscode/tasks.json`:
+
+```json
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "AI Linter: Validate Workspace",
+      "type": "shell",
+      "command": "ai-linter",
+      "args": [
+        "--skills",
+        "."
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": {
+        "owner": "ai-linter",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
+          "file": 3,
+          "line": 4,
+          "severity": 1,
+          "message": 5
+        }
+      }
+    },
+    {
+      "label": "AI Linter: Validate Current Directory",
+      "type": "shell",
+      "command": "ai-linter",
+      "args": [
+        "--skills",
+        "${workspaceFolder}"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "problemMatcher": {
+        "owner": "ai-linter",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
+          "file": 3,
+          "line": 4,
+          "severity": 1,
+          "message": 5
+        }
+      }
+    }
+  ]
+}
 ```
 
 ## 4. Command help
@@ -205,7 +292,28 @@ metadata: object
 compatibility: object
 ```
 
-### 6.4. Pre-commit Integration
+## 7. Exit Codes
+
+- **0**: Success (no errors, warnings within limits)
+- **1**: Failure (errors found or too many warnings)
+
+## 8. Development
+
+### 8.1. Installation
+
+```bash
+# Clone and install for development
+git clone git@github.com:fchastanet/ai-linter.git
+cd ai-linter
+
+# Install in development mode with all dev dependencies
+pip install -e ".[dev]"
+
+# Set up pre-commit hooks
+pre-commit install
+```
+
+### 8.2. Pre-commit
 
 - ✅ **[.pre-commit-hooks.yaml](.pre-commit-hooks.yaml)** - Hook definitions for external use
 - ✅ **[.pre-commit-config.yaml](.pre-commit-config.yaml)** - Local development configuration with:
@@ -217,48 +325,7 @@ compatibility: object
   - bandit security scanning
   - YAML/Markdown validation
 
-See [.pre-commit-hooks.yaml](.pre-commit-hooks.yaml) for ready-to-use pre-commit hooks. Add to your
-`.pre-commit-config.yaml`:
-
-Lint entire workspace:
-
-```yaml
-repos:
-  - repo: https://github.com/fchastanet/ai-linter
-    rev: 0.2.0
-    hooks:
-      - id: ai-linter-workspace
-        args: [--max-warnings, '5']
-```
-
-Lint entire workspace including skills:
-
-```yaml
-repos:
-  - repo: https://github.com/fchastanet/ai-linter
-    rev: 0.2.0
-    hooks:
-      - id: ai-linter-workspace
-        args: [--skills, --max-warnings, '5']
-```
-
-Lint only changed files:
-
-```yaml
-repos:
-  - repo: https://github.com/fchastanet/ai-linter
-    rev: 0.2.0
-    hooks:
-      - id: ai-linter-changed-files
-        args: [--max-warnings, '5']
-```
-
-## 7. Exit Codes
-
-- **0**: Success (no errors, warnings within limits)
-- **1**: Failure (errors found or too many warnings)
-
-### 7.1. Development Workflow
+### 8.3. Development Workflow
 
 ```bash
 # Setup development environment
@@ -271,16 +338,16 @@ make check-all
 make validate
 ```
 
-## 8. Inspiration
+## 9. Inspiration
 
 This tool was inspired by
 [Anthropic's skill validation script](https://github.com/anthropics/skills/blob/ef740771ac901e03fbca3ce4e1c453a96010f30a/skills/skill-creator/scripts/quick_validate.py)
 and adapted for broader AI development workflows.
 
-## 9. Contributing
+## 10. Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 10. License
+## 11. License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
