@@ -31,7 +31,7 @@ class Parser:
         markdown_path = Path(path)
         content = markdown_path.read_text()
         if not content.startswith("---"):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR if frontmatter_required else LogLevel.DEBUG,
                 "no-frontmatter",
                 "No YAML frontmatter found",
@@ -41,7 +41,7 @@ class Parser:
         # Extract frontmatter
         frontmatter_match = re.match(r"^---\n(.*?)\n---\n(.*)$", content, re.DOTALL)
         if not frontmatter_match:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR if frontmatter_required else LogLevel.DEBUG,
                 "missing-frontmatter",
                 "Missing or invalid frontmatter in markdown file",
@@ -57,7 +57,7 @@ class Parser:
         try:
             frontmatter = yaml.safe_load(frontmatter_text)
             if not isinstance(frontmatter, dict):
-                self.logger.log(
+                self.logger.logRule(
                     LogLevel.ERROR,
                     "invalid-frontmatter-format",
                     "Frontmatter must be a YAML dictionary",
@@ -65,7 +65,7 @@ class Parser:
                 )
                 return None, 1, 0
         except yaml.YAMLError as e:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-yaml",
                 f"Invalid YAML in frontmatter: {e}",

@@ -9,7 +9,10 @@
       "args": [
         "../pendulum-guide",
         "--log-level",
-        "DEBUG"
+        "DEBUG",
+        "--skills",
+        "--log-format",
+        "logfmt"
       ],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",

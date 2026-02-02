@@ -62,7 +62,7 @@ class PromptAgentValidator:
         agents_md = project_dir / "AGENTS.md"
 
         if not agents_md.exists():
-            self.logger.log(
+            self.logger.logRule(
                 self.missing_agents_level,
                 "agents-file-missing",
                 "AGENTS.md file is missing in the root directory. "
@@ -147,7 +147,7 @@ class PromptAgentValidator:
         try:
             content = file_path.read_text()
         except Exception as e:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "file-read-error",
                 f"Failed to read file: {e}",
@@ -168,7 +168,7 @@ class PromptAgentValidator:
         metadata["token_count"] = token_count
 
         if line_count > self.MAX_LINE_COUNT:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "prompt-content-too-long",
                 f"Content has {line_count} lines (max: {self.MAX_LINE_COUNT}). "
@@ -178,7 +178,7 @@ class PromptAgentValidator:
             warnings += 1
 
         if token_count > self.MAX_TOKEN_COUNT:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "prompt-token-count-exceeded",
                 f"Content has approximately {token_count} tokens (max: {self.MAX_TOKEN_COUNT}). "
@@ -199,7 +199,7 @@ class PromptAgentValidator:
                 ref_path = file_path.parent / ref
 
             if not ref_path.exists():
-                self.logger.log(
+                self.logger.logRule(
                     LogLevel.ERROR,
                     "file-reference-not-found",
                     f"Referenced file not found: {ref}",
@@ -215,19 +215,16 @@ class PromptAgentValidator:
         metadata["skills"] = list(skills)
 
         if tools:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.INFO,
                 "tools-found",
                 f"Found {len(tools)} tool references: {', '.join(sorted(tools))}",
-                file_path,
             )
 
         if skills:
             self.logger.log(
                 LogLevel.INFO,
-                "skills-found",
                 f"Found {len(skills)} skill references: {', '.join(sorted(skills))}",
-                file_path,
             )
 
         return warnings, errors, metadata
@@ -254,9 +251,7 @@ class PromptAgentValidator:
             if prompt_path.exists() and prompt_path.is_dir():
                 self.logger.log(
                     LogLevel.INFO,
-                    "validating-prompt-dir",
                     f"Validating prompt directory: {prompt_dir}",
-                    prompt_path,
                 )
 
                 for md_file in prompt_path.rglob("*.md"):
@@ -266,9 +261,7 @@ class PromptAgentValidator:
             else:
                 self.logger.log(
                     LogLevel.DEBUG,
-                    "prompt-dir-not-found",
                     f"Prompt directory not found: {prompt_dir}",
-                    project_dir,
                 )
 
         # Check agent directories
@@ -277,9 +270,7 @@ class PromptAgentValidator:
             if agent_path.exists() and agent_path.is_dir():
                 self.logger.log(
                     LogLevel.INFO,
-                    "validating-agent-dir",
                     f"Validating agent directory: {agent_dir}",
-                    agent_path,
                 )
 
                 for md_file in agent_path.rglob("*.md"):
@@ -289,9 +280,7 @@ class PromptAgentValidator:
             else:
                 self.logger.log(
                     LogLevel.DEBUG,
-                    "agent-dir-not-found",
                     f"Agent directory not found: {agent_dir}",
-                    project_dir,
                 )
 
         return total_warnings, total_errors

@@ -25,7 +25,6 @@ class ProcessAgents:
             # check if project dir is one of the ignore directories
             self.logger.log(
                 LogLevel.DEBUG,
-                "validating-agents-in-project-dir",
                 f"Validating AGENTS.md files in project directory: {project_dir} {ignore_dirs}",
             )
 
@@ -33,7 +32,6 @@ class ProcessAgents:
             if any(fnmatch.fnmatch(str(project_dir), str(pattern)) for pattern in ignore_dirs):
                 self.logger.log(
                     LogLevel.DEBUG,
-                    "ignoring-project-dir",
                     f"Ignoring project directory '{project_dir}' due to ignore_dirs setting: {ignore_dirs}",
                 )
                 continue

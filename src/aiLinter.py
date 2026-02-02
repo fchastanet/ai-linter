@@ -122,6 +122,9 @@ def main() -> None:
         logger, parser, file_reference_validator, config.missing_agents_file_level
     )
 
+    # start processing
+    start_time = os.times()
+
     # collect skill directories
     skill_directories = {}
     project_dirs = set()
@@ -131,7 +134,6 @@ def main() -> None:
         if not os.path.isdir(directory):
             logger.log(
                 LogLevel.ERROR,
-                "directory-not-found",
                 f"Directory '{directory}' does not exist or is not a directory",
             )
             sys.exit(1)
@@ -153,9 +155,7 @@ def main() -> None:
             new_skills_count = len(skill_directories.keys())
             logger.log(
                 LogLevel.INFO,
-                "skills-found",
                 f"Found {new_skills_count - skills_count} skills in directory '{directory}'",
-                directory,
             )
             skills_count = new_skills_count
             for skill_dir in skill_directories.keys():
@@ -168,7 +168,6 @@ def main() -> None:
 
     logger.log(
         LogLevel.INFO,
-        "projects-found",
         f"Found {len(project_dirs)} unique project directories to process: {project_dirs} ",
     )
 
@@ -189,7 +188,6 @@ def main() -> None:
     for project_dir in project_dirs:
         logger.log(
             LogLevel.INFO,
-            "validating-project",
             f"Running additional validations for project: {project_dir}",
         )
 
@@ -217,9 +215,17 @@ def main() -> None:
     # Flush buffered log messages
     logger.flush()
 
-    print(
+    logger.log(
+        LogLevel.INFO,
         f"Total warnings: {total_warnings}, Total errors: {total_errors}",
-        file=sys.stderr,
+    )
+
+    # finish processing
+    end_time = os.times()
+    elapsed_time = end_time.elapsed - start_time.elapsed
+    logger.log(
+        LogLevel.INFO,
+        f"Linting completed in {elapsed_time:.2f} seconds",
     )
 
     sys.exit(0 if total_errors == 0 and total_warnings <= max_warnings else 1)

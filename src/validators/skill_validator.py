@@ -39,7 +39,7 @@ class SkillValidator:
         # Check SKILL.md exists
         skill_md = skill_path / "SKILL.md"
         if not skill_md.exists():
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "skill-not-found",
                 "SKILL.md not found",
@@ -56,7 +56,7 @@ class SkillValidator:
             return warning_count, error_count
 
         if frontmatter is None:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "skill-frontmatter-missing",
                 "Frontmatter is missing or invalid in SKILL.md",

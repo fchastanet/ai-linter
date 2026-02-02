@@ -84,7 +84,7 @@ class UnreferencedFileValidator:
                 if refs:
                     all_references[str(md_file)] = refs
             except Exception as e:
-                self.logger.log(
+                self.logger.logRule(
                     LogLevel.WARNING,
                     "file-read-error",
                     f"Failed to read markdown file: {e}",
@@ -141,9 +141,7 @@ class UnreferencedFileValidator:
             if not resource_path.exists() or not resource_path.is_dir():
                 self.logger.log(
                     LogLevel.DEBUG,
-                    "resource-dir-not-found",
                     f"Resource directory not found: {resource_dir}",
-                    project_dir,
                 )
                 continue
 
@@ -167,7 +165,7 @@ class UnreferencedFileValidator:
                                 break
 
                         if not is_referenced:
-                            self.logger.log(
+                            self.logger.logRule(
                                 self.level,
                                 "unreferenced-resource-file",
                                 f"File '{relative_path}' in resource directory is not referenced in any markdown file",

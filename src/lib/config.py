@@ -55,7 +55,6 @@ def load_config(
                     logger.set_level(log_level)
                     logger.log(
                         LogLevel.INFO,
-                        "config-log-level-set",
                         f"Log level set to {log_level} from config file",
                     )
 
@@ -66,7 +65,6 @@ def load_config(
                         logger.set_format(log_format)
                         logger.log(
                             LogLevel.INFO,
-                            "config-log-format-set",
                             f"Log format set to {log_format.value} from config file",
                         )
 
@@ -80,7 +78,6 @@ def load_config(
                         config_obj.max_warnings = max_warnings
                         logger.log(
                             LogLevel.INFO,
-                            "config-max-warnings-set",
                             f"Max warnings set to {max_warnings} from config file",
                         )
                     # Add ignore directories from config
@@ -89,7 +86,6 @@ def load_config(
                         config_obj.ignore_dirs = ignore_dirs
                         logger.log(
                             LogLevel.INFO,
-                            "config-ignore-dirs-set",
                             f"Ignore directories set to {ignore_dirs} from config file",
                         )
 
@@ -98,7 +94,6 @@ def load_config(
                         config_obj.code_snippet_max_lines = config["code_snippet_max_lines"]
                         logger.log(
                             LogLevel.INFO,
-                            "config-code-snippet-max-lines-set",
                             f"Code snippet max lines set to {config_obj.code_snippet_max_lines} from config file",
                         )
 
@@ -106,7 +101,6 @@ def load_config(
                         config_obj.prompt_dirs = config["prompt_dirs"]
                         logger.log(
                             LogLevel.INFO,
-                            "config-prompt-dirs-set",
                             f"Prompt directories set to {config_obj.prompt_dirs} from config file",
                         )
 
@@ -114,7 +108,6 @@ def load_config(
                         config_obj.agent_dirs = config["agent_dirs"]
                         logger.log(
                             LogLevel.INFO,
-                            "config-agent-dirs-set",
                             f"Agent directories set to {config_obj.agent_dirs} from config file",
                         )
 
@@ -122,7 +115,6 @@ def load_config(
                         config_obj.resource_dirs = config["resource_dirs"]
                         logger.log(
                             LogLevel.INFO,
-                            "config-resource-dirs-set",
                             f"Resource directories set to {config_obj.resource_dirs} from config file",
                         )
 
@@ -130,7 +122,6 @@ def load_config(
                         config_obj.unreferenced_file_level = config["unreferenced_file_level"].upper()
                         logger.log(
                             LogLevel.INFO,
-                            "config-unreferenced-file-level-set",
                             f"Unreferenced file level set to {config_obj.unreferenced_file_level} from config file",
                         )
 
@@ -138,33 +129,28 @@ def load_config(
                         config_obj.missing_agents_file_level = config["missing_agents_file_level"].upper()
                         logger.log(
                             LogLevel.INFO,
-                            "config-missing-agents-file-level-set",
-                            f"Missing AGENTS.md file level set to "
+                            "Missing AGENTS.md file level set to "
                             f"{config_obj.missing_agents_file_level} from config file",
                         )
 
                 else:
                     logger.log(
                         LogLevel.WARNING,
-                        "invalid-config-format",
                         f"Config file '{config_path}' is not a valid YAML dictionary.",
                     )
             logger.log(
                 LogLevel.INFO,
-                "loaded-config",
                 f"Loaded config file: {config_path}",
             )
 
         except Exception as e:
             logger.log(
                 LogLevel.WARNING,
-                "config-load-error",
                 f"Failed to load config file '{config_path}': {e}",
             )
     else:
         logger.log(
             LogLevel.INFO,
-            "config-not-found",
             f"Config file '{config_path}' not found, using default settings.",
         )
 

@@ -7,37 +7,38 @@ import yaml
 
 from lib.log_format import LogFormat
 from lib.log_formatters.base_log_formatter import BaseLogFormatter
+from lib.log_formatters.rule_message import RuleMessage
 
 
 class YamlFormatter(BaseLogFormatter):
     """Formats messages in YAML structure grouped by file"""
 
-    def format(self, messages: list[dict[str, Any]]) -> str:
+    def format(self, messages: list[RuleMessage]) -> str:
         """Format messages in YAML format"""
 
         # Group messages by file
-        by_file: dict[str, list[dict[str, Any]]] = defaultdict(list)
-        unknown_messages: list[dict[str, Any]] = []
+        by_file: dict[str, list[RuleMessage]] = defaultdict(list)
+        unknown_messages: list[RuleMessage] = []
 
         for msg in messages:
-            if msg["file"] == "<unknown>":
+            if msg.file == "<unknown>":
                 unknown_messages.append(msg)
             else:
-                by_file[msg["file"]].append(msg)
+                by_file[msg.file].append(msg)
 
         output_data: dict[str, Any] = {"files": {}}
 
         # Add file-grouped messages
         for file_path in sorted(by_file.keys()):
             file_messages = []
-            for msg in sorted(by_file[file_path], key=lambda m: m["line_number"] or 0):
+            for msg in sorted(by_file[file_path], key=lambda m: m.line_number or 0):
                 file_msg: dict[str, Any] = {
-                    "level": msg["level"].name,
-                    "rule": msg["rule"],
-                    "message": msg["message"],
+                    "level": msg.level.name,
+                    "rule": msg.rule,
+                    "message": msg.message,
                 }
-                if msg["line_number"]:
-                    file_msg["line"] = msg["line_number"]
+                if msg.line_number:
+                    file_msg["line"] = msg.line_number
                 file_messages.append(file_msg)
             output_data["files"][file_path] = file_messages
 
@@ -47,9 +48,9 @@ class YamlFormatter(BaseLogFormatter):
             for msg in unknown_messages:
                 unknown_file_messages.append(
                     {
-                        "level": msg["level"].name,
-                        "rule": msg["rule"],
-                        "message": msg["message"],
+                        "level": msg.level.name,
+                        "rule": msg.rule,
+                        "message": msg.message,
                     }
                 )
             output_data["files"]["<unknown>"] = unknown_file_messages

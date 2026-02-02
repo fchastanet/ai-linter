@@ -28,7 +28,7 @@ class AgentValidator:
         # frontmatter validation
         frontmatter_text, agent_content = self.parser.parse_content_and_frontmatter(agent_file, False)
         if frontmatter_text is not None:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "agent-frontmatter-extracted",
                 "AGENTS.md should not contain frontmatter",
@@ -37,7 +37,7 @@ class AgentValidator:
             nb_errors += 1
 
         if agent_content is None:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "agent-content-missing",
                 "AGENTS.md content is missing",
@@ -73,19 +73,14 @@ class AgentValidator:
         nb_errors = 0
         for agent_file in agent_files:
             if any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
-                self.logger.log(
+                self.logger.logRule(
                     LogLevel.DEBUG,
                     "ignoring-agents-file",
                     f"Ignoring AGENTS.md file due to ignore_dirs setting: {ignore_dirs}",
                     agent_file,
                 )
                 continue
-            self.logger.log(
-                LogLevel.INFO,
-                "validating-agents-file",
-                f"Validating AGENTS.md file: {agent_file}",
-                agent_file,
-            )
+            self.logger.log(LogLevel.INFO, "Validating AGENTS.md file: %s", (str(agent_file),))
             agent_warnings, agent_errors = self.validate_agent_file([agent_file.parent, project_dir], agent_file)
             nb_warnings += agent_warnings
             nb_errors += agent_errors

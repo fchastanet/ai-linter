@@ -22,7 +22,7 @@ class ProcessSkills:
                 total_warnings += nb_warnings
                 total_errors += nb_errors
             else:
-                self.logger.log(
+                self.logger.logRule(
                     LogLevel.ERROR,
                     "directory-not-found",
                     f"Skill directory '{skill_dir}' does not exist or is not a directory",

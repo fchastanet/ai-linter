@@ -18,7 +18,7 @@ class FileReferenceValidator:
         file_warning_count = 0
         for m in re.finditer(r"(?<!`)`(?P<link>[^`\n]+)`(?!`)", content):
             link = m.group("link")
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.DEBUG,
                 "file-link-found",
                 f"Found file link: {link}",
@@ -30,9 +30,7 @@ class FileReferenceValidator:
             if re.search(r"^(?=[^*?]*\/)[^*?\\<>$|:\"']+$", link) and file_links.get(link) is None:
                 self.logger.log(
                     LogLevel.DEBUG,
-                    "validating-file-link",
                     f"Validating file link: {link}",
-                    file,
                 )
                 file_links[link] = True
                 if not self._validate_file_link(base_dirs, file, content, m, link, content_start_line_number):
@@ -49,7 +47,7 @@ class FileReferenceValidator:
         # Check content token count
         token_count = self._compute_token_count_accurate(content)
         if token_count > max_tokens:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "too-complex-content",
                 f"Content is too complex ({token_count}/{max_tokens} tokens).",
@@ -58,7 +56,7 @@ class FileReferenceValidator:
             )
             nb_warnings += 1
         else:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.INFO,
                 "content-complexity",
                 f"Content token count: {token_count}/{max_tokens} tokens.",
@@ -69,7 +67,7 @@ class FileReferenceValidator:
         # Check content line count (max 500 lines per spec)
         line_count = content.count("\n") + 1
         if line_count > max_lines:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "too-many-lines",
                 f"Content has too many lines ({line_count}/{max_lines} lines).",
@@ -99,7 +97,7 @@ class FileReferenceValidator:
             if file_path.exists():
                 return True
 
-        self.logger.log(
+        self.logger.logRule(
             LogLevel.ERROR,
             "file-link-not-found",
             f"File link '{link}' not found in any of the base directories: {base_dirs}",
@@ -119,7 +117,6 @@ class FileReferenceValidator:
         except ImportError:
             self.logger.log(
                 LogLevel.WARNING,
-                "tiktoken-not-found",
                 "tiktoken not found, using naive token count approximation.",
             )
             # Fallback to naive approximation if tiktoken is not available

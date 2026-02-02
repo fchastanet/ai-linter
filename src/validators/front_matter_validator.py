@@ -22,7 +22,7 @@ class FrontMatterValidator:
         """Validate that frontmatter contains only allowed keys"""
         unexpected_keys = set(frontmatter.keys()) - allowed_keys
         if unexpected_keys:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "unexpected-properties",
                 f"Unexpected key(s) in frontmatter: {', '.join(sorted(unexpected_keys))}. ",
@@ -38,7 +38,7 @@ class FrontMatterValidator:
     ) -> tuple[int, int]:
         # Check required fields
         if "name" not in frontmatter:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "missing-name",
                 "Missing 'name' in frontmatter",
@@ -50,7 +50,7 @@ class FrontMatterValidator:
         # Extract name for validation
         name = frontmatter.get("name", "")
         if name is None or not isinstance(name, str):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-type",
                 f"Name must be a string, got {type(name).__name__}",
@@ -63,7 +63,7 @@ class FrontMatterValidator:
         nb_errors = 0
         name = name.strip()
         if not name:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "empty-name",
                 "Name in frontmatter cannot be empty",
@@ -75,7 +75,7 @@ class FrontMatterValidator:
         line_number += self.parser.get_frontmatter_line_number(frontmatter_text, "name") + 1
         # Check naming convention (hyphen-case: lowercase with hyphens)
         if not re.match(r"^[a-z0-9-]+$", name):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-format",
                 f"Name '{name}' should be hyphen-case (lowercase letters, digits, and hyphens only)",
@@ -85,7 +85,7 @@ class FrontMatterValidator:
             nb_errors += 1
 
         if name.startswith("-") or name.endswith("-") or "--" in name:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-format",
                 f"Name '{name}' cannot start/end with hyphen or contain consecutive hyphens",
@@ -96,7 +96,7 @@ class FrontMatterValidator:
 
         # Check name length (max 64 characters per spec)
         if len(name) > self.MAX_NAME_LENGTH:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-length",
                 f"Name is too long ({len(name)}/{self.MAX_NAME_LENGTH} characters).",
@@ -107,7 +107,7 @@ class FrontMatterValidator:
 
         # check if name matches directory name
         if name != file_path.name:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "name-directory-mismatch",
                 f"Name '{name}' does not match directory name '{file_path.name}'",
@@ -125,7 +125,7 @@ class FrontMatterValidator:
         nb_warnings = 0
         nb_errors = 0
         if "description" not in frontmatter:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "missing-description",
                 "Missing 'description' in frontmatter",
@@ -136,7 +136,7 @@ class FrontMatterValidator:
 
         line_number = self.parser.get_frontmatter_line_number(frontmatter_text, "description") + 1
         if frontmatter["description"] is None or not isinstance(frontmatter["description"], str):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-description-type",
                 f"Description must be a string, got {type(frontmatter['description']).__name__}",
@@ -147,7 +147,7 @@ class FrontMatterValidator:
 
         description = frontmatter["description"].strip()
         if not description:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "empty-description",
                 "Description in frontmatter cannot be empty",
@@ -158,7 +158,7 @@ class FrontMatterValidator:
 
         # Check for angle brackets
         if "<" in description or ">" in description:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-description-format",
                 "Description cannot contain angle brackets (< or >)",
@@ -169,7 +169,7 @@ class FrontMatterValidator:
 
         # Check description length (max 1024 characters per spec)
         if len(description) > self.MAX_DESCRIPTION_LENGTH:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-description-length",
                 f"Description is too long ({len(description)}/{self.MAX_DESCRIPTION_LENGTH} characters).",
@@ -178,7 +178,7 @@ class FrontMatterValidator:
             )
             nb_errors += 1
         else:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.INFO,
                 "description-length",
                 f"Description length: {len(description)}/{self.MAX_DESCRIPTION_LENGTH} characters.",

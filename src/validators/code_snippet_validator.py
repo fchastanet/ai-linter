@@ -18,7 +18,7 @@ class CodeSnippetValidator:
         """
         file_path = Path(file_path)
         if not file_path.exists():
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "file-not-found",
                 f"File not found: {file_path}",
@@ -29,7 +29,7 @@ class CodeSnippetValidator:
         try:
             content = file_path.read_text()
         except Exception as e:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "file-read-error",
                 f"Failed to read file: {e}",
@@ -60,13 +60,14 @@ class CodeSnippetValidator:
                 start_pos = match.start()
                 line_number = content[:start_pos].count("\n") + 1
 
-                self.logger.log(
+                self.logger.logRule(
                     LogLevel.WARNING,
                     "code-snippet-too-large",
                     f"Code snippet at line {line_number} has {line_count} lines (max: {self.max_lines}). "
                     f"Consider externalizing this code block to an external file to limit AI context size.",
                     file_path,
                     line_number,
+                    match.group(0).partition("\n")[0],  # First line of the code block for context
                 )
                 warnings += 1
 
