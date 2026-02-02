@@ -1,6 +1,10 @@
 import sys
 from enum import Enum
 from pathlib import Path
+from typing import Any
+
+from lib.log_format import LogFormat
+from lib.log_formatters.formatter_factory import LogFormatterFactory
 
 # ANSI color codes for console output
 RESET = "\033[0m"
@@ -12,6 +16,8 @@ GRAY = "\033[90m"
 
 
 class LogLevel(Enum):
+    """Log level enumeration"""
+
     ERROR = 0
     WARNING = 1
     INFO = 2
@@ -56,12 +62,18 @@ class LogLevel(Enum):
 
 
 class Logger:
-    def __init__(self, level: LogLevel = LogLevel.INFO):
+    def __init__(self, level: LogLevel = LogLevel.INFO, format: LogFormat = LogFormat.FILE_DIGEST):
         self.level = level
+        self.formatter = LogFormatterFactory.create(format)
+        self.messages: list[dict[str, Any]] = []
 
     def set_level(self, level: LogLevel) -> None:
         """Set the logging level"""
         self.level = level
+
+    def set_format(self, format: LogFormat) -> None:
+        """Set the logging format"""
+        self.formatter = LogFormatterFactory.create(format)
 
     def try_relative_path(self, file: str | Path | None) -> Path:
         """Try to convert file path to relative path"""
@@ -72,16 +84,6 @@ class Logger:
         except ValueError:
             return Path(file)
 
-    def _format_message(
-        self, level: LogLevel, rule: str, message: str, file: str | Path | None, line_number: int | None = None
-    ) -> str:
-        """Format message for console output"""
-        relative_path = self.try_relative_path(file)
-        if line_number:
-            return f'level="{level}" rule="{rule}" path="{relative_path}" line="{line_number}" message="{message}"'
-        else:
-            return f'level="{level}" rule="{rule}" path="{relative_path}" message="{message}"'
-
     def log(
         self,
         level: LogLevel,
@@ -91,12 +93,65 @@ class Logger:
         line_number: int | None = None,
         **kwargs: str,
     ) -> None:
-        """Display message with color coding"""
+        """Log a message using the configured formatter"""
         if level.value > self.level.value:
             return
-        formatted_message = self._format_message(level, rule, message, file, line_number)
+        # Store message for later formatting and output
+        self._buffer_message(level, rule, message, file, line_number, kwargs)
+        # For logfmt, also print immediately to stderr
+        if self.formatter.get_format() == LogFormat.LOGFMT:
+            self._print_logfmt_immediate(level, rule, message, file, line_number, kwargs)
+
+    def _buffer_message(
+        self,
+        level: LogLevel,
+        rule: str,
+        message: str,
+        file: str | Path | None,
+        line_number: int | None,
+        kwargs: dict[str, str],
+    ) -> None:
+        """Buffer a message for later formatting"""
+        relative_path = str(self.try_relative_path(file)) if file else "<unknown>"
+        self.messages.append(
+            {
+                "level": level,
+                "rule": rule,
+                "message": message,
+                "file": relative_path,
+                "line_number": line_number,
+                "kwargs": kwargs,
+            }
+        )
+
+    def _print_logfmt_immediate(
+        self,
+        level: LogLevel,
+        rule: str,
+        message: str,
+        file: str | Path | None,
+        line_number: int | None,
+        kwargs: dict[str, str],
+    ) -> None:
+        """Print a message in logfmt format immediately to stderr"""
+        relative_path = self.try_relative_path(file)
+        if line_number:
+            formatted_message = (
+                f'level="{level.name}" rule="{rule}" path="{relative_path}" '
+                f'line="{line_number}" message="{message}"'
+            )
+        else:
+            formatted_message = f'level="{level.name}" rule="{rule}" path="{relative_path}" message="{message}"'
         for key, value in kwargs.items():
             formatted_message += f' {key}="{value}"'
-        # Print on stderr
         color = level.get_level_color()
         print(f"{color}{formatted_message}{RESET}", file=sys.stderr)
+
+    def flush(self) -> None:
+        """Output all buffered messages using the configured formatter"""
+        if not self.messages:
+            return
+        output = self.formatter.format(self.messages)
+        if output:
+            print(output, file=sys.stderr)
+        self.messages.clear()

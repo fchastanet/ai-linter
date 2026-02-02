@@ -10,6 +10,7 @@ from pathlib import Path
 
 from lib.config import load_config
 from lib.log import Logger, LogLevel
+from lib.log_format import LogFormat
 from lib.parser import Parser
 from processors.process_agents import ProcessAgents
 from processors.process_skills import ProcessSkills
@@ -28,7 +29,7 @@ except ImportError:
 
 AI_LINTER_CONFIG_FILE = ".ai-linter-config.yaml"
 
-logger = Logger(LogLevel.INFO)
+logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
 parser = Parser(logger)
 file_reference_validator = FileReferenceValidator(logger)
 front_matter_validator = FrontMatterValidator(logger, parser)
@@ -66,6 +67,13 @@ def main() -> None:
         default=None,
         help="Set the logging level",
     )
+    arg_parser.add_argument(
+        "--log-format",
+        type=str,
+        choices=[fmt.value for fmt in LogFormat],
+        default=None,
+        help="Set the logging format (default: file-digest)",
+    )
     arg_parser.add_argument("directories", nargs="+", help="Directories to validate")
     arg_parser.add_argument(
         "--version",
@@ -84,6 +92,9 @@ def main() -> None:
     # log level
     log_level = LogLevel.from_string(args.log_level) if args.log_level else LogLevel.INFO
 
+    # log format
+    log_format = LogFormat.from_string(args.log_format) if args.log_format else LogFormat.FILE_DIGEST
+
     # ignore directories
     ignore_dirs = [".git", "__pycache__"]
 
@@ -98,11 +109,13 @@ def main() -> None:
 
     # Load configuration file if it exists
     config_path = os.path.join(Path.cwd(), config_file)
-    ignore_dirs, log_level, max_warnings, config = load_config(
-        args, logger, config_path, log_level, ignore_dirs, max_warnings
+    ignore_dirs, log_level, log_format, max_warnings, config = load_config(
+        args, logger, config_path, log_level, log_format, ignore_dirs, max_warnings
     )
 
-    # Initialize new validators with config
+    # Update logger with config values (config file overridden by CLI args)
+    logger.set_level(log_level)
+    logger.set_format(log_format)
     code_snippet_validator = CodeSnippetValidator(logger, config.code_snippet_max_lines)
     unreferenced_file_validator = UnreferencedFileValidator(logger, config.unreferenced_file_level)
     prompt_agent_validator = PromptAgentValidator(
@@ -200,6 +213,9 @@ def main() -> None:
         )
         total_warnings += prompt_warnings
         total_errors += prompt_errors
+
+    # Flush buffered log messages
+    logger.flush()
 
     print(
         f"Total warnings: {total_warnings}, Total errors: {total_errors}",

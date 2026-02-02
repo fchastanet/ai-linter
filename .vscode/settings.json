@@ -22,8 +22,16 @@
   },
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "file": "../copilot-prompts/.github/commit-message.instructions.md"
+      "file": "../../copilot-prompts/.github/commit-message.instructions.md"
     }
   ],
-  "python.analysis.extraPaths": ["src"]
+  "python.analysis.extraPaths": [
+    "src"
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "/^cd /home/wsl/fchastanet/ai-linter && python -m pytest --cov=src --cov-report=term-missing 2>&1 \\| tail -50$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
 }

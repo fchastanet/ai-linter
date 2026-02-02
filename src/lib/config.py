@@ -4,6 +4,7 @@ from argparse import Namespace
 import yaml
 
 from lib.log import Logger, LogLevel
+from lib.log_format import LogFormat
 
 
 class Config:
@@ -11,6 +12,7 @@ class Config:
 
     def __init__(self) -> None:
         self.log_level: LogLevel = LogLevel.INFO
+        self.log_format: LogFormat = LogFormat.FILE_DIGEST
         self.max_warnings: float = float("inf")
         self.ignore_dirs: list[str] = [".git", "__pycache__"]
         self.code_snippet_max_lines: int = 3
@@ -22,11 +24,18 @@ class Config:
 
 
 def load_config(
-    args: Namespace, logger: Logger, config_path: str, log_level: LogLevel, ignore_dirs: list[str], max_warnings: float
-) -> tuple[list[str], LogLevel, float, Config]:
+    args: Namespace,
+    logger: Logger,
+    config_path: str,
+    log_level: LogLevel,
+    log_format: LogFormat,
+    ignore_dirs: list[str],
+    max_warnings: float,
+) -> tuple[list[str], LogLevel, LogFormat, float, Config]:
     """Load configuration from a YAML file"""
     config_obj = Config()
     config_obj.log_level = log_level
+    config_obj.log_format = log_format
     config_obj.ignore_dirs = ignore_dirs
     config_obj.max_warnings = max_warnings
 
@@ -49,6 +58,18 @@ def load_config(
                         "config-log-level-set",
                         f"Log level set to {log_level} from config file",
                     )
+
+                    # Override log format if specified in config (CLI overrides config)
+                    if args.log_format is None and "log_format" in config and isinstance(config["log_format"], str):
+                        log_format = LogFormat.from_string(config["log_format"])
+                        config_obj.log_format = log_format
+                        logger.set_format(log_format)
+                        logger.log(
+                            LogLevel.INFO,
+                            "config-log-format-set",
+                            f"Log format set to {log_format.value} from config file",
+                        )
+
                     # Override max warnings if specified in config
                     if (
                         args.max_warnings is None
@@ -147,4 +168,4 @@ def load_config(
             f"Config file '{config_path}' not found, using default settings.",
         )
 
-    return ignore_dirs, log_level, max_warnings, config_obj
+    return ignore_dirs, log_level, log_format, max_warnings, config_obj
