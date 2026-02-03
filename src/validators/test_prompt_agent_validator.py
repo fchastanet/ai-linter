@@ -134,7 +134,7 @@ skill `typescript-linting`
         prompt_file.write_text("# Test Prompt\n\nShort content")
 
         warnings, errors = validator.validate_prompt_agent_directories(
-            tmp_path, prompt_dirs=[".github/prompts"], agent_dirs=[]
+            tmp_path, prompt_dirs=[Path(".github/prompts")], agent_dirs=[]
         )
 
         # Should have warning for missing AGENTS.md
@@ -154,7 +154,7 @@ skill `typescript-linting`
         agent_file.write_text("# Test Agent\n\ntool: grep_search\nskill: python-testing")
 
         warnings, errors = validator.validate_prompt_agent_directories(
-            tmp_path, prompt_dirs=[], agent_dirs=[".github/agents"]
+            tmp_path, prompt_dirs=[], agent_dirs=[Path(".github/agents")]
         )
 
         assert errors == 0
@@ -165,7 +165,7 @@ skill `typescript-linting`
         (tmp_path / "AGENTS.md").write_text("# Agents")
 
         warnings, errors = validator.validate_prompt_agent_directories(
-            tmp_path, prompt_dirs=[".github/prompts"], agent_dirs=[".github/agents"]
+            tmp_path, prompt_dirs=[Path(".github/prompts")], agent_dirs=[Path(".github/agents")]
         )
 
         # Should not error, just skip missing directories

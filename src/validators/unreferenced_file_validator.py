@@ -11,7 +11,7 @@ class UnreferencedFileValidator:
         self.logger = logger
         self.level = LogLevel.from_string(level) if level in ["ERROR", "WARNING", "INFO"] else LogLevel.ERROR
 
-    def find_all_markdown_files(self, directory: str | Path, ignore_dirs: list[str] | None = None) -> list[Path]:
+    def find_all_markdown_files(self, directory: str | Path, ignore_dirs: list[Path] | None = None) -> list[Path]:
         """Find all markdown files in a directory"""
         directory = Path(directory)
         if ignore_dirs is None:
@@ -68,7 +68,7 @@ class UnreferencedFileValidator:
         return references
 
     def get_all_references_in_directory(
-        self, directory: str | Path, ignore_dirs: list[str] | None = None
+        self, directory: Path, ignore_dirs: list[Path] | None = None
     ) -> dict[str, set[str]]:
         """
         Get all file references from all markdown files in a directory
@@ -94,7 +94,7 @@ class UnreferencedFileValidator:
         return all_references
 
     def validate_unreferenced_files(
-        self, project_dir: str | Path, resource_dirs: list[str], ignore_dirs: list[str] | None = None
+        self, project_dir: Path, resource_dirs: list[Path], ignore_dirs: list[Path] | None = None
     ) -> tuple[int, int]:
         """
         Validate that all files in resource directories are referenced in markdown files
@@ -169,7 +169,7 @@ class UnreferencedFileValidator:
                                 self.level,
                                 "unreferenced-resource-file",
                                 f"File '{relative_path}' in resource directory is not referenced in any markdown file",
-                                file_path,
+                                file=relative_path,
                             )
                             if self.level == LogLevel.ERROR:
                                 errors += 1

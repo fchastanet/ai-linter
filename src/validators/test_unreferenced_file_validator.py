@@ -71,7 +71,9 @@ class TestUnreferencedFileValidator:
         md_file = tmp_path / "README.md"
         md_file.write_text("[Link](references/test.txt)")
 
-        warnings, errors = validator.validate_unreferenced_files(tmp_path, resource_dirs=["references"], ignore_dirs=[])
+        warnings, errors = validator.validate_unreferenced_files(
+            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+        )
 
         assert warnings == 0
         assert errors == 0
@@ -88,8 +90,9 @@ class TestUnreferencedFileValidator:
         md_file = tmp_path / "README.md"
         md_file.write_text("# No references here")
 
-        warnings, errors = validator.validate_unreferenced_files(tmp_path, resource_dirs=["references"], ignore_dirs=[])
-
+        warnings, errors = validator.validate_unreferenced_files(
+            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+        )
         assert errors == 1  # Validator is set to ERROR level
         assert warnings == 0
 
@@ -105,7 +108,7 @@ class TestUnreferencedFileValidator:
         md_file.write_text("[Link](references/file.txt)")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=["references", "assets", "scripts"], ignore_dirs=[]
+            tmp_path, resource_dirs=[Path("references"), Path("assets"), Path("scripts")], ignore_dirs=[]
         )
 
         # Should find 2 unreferenced files (in assets and scripts)
@@ -126,7 +129,9 @@ class TestUnreferencedFileValidator:
         md_file = docs_dir / "guide.md"
         md_file.write_text("[Link](../references/test.txt)")
 
-        warnings, errors = validator.validate_unreferenced_files(tmp_path, resource_dirs=["references"], ignore_dirs=[])
+        warnings, errors = validator.validate_unreferenced_files(
+            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+        )
 
         assert warnings == 0
         assert errors == 0
@@ -141,7 +146,7 @@ class TestUnreferencedFileValidator:
         (ignored / "file.txt").write_text("content")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=["references"], ignore_dirs=[".git"]
+            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[Path(".git")]
         )
 
         # Should not find any unreferenced files (ignored)
@@ -160,7 +165,9 @@ class TestUnreferencedFileValidator:
         md_file = tmp_path / "README.md"
         md_file.write_text("# No references")
 
-        warnings, errors = validator.validate_unreferenced_files(tmp_path, resource_dirs=["references"], ignore_dirs=[])
+        warnings, errors = validator.validate_unreferenced_files(
+            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+        )
 
         assert warnings == 1
         assert errors == 0

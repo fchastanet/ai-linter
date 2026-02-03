@@ -21,7 +21,7 @@ class AgentValidator:
         self.parser = parser
         self.file_reference_validator = file_reference_validator
 
-    def validate_agent_file(self, base_dirs: Sequence[str | Path], agent_file: Path) -> tuple[int, int]:
+    def validate_agent_file(self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path) -> tuple[int, int]:
         """Validate a single AGENTS.md file"""
         nb_errors = 0
         nb_warnings = 0
@@ -32,7 +32,7 @@ class AgentValidator:
                 LogLevel.ERROR,
                 "agent-frontmatter-extracted",
                 "AGENTS.md should not contain frontmatter",
-                agent_file,
+                agent_file.relative_to(project_dir),
             )
             nb_errors += 1
 
@@ -41,14 +41,14 @@ class AgentValidator:
                 LogLevel.ERROR,
                 "agent-content-missing",
                 "AGENTS.md content is missing",
-                agent_file,
+                agent_file.relative_to(project_dir),
             )
             nb_errors += 1
             return nb_warnings, nb_errors
 
         line_number = frontmatter_text.count("\n") + 3 if frontmatter_text else 1
         desc_warnings, desc_errors = self.file_reference_validator.validate_content_file_references(
-            base_dirs, agent_file, agent_content, line_number
+            base_dirs, agent_file, agent_content, line_number, project_dir=project_dir
         )
         nb_warnings += desc_warnings
         nb_errors += desc_errors
@@ -59,13 +59,14 @@ class AgentValidator:
             line_number,
             self.MAX_AGENT_CONTENT_TOKEN_COUNT,
             self.MAX_AGENT_CONTENT_LINES_COUNT,
+            project_dir=project_dir,
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
 
         return nb_warnings, nb_errors
 
-    def validate_agents_files(self, project_dir: str | Path, ignore_dirs: Sequence[str | Path] = []) -> tuple[int, int]:
+    def validate_agents_files(self, project_dir: Path, ignore_dirs: Sequence[Path] = []) -> tuple[int, int]:
         """Validate all AGENTS.md files in the project directory"""
         project_dir = Path(project_dir)
         agent_files = list(project_dir.rglob("AGENTS.md"))
@@ -77,11 +78,13 @@ class AgentValidator:
                     LogLevel.DEBUG,
                     "ignoring-agents-file",
                     f"Ignoring AGENTS.md file due to ignore_dirs setting: {ignore_dirs}",
-                    agent_file,
+                    agent_file.relative_to(project_dir),
                 )
                 continue
-            self.logger.log(LogLevel.INFO, "Validating AGENTS.md file: %s", (str(agent_file),))
-            agent_warnings, agent_errors = self.validate_agent_file([agent_file.parent, project_dir], agent_file)
+            self.logger.log(LogLevel.INFO, "Validating AGENTS.md file: %s", (str(agent_file.relative_to(project_dir)),))
+            agent_warnings, agent_errors = self.validate_agent_file(
+                [agent_file.parent, project_dir], agent_file, project_dir
+            )
             nb_warnings += agent_warnings
             nb_errors += agent_errors
         return nb_warnings, nb_errors

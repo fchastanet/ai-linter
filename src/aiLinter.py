@@ -151,7 +151,7 @@ def main() -> None:
                 for skill_dir in dirs:
                     full_skill_dir = os.path.join(skills_dir, skill_dir)
                     if full_skill_dir not in skill_directories:
-                        skill_directories[full_skill_dir] = True
+                        skill_directories[full_skill_dir] = directory
             new_skills_count = len(skill_directories.keys())
             logger.log(
                 LogLevel.INFO,
@@ -176,11 +176,19 @@ def main() -> None:
 
     # process skills
     if args.skills:
-        nb_warnings, nb_errors = process_skills.process_skills(list(skill_directories.keys()))
-        total_warnings += nb_warnings
-        total_errors += nb_errors
+        for skill_dir, project_dir in skill_directories.items():
+            logger.log(
+                LogLevel.INFO,
+                f"Processing skill directory: {skill_dir} (project: {project_dir})",
+            )
 
-    nb_warnings, nb_errors = process_agents.process_agents(list(project_dirs), ignore_dirs)
+            nb_warnings, nb_errors = process_skills.process_skill(Path(skill_dir), Path(project_dir))
+            total_warnings += nb_warnings
+            total_errors += nb_errors
+
+    nb_warnings, nb_errors = process_agents.process_agents(
+        [Path(d) for d in project_dirs], [Path(d) for d in ignore_dirs]
+    )
     total_warnings += nb_warnings
     total_errors += nb_errors
 
@@ -193,21 +201,21 @@ def main() -> None:
 
         # Validate code snippets in all markdown files
         snippet_warnings, snippet_errors = code_snippet_validator.validate_all_markdown_files(
-            project_dir, config.ignore_dirs
+            Path(project_dir), [Path(d) for d in config.ignore_dirs]
         )
         total_warnings += snippet_warnings
         total_errors += snippet_errors
 
         # Validate unreferenced files in resource directories
         unref_warnings, unref_errors = unreferenced_file_validator.validate_unreferenced_files(
-            project_dir, config.resource_dirs, config.ignore_dirs
+            Path(project_dir), [Path(d) for d in config.resource_dirs], [Path(d) for d in config.ignore_dirs]
         )
         total_warnings += unref_warnings
         total_errors += unref_errors
 
         # Validate prompt and agent directories
         prompt_warnings, prompt_errors = prompt_agent_validator.validate_prompt_agent_directories(
-            project_dir, config.prompt_dirs, config.agent_dirs
+            Path(project_dir), [Path(d) for d in config.prompt_dirs], [Path(d) for d in config.agent_dirs]
         )
         total_warnings += prompt_warnings
         total_errors += prompt_errors

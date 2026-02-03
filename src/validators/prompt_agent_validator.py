@@ -56,7 +56,7 @@ class PromptAgentValidator:
 
         return references
 
-    def validate_agents_md_exists(self, project_dir: str | Path) -> tuple[int, int]:
+    def validate_agents_md_exists(self, project_dir: Path) -> tuple[int, int]:
         """Check if AGENTS.md exists in the root directory"""
         project_dir = Path(project_dir)
         agents_md = project_dir / "AGENTS.md"
@@ -132,7 +132,7 @@ class PromptAgentValidator:
         return skills
 
     def validate_prompt_or_agent_file(
-        self, file_path: str | Path, project_dir: str | Path
+        self, file_path: str | Path, project_dir: Path
     ) -> tuple[int, int, dict[str, Any]]:
         """
         Validate a single prompt or agent file
@@ -230,7 +230,7 @@ class PromptAgentValidator:
         return warnings, errors, metadata
 
     def validate_prompt_agent_directories(
-        self, project_dir: str | Path, prompt_dirs: list[str], agent_dirs: list[str]
+        self, project_dir: Path, prompt_dirs: list[Path], agent_dirs: list[Path]
     ) -> tuple[int, int]:
         """
         Validate all files in prompt and agent directories

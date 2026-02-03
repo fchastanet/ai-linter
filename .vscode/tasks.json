@@ -17,7 +17,7 @@
       "group": "test",
       "problemMatcher": {
         "owner": "ai-linter",
-        "fileLocation": "absolute",
+        "fileLocation": "relative",
         "pattern": {
           "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
           "file": 3,
@@ -35,7 +35,7 @@
       "group": "test",
       "problemMatcher": {
         "owner": "ai-linter",
-        "fileLocation": "absolute",
+        "fileLocation": "relative",
         "pattern": {
           "regexp": "^level=\"(WARNING|ERROR)\"\\s+rule=\"([^\"]+)\"\\s+path=\"([^\"]+)\"(?:\\s+line=\"(\\d+)\")?\\s+message=\"([^\"]+)\"",
           "file": 3,

@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from lib.log import Logger, LogLevel
@@ -31,7 +30,7 @@ class SkillValidator:
         self.file_ref_validator = file_ref_validator
         self.front_matter_validator = front_matter_validator
 
-    def validate_skill(self, skill_path: str | Path) -> tuple[int, int]:
+    def validate_skill(self, skill_path: Path, project_dir: Path) -> tuple[int, int]:
         """Basic validation of a skill"""
         skill_path = Path(skill_path)
         project_root_dir = self.deduce_project_root_dir_from_skill_dir(skill_path)
@@ -73,19 +72,20 @@ class SkillValidator:
             frontmatter,
             skill_md,
             self.ALLOWED_PROPERTIES,
+            project_dir=project_dir,
             line_number=line_number,
         )
         nb_warnings += prop_warnings
         nb_errors += prop_errors
 
         name_warnings, name_errors = self.front_matter_validator.validate_name(
-            frontmatter, skill_md, frontmatter_text, skill_path, line_number=line_number
+            frontmatter, skill_md, frontmatter_text, skill_path, project_dir=project_dir, line_number=line_number
         )
         nb_warnings += name_warnings
         nb_errors += name_errors
 
         desc_warnings, desc_errors = self.front_matter_validator.validate_description(
-            frontmatter, skill_md, frontmatter_text, line_number=line_number
+            frontmatter, skill_md, frontmatter_text, project_dir=project_dir, line_number=line_number
         )
         nb_warnings += desc_warnings
         nb_errors += desc_errors
@@ -100,21 +100,26 @@ class SkillValidator:
             line_number,
             self.MAX_SKILL_CONTENT_TOKEN_COUNT,
             self.MAX_SKILL_CONTENT_LINES_COUNT,
+            project_dir=project_dir,
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
 
         # Validate file references in skill content
         nb_warnings_ref, nb_errors_ref = self.file_ref_validator.validate_content_file_references(
-            [skill_path, project_root_dir], skill_path, skill_content, line_number
+            [skill_path, project_root_dir],
+            skill_md,
+            skill_content,
+            line_number,
+            project_dir=project_dir,
         )
         nb_warnings += nb_warnings_ref
         nb_errors += nb_errors_ref
 
         return nb_warnings, nb_errors
 
-    def deduce_project_root_dir_from_skill_dir(self, skill_dir: str | Path) -> str:
+    def deduce_project_root_dir_from_skill_dir(self, skill_dir: str | Path) -> Path:
         """Deduces the project root directory from a skill directory"""
         skill_path = Path(skill_dir)
         # Assume project root is three levels up from skill directory
-        return os.path.realpath(skill_path.parent.parent.parent)
+        return skill_path.parent.parent.parent.resolve()

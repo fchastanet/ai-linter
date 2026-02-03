@@ -10,7 +10,12 @@ class FileReferenceValidator:
         self.logger = logger
 
     def validate_content_file_references(
-        self, base_dirs: Sequence[str | Path], file: Path, content: str, content_start_line_number: int
+        self,
+        base_dirs: Sequence[Path],
+        file: Path,
+        content: str,
+        content_start_line_number: int,
+        project_dir: Path,
     ) -> tuple[int, int]:
         """Parse content to extract file links (if any)"""
         file_links: dict[str, bool] = {}
@@ -22,7 +27,7 @@ class FileReferenceValidator:
                 LogLevel.DEBUG,
                 "file-link-found",
                 f"Found file link: {link}",
-                file,
+                file=file.relative_to(project_dir),
             )
             # check if it seems like a file path (i.e., contains at least one /)
             # Regex: at least one /, and no * or ?
@@ -33,13 +38,15 @@ class FileReferenceValidator:
                     f"Validating file link: {link}",
                 )
                 file_links[link] = True
-                if not self._validate_file_link(base_dirs, file, content, m, link, content_start_line_number):
+                if not self._validate_file_link(
+                    base_dirs, file, content, m, link, content_start_line_number, project_dir
+                ):
                     file_error_count += 1
 
         return file_warning_count, file_error_count
 
     def validate_content_length(
-        self, content: str, file: str | Path, line_number: int, max_tokens: int, max_lines: int
+        self, content: str, file: Path, line_number: int, max_tokens: int, max_lines: int, project_dir: Path
     ) -> tuple[int, int]:
         """Validate the length of the content"""
         nb_warnings = 0
@@ -51,7 +58,7 @@ class FileReferenceValidator:
                 LogLevel.WARNING,
                 "too-complex-content",
                 f"Content is too complex ({token_count}/{max_tokens} tokens).",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_warnings += 1
@@ -60,7 +67,7 @@ class FileReferenceValidator:
                 LogLevel.INFO,
                 "content-complexity",
                 f"Content token count: {token_count}/{max_tokens} tokens.",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
 
@@ -71,7 +78,7 @@ class FileReferenceValidator:
                 LogLevel.ERROR,
                 "too-many-lines",
                 f"Content has too many lines ({line_count}/{max_lines} lines).",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
@@ -80,12 +87,13 @@ class FileReferenceValidator:
 
     def _validate_file_link(
         self,
-        base_dirs: Sequence[str | Path],
-        file: str | Path,
+        base_dirs: Sequence[Path],
+        file: Path,
         content: str,
         match: re.Match[str],
         link: str,
         content_start_line_number: int,
+        project_dir: Path,
     ) -> bool:
         """Validate that a file link exists relative to base directories"""
         # Determine line number of the link
@@ -93,7 +101,7 @@ class FileReferenceValidator:
         line_number = content.count("\n", 0, start_pos) + 1 + content_start_line_number
         # Check if the file exists relative to any of the base directories
         for base_dir in base_dirs:
-            file_path = Path(base_dir) / link
+            file_path = base_dir / link
             if file_path.exists():
                 return True
 
@@ -101,7 +109,7 @@ class FileReferenceValidator:
             LogLevel.ERROR,
             "file-link-not-found",
             f"File link '{link}' not found in any of the base directories: {base_dirs}",
-            file,
+            file=file.relative_to(project_dir),
             line_number=line_number,
         )
         return False

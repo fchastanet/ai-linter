@@ -17,7 +17,7 @@ class FrontMatterValidator:
         self.parser = parser
 
     def validate_keys(
-        self, frontmatter: dict, file: str | Path, allowed_keys: set[str], line_number: int = 1
+        self, frontmatter: dict, file: Path, allowed_keys: set[str], project_dir: Path, line_number: int = 1
     ) -> tuple[int, int]:
         """Validate that frontmatter contains only allowed keys"""
         unexpected_keys = set(frontmatter.keys()) - allowed_keys
@@ -26,7 +26,7 @@ class FrontMatterValidator:
                 LogLevel.WARNING,
                 "unexpected-properties",
                 f"Unexpected key(s) in frontmatter: {', '.join(sorted(unexpected_keys))}. ",
-                file=file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
                 detail=f"Allowed properties are: {', '.join(sorted(allowed_keys))}",
             )
@@ -34,7 +34,13 @@ class FrontMatterValidator:
         return 0, 0
 
     def validate_name(
-        self, frontmatter: dict, file: str | Path, frontmatter_text: str, file_path: Path, line_number: int = 2
+        self,
+        frontmatter: dict,
+        file: Path,
+        frontmatter_text: str,
+        file_path: Path,
+        project_dir: Path,
+        line_number: int = 2,
     ) -> tuple[int, int]:
         # Check required fields
         if "name" not in frontmatter:
@@ -42,7 +48,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "missing-name",
                 "Missing 'name' in frontmatter",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -54,7 +60,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-name-type",
                 f"Name must be a string, got {type(name).__name__}",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -67,7 +73,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "empty-name",
                 "Name in frontmatter cannot be empty",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -79,7 +85,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-name-format",
                 f"Name '{name}' should be hyphen-case (lowercase letters, digits, and hyphens only)",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
@@ -89,7 +95,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-name-format",
                 f"Name '{name}' cannot start/end with hyphen or contain consecutive hyphens",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
@@ -100,7 +106,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-name-length",
                 f"Name is too long ({len(name)}/{self.MAX_NAME_LENGTH} characters).",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
@@ -111,7 +117,7 @@ class FrontMatterValidator:
                 LogLevel.WARNING,
                 "name-directory-mismatch",
                 f"Name '{name}' does not match directory name '{file_path.name}'",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_warnings += 1
@@ -119,7 +125,7 @@ class FrontMatterValidator:
         return nb_warnings, nb_errors
 
     def validate_description(
-        self, frontmatter: dict, file: str | Path, frontmatter_text: str, line_number: int = 1
+        self, frontmatter: dict, file: Path, frontmatter_text: str, project_dir: Path, line_number: int = 1
     ) -> tuple[int, int]:
         """Validate the description field in frontmatter"""
         nb_warnings = 0
@@ -129,7 +135,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "missing-description",
                 "Missing 'description' in frontmatter",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -140,7 +146,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-description-type",
                 f"Description must be a string, got {type(frontmatter['description']).__name__}",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -151,7 +157,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "empty-description",
                 "Description in frontmatter cannot be empty",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -162,7 +168,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-description-format",
                 "Description cannot contain angle brackets (< or >)",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
@@ -173,7 +179,7 @@ class FrontMatterValidator:
                 LogLevel.ERROR,
                 "invalid-description-length",
                 f"Description is too long ({len(description)}/{self.MAX_DESCRIPTION_LENGTH} characters).",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
@@ -182,7 +188,7 @@ class FrontMatterValidator:
                 LogLevel.INFO,
                 "description-length",
                 f"Description length: {len(description)}/{self.MAX_DESCRIPTION_LENGTH} characters.",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
 
