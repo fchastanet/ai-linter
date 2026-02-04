@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from lib.config import Config
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator

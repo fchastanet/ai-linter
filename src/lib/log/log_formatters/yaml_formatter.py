@@ -5,9 +5,9 @@ from typing import Any
 
 import yaml
 
-from lib.log_format import LogFormat
-from lib.log_formatters.base_log_formatter import BaseLogFormatter
-from lib.log_formatters.rule_message import RuleMessage
+from lib.log.log_format import LogFormat
+from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
+from lib.log.log_formatters.rule_message import RuleMessage
 
 
 class YamlFormatter(BaseLogFormatter):

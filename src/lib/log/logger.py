@@ -3,10 +3,10 @@ import sys
 from pathlib import Path
 from typing import Any, Mapping, Tuple, Union
 
-from lib.log_format import LogFormat
-from lib.log_formatters.formatter_factory import LogFormatterFactory
-from lib.log_formatters.rule_message import RuleMessage
-from lib.log_level import LogLevel
+from lib.log.log_format import LogFormat
+from lib.log.log_formatters.formatter_factory import LogFormatterFactory
+from lib.log.log_formatters.rule_message import RuleMessage
+from lib.log.log_level import LogLevel
 
 
 class CustomFormatter(logging.Formatter):

@@ -1,4 +1,4 @@
-from lib.log_level import LogLevel
+from lib.log.log_level import LogLevel
 
 
 class RuleMessage:

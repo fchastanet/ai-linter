@@ -2,10 +2,9 @@
 
 import pytest
 
-from lib.log import LogLevel
-from lib.log_format import LogFormat
-from lib.log_formatters.logfmt_formatter import LogfmtFormatter
-from lib.log_formatters.rule_message import RuleMessage
+from lib.log.log_formatters.logfmt_formatter import LogfmtFormatter
+from lib.log.log_formatters.rule_message import RuleMessage
+from lib.log.logger import LogFormat, LogLevel
 
 
 class TestLogfmtFormatter:

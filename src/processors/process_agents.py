@@ -2,7 +2,7 @@ import fnmatch
 from pathlib import Path
 from typing import Sequence, Tuple
 
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 from lib.parser import Parser
 from validators.agent_validator import AgentValidator
 

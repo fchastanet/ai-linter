@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Tuple
 
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 from lib.parser import Parser
 from validators.skill_validator import SkillValidator
 

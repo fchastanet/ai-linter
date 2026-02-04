@@ -1,10 +1,10 @@
 """Factory for creating log formatters"""
 
-from lib.log_format import LogFormat
-from lib.log_formatters.base_log_formatter import BaseLogFormatter
-from lib.log_formatters.file_digest_formatter import FileDigestFormatter
-from lib.log_formatters.logfmt_formatter import LogfmtFormatter
-from lib.log_formatters.yaml_formatter import YamlFormatter
+from lib.log.log_format import LogFormat
+from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
+from lib.log.log_formatters.file_digest_formatter import FileDigestFormatter
+from lib.log.log_formatters.logfmt_formatter import LogfmtFormatter
+from lib.log.log_formatters.yaml_formatter import YamlFormatter
 
 
 class LogFormatterFactory:

@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 
-from lib.log_format import LogFormat
-from lib.log_formatters.rule_message import RuleMessage
+from lib.log.log_format import LogFormat
+from lib.log.log_formatters.rule_message import RuleMessage
 
 
 class BaseLogFormatter(ABC):

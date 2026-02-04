@@ -21,7 +21,7 @@ class TestAILinter(unittest.TestCase):
         """Test that main modules can be imported"""
         try:
             from lib.config import load_config  # noqa: F401
-            from lib.log import Logger  # noqa: F401
+            from lib.log.logger import Logger  # noqa: F401
             from lib.parser import Parser  # noqa: F401
             from validators.agent_validator import AgentValidator  # noqa: F401
             from validators.skill_validator import SkillValidator  # noqa: F401

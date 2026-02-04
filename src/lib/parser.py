@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 
 
 class Parser:

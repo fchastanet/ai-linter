@@ -3,8 +3,8 @@ from argparse import Namespace
 
 import yaml
 
-from lib.log import Logger, LogLevel
-from lib.log_format import LogFormat
+from lib.log.log_format import LogFormat
+from lib.log.logger import Logger, LogLevel
 
 
 class Config:

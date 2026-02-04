@@ -9,8 +9,9 @@ import sys
 from pathlib import Path
 
 from lib.config import load_config
-from lib.log import Logger, LogLevel
-from lib.log_format import LogFormat
+from lib.log.log_format import LogFormat
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from lib.parser import Parser
 from processors.process_agents import ProcessAgents
 from processors.process_skills import ProcessSkills

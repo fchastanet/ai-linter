@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
 from validators.prompt_agent_validator import PromptAgentValidator

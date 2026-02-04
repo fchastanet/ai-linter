@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 

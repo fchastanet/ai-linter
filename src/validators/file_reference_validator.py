@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Sequence
 
-from lib.log import Logger, LogLevel
+from lib.log.logger import Logger, LogLevel
 
 
 class FileReferenceValidator:

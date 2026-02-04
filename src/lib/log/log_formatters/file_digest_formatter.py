@@ -2,10 +2,10 @@
 
 from collections import defaultdict
 
-from lib.log_format import LogFormat
-from lib.log_formatters.base_log_formatter import BaseLogFormatter
-from lib.log_formatters.rule_message import RuleMessage
-from lib.log_level import RESET
+from lib.log.log_format import LogFormat
+from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
+from lib.log.log_formatters.rule_message import RuleMessage
+from lib.log.log_level import RESET
 
 
 class FileDigestFormatter(BaseLogFormatter):
