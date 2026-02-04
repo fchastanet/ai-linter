@@ -50,8 +50,8 @@ def main() -> None:
     arg_parser.add_argument(
         "--max-warnings",
         type=int,
-        default=float("inf"),
-        help="Maximum number of warnings allowed before failing",
+        default=-1,
+        help="Maximum number of warnings allowed before failing, -1 for unlimited",
     )
     arg_parser.add_argument(
         "--ignore-dirs",
@@ -99,7 +99,7 @@ def main() -> None:
     ignore_dirs = [".git", "__pycache__"]
 
     # max warnings
-    max_warnings = float(args.max_warnings) if args.max_warnings is not None else float("inf")
+    max_warnings = int(args.max_warnings) if args.max_warnings is not None else -1
 
     # unique directories
     args.directories = list(set(args.directories))

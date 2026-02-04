@@ -13,7 +13,7 @@ class Config:
     def __init__(self) -> None:
         self.log_level: LogLevel = LogLevel.INFO
         self.log_format: LogFormat = LogFormat.FILE_DIGEST
-        self.max_warnings: float = float("inf")
+        self.max_warnings: int = -1
         self.ignore_dirs: list[str] = [".git", "__pycache__"]
         self.code_snippet_max_lines: int = 3
         self.prompt_dirs: list[str] = [".github/prompts"]
@@ -30,8 +30,8 @@ def load_config(
     log_level: LogLevel,
     log_format: LogFormat,
     ignore_dirs: list[str],
-    max_warnings: float,
-) -> tuple[list[str], LogLevel, LogFormat, float, Config]:
+    max_warnings: int,
+) -> tuple[list[str], LogLevel, LogFormat, int, Config]:
     """Load configuration from a YAML file"""
     config_obj = Config()
     config_obj.log_level = log_level
