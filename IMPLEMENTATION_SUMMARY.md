@@ -145,7 +145,7 @@ ______________________________________________________________________
 
 ### 2.5. ✅ Main CLI Integration
 
-**File Modified**: `src/aiLinter.py`
+**File Modified**: `src/ai_linter.py`
 
 **Changes**:
 
@@ -226,7 +226,7 @@ Status: All passing
 ### 4.3. Integration Test
 
 ```text
-$ python src/aiLinter.py . --log-level INFO
+$ python src/ai_linter.py . --log-level INFO
 Total warnings: 35, Total errors: 0
 Exit code: 1 (warnings > max_warnings)
 ```
@@ -265,7 +265,7 @@ ______________________________________________________________________
 ### 6.2. Modified (3 files)
 
 1. `src/lib/config.py` - Enhanced configuration system
-2. `src/aiLinter.py` - Integrated new validators
+2. `src/ai_linter.py` - Integrated new validators
 3. `.ai-linter-config.yaml` - Added new options
 
 ______________________________________________________________________

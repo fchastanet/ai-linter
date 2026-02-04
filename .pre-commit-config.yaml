@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: ai-linter-local
         name: AI Linter (Local)
-        entry: python src/aiLinter.py --skills .
+        entry: python src/ai_linter.py --skills .
         language: python
         types: [markdown]
         files: ^(.*/)?(SKILL|AGENTS)\.md$

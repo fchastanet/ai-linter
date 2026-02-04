@@ -55,7 +55,7 @@ Before creating a release, ensure you have:
 Check that the version is correctly set in:
 
 - [ ] `pyproject.toml` - `[project]` section `version` field
-- [ ] `src/aiLinter.py` - `AI_LINTER_VERSION` constant
+- [ ] `src/ai_linter.py` - `AI_LINTER_VERSION` constant
 
 ### 2.2. Documentation Updates
 
@@ -105,7 +105,7 @@ Update the version in both files:
 # In pyproject.toml
 version = "0.2.0"
 
-# In src/aiLinter.py
+# In src/ai_linter.py
 AI_LINTER_VERSION = "0.2.0"
 ```
 
@@ -132,7 +132,7 @@ Add a new section for the release:
 ### 4.5. Step 4: Commit Changes
 
 ```bash
-git add pyproject.toml src/aiLinter.py CHANGELOG.md
+git add pyproject.toml src/ai_linter.py CHANGELOG.md
 git commit -m "chore: bump version to v0.2.0"
 git push origin main
 ```
@@ -213,7 +213,7 @@ twine upload dist/*
 Optionally bump to the next development version:
 
 ```bash
-# In pyproject.toml and aiLinter.py
+# In pyproject.toml and src/ai_linter.py
 version = "0.3.0-dev"
 AI_LINTER_VERSION = "0.3.0-dev"
 

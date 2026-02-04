@@ -2,7 +2,7 @@ import os
 import sys
 import unittest
 
-from aiLinter import AI_LINTER_VERSION
+from ai_linter import AI_LINTER_VERSION
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))

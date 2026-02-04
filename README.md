@@ -188,7 +188,7 @@ Add the following task to your `.vscode/tasks.json`:
 ## 4. Command help
 
 ```text
-usage: aiLinter.py [-h]
+usage: ai-linter [-h]
           [--skills]
           [--max-warnings MAX_WARNINGS]
           [--ignore-dirs IGNORE_DIRS [IGNORE_DIRS ...]]
@@ -230,7 +230,7 @@ ai-linter /path/to/directory
 ai-linter --skills /path/to/skills/directory
 
 # Using the Python module directly
-python src/aiLinter.py --skills examples/
+python src/ai_linter.py --skills examples/
 ```
 
 ### 5.2. Advanced Options
