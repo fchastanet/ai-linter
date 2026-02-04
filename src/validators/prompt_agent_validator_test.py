@@ -29,7 +29,7 @@ class TestPromptAgentValidator:
         self, logger: Logger, parser: Parser, file_ref_validator: FileReferenceValidator
     ) -> PromptAgentValidator:
         """Create a prompt/agent validator"""
-        return PromptAgentValidator(logger, parser, file_ref_validator, missing_agents_level="WARNING")
+        return PromptAgentValidator(logger, parser, file_ref_validator, missing_agents_level=LogLevel.WARNING)
 
     def test_agents_md_missing(self, validator: PromptAgentValidator, tmp_path: Path) -> None:
         """Test detection of missing AGENTS.md"""

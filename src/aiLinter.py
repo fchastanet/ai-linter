@@ -33,10 +33,7 @@ logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
 parser = Parser(logger)
 file_reference_validator = FileReferenceValidator(logger)
 front_matter_validator = FrontMatterValidator(logger, parser)
-skill_validator = SkillValidator(logger, parser, file_reference_validator, front_matter_validator)
 agent_validator = AgentValidator(logger, parser, file_reference_validator)
-process_skills = ProcessSkills(logger, parser, skill_validator)
-process_agents = ProcessAgents(logger, parser, agent_validator)
 
 
 def main() -> None:
@@ -117,7 +114,12 @@ def main() -> None:
     logger.set_level(log_level)
     logger.set_format(log_format)
     code_snippet_validator = CodeSnippetValidator(logger, config.code_snippet_max_lines)
-    unreferenced_file_validator = UnreferencedFileValidator(logger, config.unreferenced_file_level)
+    unreferenced_file_validator = UnreferencedFileValidator(logger)
+    skill_validator = SkillValidator(
+        logger, parser, file_reference_validator, front_matter_validator, unreferenced_file_validator, config
+    )
+    process_skills = ProcessSkills(logger, parser, skill_validator)
+    process_agents = ProcessAgents(logger, parser, agent_validator)
     prompt_agent_validator = PromptAgentValidator(
         logger, parser, file_reference_validator, config.missing_agents_file_level
     )
@@ -205,13 +207,6 @@ def main() -> None:
         )
         total_warnings += snippet_warnings
         total_errors += snippet_errors
-
-        # Validate unreferenced files in resource directories
-        unref_warnings, unref_errors = unreferenced_file_validator.validate_unreferenced_files(
-            Path(project_dir), [Path(d) for d in config.resource_dirs], [Path(d) for d in config.ignore_dirs]
-        )
-        total_warnings += unref_warnings
-        total_errors += unref_errors
 
         # Validate prompt and agent directories
         prompt_warnings, prompt_errors = prompt_agent_validator.validate_prompt_agent_directories(

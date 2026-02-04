@@ -7,9 +7,8 @@ from lib.log import Logger, LogLevel
 class UnreferencedFileValidator:
     """Validator to check that all files in resource directories are referenced in .md files"""
 
-    def __init__(self, logger: Logger, level: str = "ERROR"):
+    def __init__(self, logger: Logger):
         self.logger = logger
-        self.level = LogLevel.from_string(level) if level in ["ERROR", "WARNING", "INFO"] else LogLevel.ERROR
 
     def find_all_markdown_files(self, directory: str | Path, ignore_dirs: list[Path] | None = None) -> list[Path]:
         """Find all markdown files in a directory"""
@@ -94,12 +93,18 @@ class UnreferencedFileValidator:
         return all_references
 
     def validate_unreferenced_files(
-        self, project_dir: Path, resource_dirs: list[Path], ignore_dirs: list[Path] | None = None
+        self,
+        project_dir: Path,
+        relative_to: Path,
+        resource_dirs: list[Path],
+        ignore_dirs: list[Path] | None = None,
+        level: LogLevel = LogLevel.ERROR,
     ) -> tuple[int, int]:
         """
         Validate that all files in resource directories are referenced in markdown files
         Returns tuple of (warning_count, error_count)
         """
+
         project_dir = Path(project_dir)
         if ignore_dirs is None:
             ignore_dirs = []
@@ -147,13 +152,21 @@ class UnreferencedFileValidator:
 
             # Find all files in resource directory
             for file_path in resource_path.rglob("*"):
+                self.logger.log(
+                    LogLevel.DEBUG,
+                    f"Checking file: {file_path} against references: {all_referenced_files}",
+                )
                 if file_path.is_file():
                     # Skip ignored directories
-                    if any(ignored in file_path.parts for ignored in ignore_dirs):
+                    if any(str(ignored) in file_path.parts for ignored in ignore_dirs):
                         continue
 
+                    self.logger.log(
+                        LogLevel.DEBUG,
+                        f"Checking non ignored file: {file_path} against references: {all_referenced_files}",
+                    )
                     try:
-                        relative_path = file_path.relative_to(project_dir)
+                        relative_path = file_path.relative_to(relative_to)
                         relative_path_str = str(relative_path)
 
                         # Check if this file is referenced
@@ -165,15 +178,18 @@ class UnreferencedFileValidator:
                                 break
 
                         if not is_referenced:
+                            file_path_relative_to_project = file_path.relative_to(project_dir)
+                            project_dir_relative = project_dir.relative_to(relative_to)
                             self.logger.logRule(
-                                self.level,
+                                level,
                                 "unreferenced-resource-file",
-                                f"File '{relative_path}' in resource directory is not referenced in any markdown file",
+                                f"File '{file_path_relative_to_project}' in resource directory is not referenced"
+                                f" in any markdown file of the directory {project_dir_relative}.",
                                 file=relative_path,
                             )
-                            if self.level == LogLevel.ERROR:
+                            if level == LogLevel.ERROR:
                                 errors += 1
-                            elif self.level == LogLevel.WARNING:
+                            elif level == LogLevel.WARNING:
                                 warnings += 1
 
                     except ValueError:

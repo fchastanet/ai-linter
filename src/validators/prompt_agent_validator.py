@@ -18,16 +18,12 @@ class PromptAgentValidator:
         logger: Logger,
         parser: Parser,
         file_ref_validator: FileReferenceValidator,
-        missing_agents_level: str = "WARNING",
+        missing_agents_level: LogLevel = LogLevel.WARNING,
     ):
         self.logger = logger
         self.parser = parser
         self.file_ref_validator = file_ref_validator
-        self.missing_agents_level = (
-            LogLevel.from_string(missing_agents_level)
-            if missing_agents_level in ["ERROR", "WARNING", "INFO"]
-            else LogLevel.WARNING
-        )
+        self.missing_agents_level = missing_agents_level
 
     def extract_file_references(self, content: str) -> set[str]:
         """Extract file references from markdown content"""

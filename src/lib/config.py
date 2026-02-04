@@ -19,8 +19,8 @@ class Config:
         self.prompt_dirs: list[str] = [".github/prompts"]
         self.agent_dirs: list[str] = [".github/agents"]
         self.resource_dirs: list[str] = ["references", "assets", "scripts"]
-        self.unreferenced_file_level: str = "ERROR"  # Can be ERROR, WARNING, or INFO
-        self.missing_agents_file_level: str = "WARNING"  # Level for missing AGENTS.md
+        self.unreferenced_file_level: LogLevel = LogLevel.ERROR  # Can be ERROR, WARNING, or INFO
+        self.missing_agents_file_level: LogLevel = LogLevel.WARNING  # Level for missing AGENTS.md
 
 
 def load_config(
@@ -50,8 +50,7 @@ def load_config(
                         and "log_level" in config
                         and config["log_level"] in [level.name for level in LogLevel]
                     ):
-                        log_level = LogLevel.from_string(config["log_level"])
-                        config_obj.log_level = log_level
+                        config_obj.log_level = getLogLevelFromString(config["log_level"], LogLevel.INFO)
                     logger.set_level(log_level)
                     logger.log(
                         LogLevel.INFO,
@@ -119,14 +118,18 @@ def load_config(
                         )
 
                     if "unreferenced_file_level" in config and isinstance(config["unreferenced_file_level"], str):
-                        config_obj.unreferenced_file_level = config["unreferenced_file_level"].upper()
+                        config_obj.unreferenced_file_level = getLogLevelFromString(
+                            config["unreferenced_file_level"], LogLevel.ERROR
+                        )
                         logger.log(
                             LogLevel.INFO,
                             f"Unreferenced file level set to {config_obj.unreferenced_file_level} from config file",
                         )
 
                     if "missing_agents_file_level" in config and isinstance(config["missing_agents_file_level"], str):
-                        config_obj.missing_agents_file_level = config["missing_agents_file_level"].upper()
+                        config_obj.missing_agents_file_level = getLogLevelFromString(
+                            config["missing_agents_file_level"], LogLevel.WARNING
+                        )
                         logger.log(
                             LogLevel.INFO,
                             "Missing AGENTS.md file level set to "
@@ -155,3 +158,9 @@ def load_config(
         )
 
     return ignore_dirs, log_level, log_format, max_warnings, config_obj
+
+
+def getLogLevelFromString(levelStr: str, default: LogLevel) -> LogLevel:
+    """Convert string to LogLevel, with default fallback"""
+    levelStr = levelStr.upper()
+    return LogLevel.from_string(levelStr) if levelStr in ["ERROR", "WARNING", "INFO"] else default

@@ -15,7 +15,7 @@ class TestUnreferencedFileValidator:
     @pytest.fixture
     def validator(self, logger: Logger) -> UnreferencedFileValidator:
         """Create a validator"""
-        return UnreferencedFileValidator(logger, level="ERROR")
+        return UnreferencedFileValidator(logger)
 
     def test_extract_markdown_links(self, validator: UnreferencedFileValidator) -> None:
         """Test extracting markdown links"""
@@ -72,7 +72,7 @@ class TestUnreferencedFileValidator:
         md_file.write_text("[Link](references/test.txt)")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
         )
 
         assert warnings == 0
@@ -91,7 +91,7 @@ class TestUnreferencedFileValidator:
         md_file.write_text("# No references here")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
         )
         assert errors == 1  # Validator is set to ERROR level
         assert warnings == 0
@@ -108,7 +108,10 @@ class TestUnreferencedFileValidator:
         md_file.write_text("[Link](references/file.txt)")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=[Path("references"), Path("assets"), Path("scripts")], ignore_dirs=[]
+            tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references"), Path("assets"), Path("scripts")],
+            ignore_dirs=[],
         )
 
         # Should find 2 unreferenced files (in assets and scripts)
@@ -130,7 +133,7 @@ class TestUnreferencedFileValidator:
         md_file.write_text("[Link](../references/test.txt)")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
         )
 
         assert warnings == 0
@@ -146,7 +149,11 @@ class TestUnreferencedFileValidator:
         (ignored / "file.txt").write_text("content")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[Path(".git")]
+            tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            ignore_dirs=[Path(".git")],
+            level=LogLevel.ERROR,
         )
 
         # Should not find any unreferenced files (ignored)
@@ -155,7 +162,7 @@ class TestUnreferencedFileValidator:
 
     def test_warning_level(self, logger: Logger, tmp_path: Path) -> None:
         """Test validator with WARNING level"""
-        validator = UnreferencedFileValidator(logger, level="WARNING")
+        validator = UnreferencedFileValidator(logger)
 
         # Create unreferenced file
         ref_dir = tmp_path / "references"
@@ -166,7 +173,7 @@ class TestUnreferencedFileValidator:
         md_file.write_text("# No references")
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[], level=LogLevel.WARNING
         )
 
         assert warnings == 1
