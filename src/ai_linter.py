@@ -8,6 +8,7 @@ import os
 import sys
 from pathlib import Path
 
+from lib.ai.stats import AiStats
 from lib.config import load_config
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
@@ -32,7 +33,8 @@ AI_LINTER_CONFIG_FILE = ".ai-linter-config.yaml"
 
 logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
 parser = Parser(logger)
-file_reference_validator = FileReferenceValidator(logger)
+ai_stats = AiStats(logger)
+file_reference_validator = FileReferenceValidator(logger, ai_stats)
 front_matter_validator = FrontMatterValidator(logger, parser)
 agent_validator = AgentValidator(logger, parser, file_reference_validator)
 
@@ -121,8 +123,9 @@ def main() -> None:
     )
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
+    ai_stats = AiStats(logger)
     prompt_agent_validator = PromptAgentValidator(
-        logger, parser, file_reference_validator, config.missing_agents_file_level
+        logger, parser, file_reference_validator, ai_stats, config.missing_agents_file_level
     )
 
     # start processing

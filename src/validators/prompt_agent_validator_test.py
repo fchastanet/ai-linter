@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from lib.ai.stats import AiStats
 from lib.log.logger import Logger, LogLevel
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
@@ -22,14 +23,16 @@ class TestPromptAgentValidator:
     @pytest.fixture
     def file_ref_validator(self, logger: Logger) -> FileReferenceValidator:
         """Create a file reference validator"""
-        return FileReferenceValidator(logger)
+        ai_stats = AiStats(logger)
+        return FileReferenceValidator(logger, ai_stats)
 
     @pytest.fixture
     def validator(
         self, logger: Logger, parser: Parser, file_ref_validator: FileReferenceValidator
     ) -> PromptAgentValidator:
         """Create a prompt/agent validator"""
-        return PromptAgentValidator(logger, parser, file_ref_validator, missing_agents_level=LogLevel.WARNING)
+        ai_stats = AiStats(logger)
+        return PromptAgentValidator(logger, parser, file_ref_validator, ai_stats, missing_agents_level=LogLevel.WARNING)
 
     def test_agents_md_missing(self, validator: PromptAgentValidator, tmp_path: Path) -> None:
         """Test detection of missing AGENTS.md"""

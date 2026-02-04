@@ -2,12 +2,14 @@ import re
 from pathlib import Path
 from typing import Sequence
 
+from lib.ai.stats import AiStats
 from lib.log.logger import Logger, LogLevel
 
 
 class FileReferenceValidator:
-    def __init__(self, logger: Logger):
+    def __init__(self, logger: Logger, aiStats: AiStats):
         self.logger = logger
+        self.aiStats = aiStats
 
     def validate_content_file_references(
         self,
@@ -52,7 +54,7 @@ class FileReferenceValidator:
         nb_warnings = 0
         nb_errors = 0
         # Check content token count
-        token_count = self._compute_token_count_accurate(content)
+        token_count = self.aiStats.compute_token_count_accurate(content)
         if token_count > max_tokens:
             self.logger.logRule(
                 LogLevel.WARNING,
@@ -113,19 +115,3 @@ class FileReferenceValidator:
             line_number=line_number,
         )
         return False
-
-    def _compute_token_count_accurate(self, text: str) -> int:
-        """Compute token count for a given text using tiktoken if available"""
-        try:
-            import tiktoken  # pyright: ignore[reportMissingImports]
-
-            encoder = tiktoken.get_encoding("cl100k_base")
-            tokens = encoder.encode(text)
-            return len(tokens)
-        except ImportError:
-            self.logger.log(
-                LogLevel.WARNING,
-                "tiktoken not found, using naive token count approximation.",
-            )
-            # Fallback to naive approximation if tiktoken is not available
-            return len(text) // 4

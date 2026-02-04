@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 from typing import Any
 
+from lib.ai.stats import AiStats
 from lib.log.logger import Logger, LogLevel
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
@@ -18,12 +19,14 @@ class PromptAgentValidator:
         logger: Logger,
         parser: Parser,
         file_ref_validator: FileReferenceValidator,
+        ai_stats: AiStats,
         missing_agents_level: LogLevel = LogLevel.WARNING,
     ):
         self.logger = logger
         self.parser = parser
         self.file_ref_validator = file_ref_validator
         self.missing_agents_level = missing_agents_level
+        self.ai_stats = ai_stats
 
     def extract_file_references(self, content: str) -> set[str]:
         """Extract file references from markdown content"""
@@ -158,7 +161,7 @@ class PromptAgentValidator:
         # Check token count and line count
         lines = content.split("\n")
         line_count = len(lines)
-        token_count = len(content.split())  # Simple token count approximation
+        token_count = self.ai_stats.compute_token_count_accurate(content)
 
         metadata["line_count"] = line_count
         metadata["token_count"] = token_count
@@ -177,8 +180,7 @@ class PromptAgentValidator:
             self.logger.logRule(
                 LogLevel.WARNING,
                 "prompt-token-count-exceeded",
-                f"Content has approximately {token_count} tokens (max: {self.MAX_TOKEN_COUNT}). "
-                f"Consider reducing content size.",
+                f"Content has {token_count} tokens (max: {self.MAX_TOKEN_COUNT}). " f"Consider reducing content size.",
                 file_path,
             )
             warnings += 1
