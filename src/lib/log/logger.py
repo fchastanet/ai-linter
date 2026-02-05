@@ -78,6 +78,7 @@ class Logger:
         Args:
             level: LogLevel enum value
             message: The message to log
+            args: Additional arguments for the log message
 
         Note: This should be used for general operational messages like debug info,
         progress messages, etc. For validation errors with rule codes, use logRule() instead.

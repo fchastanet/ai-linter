@@ -2,7 +2,8 @@ from pathlib import Path
 
 from pyparsing import Sequence
 
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
 

@@ -1,7 +1,8 @@
 import re
 from pathlib import Path
 
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 
 
 class UnreferencedFileValidator:
@@ -158,7 +159,7 @@ class UnreferencedFileValidator:
                 )
                 if file_path.is_file():
                     # Skip ignored directories
-                    if any(str(ignored) in file_path.parts for ignored in ignore_dirs):
+                    if any(part == Path(ignored).name for part in file_path.parts for ignored in ignore_dirs):
                         continue
 
                     self.logger.log(

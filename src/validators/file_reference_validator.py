@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Sequence
 
 from lib.ai.stats import AiStats
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 
 
 class FileReferenceValidator:

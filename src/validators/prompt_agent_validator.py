@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Any
 
 from lib.ai.stats import AiStats
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
 
@@ -217,12 +218,15 @@ class PromptAgentValidator:
                 LogLevel.INFO,
                 "tools-found",
                 f"Found {len(tools)} tool references: {', '.join(sorted(tools))}",
+                file_path,
             )
 
         if skills:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.INFO,
+                "skills-found",
                 f"Found {len(skills)} skill references: {', '.join(sorted(skills))}",
+                file_path,
             )
 
         return warnings, errors, metadata

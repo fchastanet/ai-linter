@@ -1,13 +1,7 @@
 import logging
 from enum import Enum
 
-# ANSI color codes for console output
-RESET = "\033[0m"
-RED = "\033[31m"
-YELLOW = "\033[33m"
-GREEN = "\033[32m"
-BLUE = "\033[34m"
-GRAY = "\033[90m"
+from lib.log.log_colors import BLUE, GRAY, RED, RESET, YELLOW
 
 
 class LogLevel(Enum):
@@ -60,7 +54,7 @@ class LogLevel(Enum):
             logging.INFO: LogLevel.INFO,
             logging.DEBUG: LogLevel.DEBUG,
         }
-        return LogLevel(reverse_map.get(level, LogLevel.INFO))
+        return reverse_map.get(level, LogLevel.INFO)
 
     def get_level_color(self) -> str:
         """Get color code for a given level"""

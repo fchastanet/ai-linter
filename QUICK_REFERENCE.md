@@ -23,8 +23,6 @@
 code_snippet_max_lines: 3  # Adjust to your preference
 ```
 
-______________________________________________________________________
-
 ### 1.2. Unreferenced File Detection 🔗
 
 **What**: Finds files in resource directories not referenced in any markdown
@@ -48,8 +46,6 @@ resource_dirs:
   - scripts
 unreferenced_file_level: ERROR  # or WARNING, INFO
 ```
-
-______________________________________________________________________
 
 ### 1.3. Prompt/Agent Validation 🤖
 
@@ -80,8 +76,6 @@ agent_dirs:
   - .github/agents
 ```
 
-______________________________________________________________________
-
 ### 1.4. AGENTS.md Requirement 📄
 
 **What**: Checks for AGENTS.md in project root
@@ -102,8 +96,6 @@ ______________________________________________________________________
 ```yaml
 missing_agents_file_level: WARNING  # or ERROR, INFO
 ```
-
-______________________________________________________________________
 
 ## 2. Quick Start
 
@@ -144,8 +136,6 @@ Exit code:
 - `0` = Success (no errors, warnings ≤ max)
 - `1` = Failure (errors > 0 or warnings > max)
 
-______________________________________________________________________
-
 ## 3. Common Use Cases
 
 ### 3.1. Reduce AI Context Size
@@ -163,8 +153,6 @@ code_snippet_max_lines: 3  # Strict
 - Extract code to files in `scripts/` or `references/`
 - Link using markdown: `[script](scripts/example.sh)`
 
-______________________________________________________________________
-
 ### 3.2. Clean Up Resource Files
 
 **Problem**: Accumulating unused files in resource directories
@@ -181,8 +169,6 @@ unreferenced_file_level: ERROR
 - Remove truly unused files
 - Move internal files out of resource directories
 
-______________________________________________________________________
-
 ### 3.3. Maintain Prompt Quality
 
 **Problem**: Prompts getting too long and unfocused
@@ -197,38 +183,7 @@ ______________________________________________________________________
   - Separate skills
 - Keep each under 5000 tokens
 
-______________________________________________________________________
-
-### 3.4. Improve AI Assistant Onboarding
-
-**Problem**: AI assistants don't understand project structure
-
-**Solution**: Create AGENTS.md
-
-**Template**:
-
-```markdown
-# Project Name
-
-## 4. Overview
-[Brief description]
-
-## 5. Structure
-[Directory layout with descriptions]
-
-## 6. Key Components
-[Important files/modules]
-
-## 7. Guidelines
-[Coding standards, patterns]
-
-## 8. Common Tasks
-[How to add features, run tests, etc.]
-```
-
-______________________________________________________________________
-
-## 9. Error Codes Reference
+## 4. Error Codes Reference
 
 | Code                          | Level              | Description                     |
 | ----------------------------- | ------------------ | ------------------------------- |
@@ -240,11 +195,9 @@ ______________________________________________________________________
 | `tools-found`                 | INFO               | Tool references detected        |
 | `skills-found`                | INFO               | Skill references detected       |
 
-______________________________________________________________________
+## 5. Best Practices
 
-## 10. Best Practices
-
-### 10.1. ✅ DO
+### 5.1. ✅ DO
 
 - Keep code snippets minimal (≤3 lines)
 - Reference all resource files in documentation
@@ -253,7 +206,7 @@ ______________________________________________________________________
 - Use configuration file for project standards
 - Run linter in pre-commit hooks
 
-### 10.2. ❌ DON'T
+### 5.2. ❌ DON'T
 
 - Embed large code blocks in markdown
 - Accumulate unused resource files
@@ -261,11 +214,9 @@ ______________________________________________________________________
 - Skip AGENTS.md for non-trivial projects
 - Ignore linter warnings without review
 
-______________________________________________________________________
+## 6. Configuration Presets
 
-## 11. Configuration Presets
-
-### 11.1. Strict Mode (High Quality)
+### 6.1. Strict Mode (High Quality)
 
 ```yaml
 log_level: INFO
@@ -275,7 +226,7 @@ unreferenced_file_level: ERROR
 missing_agents_file_level: ERROR
 ```
 
-### 11.2. Balanced Mode (Recommended)
+### 6.2. Balanced Mode (Recommended)
 
 ```yaml
 log_level: INFO
@@ -285,7 +236,7 @@ unreferenced_file_level: ERROR
 missing_agents_file_level: WARNING
 ```
 
-### 11.3. Lenient Mode (Large Projects)
+### 6.3. Lenient Mode (Large Projects)
 
 ```yaml
 log_level: WARNING
@@ -295,11 +246,9 @@ unreferenced_file_level: WARNING
 missing_agents_file_level: INFO
 ```
 
-______________________________________________________________________
+## 7. Troubleshooting
 
-## 12. Troubleshooting
-
-### 12.1. Too Many Warnings
+### 7.1. Too Many Warnings
 
 **Problem**: Linter fails with too many warnings
 
@@ -309,7 +258,7 @@ ______________________________________________________________________
 2. Fix issues incrementally
 3. Lower back to desired threshold
 
-### 12.2. False Positives
+### 7.2. False Positives
 
 **Problem**: File flagged as unreferenced but it is referenced
 
@@ -319,7 +268,7 @@ ______________________________________________________________________
 2. Ensure reference in markdown link: `[text](path)`
 3. Verify file path is correct
 
-### 12.3. Configuration Not Loading
+### 7.3. Configuration Not Loading
 
 **Problem**: Changes to config file not reflected
 
@@ -329,11 +278,9 @@ ______________________________________________________________________
 2. Check file is in project root or specified with `--config-file`
 3. Validate YAML syntax
 
-______________________________________________________________________
+## 8. Integration Examples
 
-## 13. Integration Examples
-
-### 13.1. Pre-commit Hook
+### 8.1. Pre-commit Hook
 
 `.pre-commit-config.yaml`:
 
@@ -349,7 +296,7 @@ repos:
         pass_filenames: false
 ```
 
-### 13.2. GitHub Actions
+### 8.2. GitHub Actions
 
 `.github/workflows/lint.yml`:
 
@@ -368,7 +315,7 @@ jobs:
       - run: ai-linter .
 ```
 
-### 13.3. Makefile
+### 8.3. Makefile
 
 ```makefile
 .PHONY: lint
@@ -384,18 +331,13 @@ lint-debug:
  ai-linter . --log-level DEBUG
 ```
 
-______________________________________________________________________
+## 9. Resources
 
-## 14. Resources
-
-- **Full Documentation**: [Enhanced Linting Rules](docs/ENHANCED_LINTING_RULES.md)
 - **Implementation Details**: [Implementation Summary](IMPLEMENTATION_SUMMARY.md)
 - **Configuration**: [.ai-linter-config.yaml](.ai-linter-config.yaml)
 - **Examples**: [examples/](examples/)
 
-______________________________________________________________________
-
-## 15. Quick Commands
+## 10. Quick Commands
 
 ```bash
 # Basic validation
@@ -416,7 +358,3 @@ ai-linter . --max-warnings 0
 # Ignore specific dirs
 ai-linter . --ignore-dirs node_modules build
 ```
-
-______________________________________________________________________
-
-**Need Help?** Check the [full documentation](docs/ENHANCED_LINTING_RULES.md) or open an issue!

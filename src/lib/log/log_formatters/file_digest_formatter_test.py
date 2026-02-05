@@ -2,9 +2,10 @@
 
 import pytest
 
+from lib.log.log_format import LogFormat
 from lib.log.log_formatters.file_digest_formatter import FileDigestFormatter
 from lib.log.log_formatters.rule_message import RuleMessage
-from lib.log.logger import LogFormat, LogLevel
+from lib.log.log_level import LogLevel
 
 
 class TestFileDigestFormatter:

@@ -1,4 +1,5 @@
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 
 
 class AiStats:

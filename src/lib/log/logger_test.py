@@ -1,6 +1,8 @@
 """Unit tests for Logger class"""
 
-from lib.log.logger import LogFormat, Logger, LogLevel
+from lib.log.log_format import LogFormat
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 
 
 class TestLogger:

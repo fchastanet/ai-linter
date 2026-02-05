@@ -4,7 +4,8 @@ from argparse import Namespace
 import yaml
 
 from lib.log.log_format import LogFormat
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 
 
 class Config:
@@ -51,11 +52,11 @@ def load_config(
                         and config["log_level"] in [level.name for level in LogLevel]
                     ):
                         config_obj.log_level = getLogLevelFromString(config["log_level"], LogLevel.INFO)
-                    logger.set_level(log_level)
-                    logger.log(
-                        LogLevel.INFO,
-                        f"Log level set to {log_level} from config file",
-                    )
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Log level set to {config_obj.log_level} from config file",
+                        )
+                    logger.set_level(config_obj.log_level)
 
                     # Override log format if specified in config (CLI overrides config)
                     if args.log_format is None and "log_format" in config and isinstance(config["log_format"], str):

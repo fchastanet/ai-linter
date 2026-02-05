@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from validators.code_snippet_validator import CodeSnippetValidator
 
 

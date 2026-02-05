@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 
 from lib.ai.stats import AiStats
-from lib.log.logger import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
 from validators.prompt_agent_validator import PromptAgentValidator

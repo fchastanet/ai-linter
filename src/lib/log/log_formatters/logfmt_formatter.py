@@ -1,10 +1,10 @@
 """Logfmt formatter - space-separated key=value pairs"""
 
-from typing import Any
-
+from lib.log.log_colors import RESET
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
 from lib.log.log_formatters.rule_message import RuleMessage
+from lib.log.log_level import LogLevel
 
 
 class LogfmtFormatter(BaseLogFormatter):
@@ -26,7 +26,7 @@ class LogfmtFormatter(BaseLogFormatter):
 
     def _format_single_message(
         self,
-        level: Any,
+        level: LogLevel,
         rule: str,
         relative_path: str,
         line_number: int | None,
@@ -34,7 +34,6 @@ class LogfmtFormatter(BaseLogFormatter):
         **kwargs: str,
     ) -> str:
         """Print a single logfmt-formatted message to stderr"""
-        RESET = "\033[0m"
         if line_number:
             formatted_message = (
                 f'level="{level.name}" rule="{rule}" path="{relative_path}" '
