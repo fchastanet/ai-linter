@@ -18,6 +18,7 @@ from processors.process_agents import ProcessAgents
 from processors.process_skills import ProcessSkills
 from validators.agent_validator import AgentValidator
 from validators.code_snippet_validator import CodeSnippetValidator
+from validators.content_length_validator import ContentLengthValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
 from validators.skill_validator import SkillValidator
@@ -33,7 +34,8 @@ AI_LINTER_CONFIG_FILE = ".ai-linter-config.yaml"
 logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
 parser = Parser(logger)
 ai_stats = AiStats(logger)
-file_reference_validator = FileReferenceValidator(logger, ai_stats)
+content_length_validator = ContentLengthValidator(logger, ai_stats)
+file_reference_validator = FileReferenceValidator(logger)
 front_matter_validator = FrontMatterValidator(logger, parser)
 
 
@@ -119,13 +121,22 @@ def main() -> None:
     skill_validator = SkillValidator(
         logger,
         parser,
+        content_length_validator,
         file_reference_validator,
         front_matter_validator,
         unreferenced_file_validator,
         code_snippet_validator_instance,
         config,
     )
-    agent_validator = AgentValidator(logger, parser, file_reference_validator, code_snippet_validator_instance)
+    agent_validator = AgentValidator(
+        logger,
+        parser,
+        content_length_validator,
+        file_reference_validator,
+        code_snippet_validator_instance,
+        unreferenced_file_validator,
+        config,
+    )
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
 
