@@ -58,15 +58,22 @@ ai-linter/
   - Content length limits (500 lines, 5000 tokens)
   - Required properties validation
   - File reference checking
+  - Unreferenced file checking
 
 - **`agent_validator.py`**: Validates `AGENTS.md` files
   - No frontmatter allowed
   - Content length limits
   - Token count validation
+  - Unreferenced file checking
 
 - **`file_reference_validator.py`**: Checks file existence
   - Validates that referenced files exist
   - Resolves relative paths correctly
+
+- **`unreferenced_file_validator.py`**: Checks for unreferenced files
+  - Validates that files in `assets/`, `references/`, and `scripts/` directories are referenced
+  - Extracts file references from markdown content
+  - Reports warnings for unreferenced files
 
 - **`front_matter_validator.py`**: YAML frontmatter parsing
   - Validates YAML syntax
@@ -231,6 +238,7 @@ Content must be under 500 lines and 5000 tokens
 - ✅ Token count ≤ 5000 tokens
 - ✅ File references exist
 - ✅ Directory name matches skill name
+- ✅ Files in `assets/`, `references/`, and `scripts/` directories are referenced
 
 ### Agents Validation (`AGENTS.md`)
 
@@ -249,6 +257,7 @@ No frontmatter allowed.
 - ✅ Content length ≤ 500 lines
 - ✅ Token count ≤ 5000 tokens
 - ✅ File references exist
+- ✅ Files in `assets/`, `references/`, and `scripts/` directories are referenced
 
 ## Error Codes and Messages
 
@@ -262,6 +271,7 @@ No frontmatter allowed.
 - **`content-too-long`**: Content exceeds line limit
 - **`token-count-exceeded`**: Content exceeds token limit
 - **`file-reference-not-found`**: Referenced file doesn't exist
+- **`unreferenced-file`**: File in `assets/`, `references/`, or `scripts/` directory is not referenced
 - **`agent-frontmatter-extracted`**: AGENTS.md contains frontmatter (not allowed)
 
 ### Log Levels
