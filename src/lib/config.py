@@ -51,7 +51,7 @@ def load_config(
                         and "log_level" in config
                         and config["log_level"] in [level.name for level in LogLevel]
                     ):
-                        config_obj.log_level = getLogLevelFromString(config["log_level"], LogLevel.INFO)
+                        config_obj.log_level = get_log_level_from_string(config["log_level"], LogLevel.INFO)
                         logger.log(
                             LogLevel.INFO,
                             f"Log level set to {config_obj.log_level} from config file",
@@ -119,7 +119,7 @@ def load_config(
                         )
 
                     if "unreferenced_file_level" in config and isinstance(config["unreferenced_file_level"], str):
-                        config_obj.unreferenced_file_level = getLogLevelFromString(
+                        config_obj.unreferenced_file_level = get_log_level_from_string(
                             config["unreferenced_file_level"], LogLevel.ERROR
                         )
                         logger.log(
@@ -128,7 +128,7 @@ def load_config(
                         )
 
                     if "missing_agents_file_level" in config and isinstance(config["missing_agents_file_level"], str):
-                        config_obj.missing_agents_file_level = getLogLevelFromString(
+                        config_obj.missing_agents_file_level = get_log_level_from_string(
                             config["missing_agents_file_level"], LogLevel.WARNING
                         )
                         logger.log(
@@ -158,10 +158,10 @@ def load_config(
             f"Config file '{config_path}' not found, using default settings.",
         )
 
-    return ignore_dirs, log_level, log_format, max_warnings, config_obj
+    return config_obj.ignore_dirs, config_obj.log_level, config_obj.log_format, config_obj.max_warnings, config_obj
 
 
-def getLogLevelFromString(levelStr: str, default: LogLevel) -> LogLevel:
+def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:
     """Convert string to LogLevel, with default fallback"""
     levelStr = levelStr.upper()
     return LogLevel.from_string(levelStr) if levelStr in ["ERROR", "WARNING", "INFO"] else default

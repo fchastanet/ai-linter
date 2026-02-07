@@ -127,7 +127,7 @@ class SkillValidator:
         nb_errors += nb_errors_ref
 
         snippet_warnings, snippet_errors = self.code_snippet_validator.validate_code_snippets(
-            skill_path, project_dir, skill_content
+            skill_md, project_dir, skill_content, line_number
         )
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors

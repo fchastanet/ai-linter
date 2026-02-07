@@ -19,7 +19,7 @@ class ProcessAgents:
         self.parser = parser
         self.agent_validator = agent_validator
 
-    def process_agents(self, project_dirs: Sequence[Path], ignore_dirs: Sequence[Path] = []) -> Tuple[int, int]:
+    def process_agents(self, project_dirs: Sequence[Path], ignore_dirs: Sequence[Path] | None) -> Tuple[int, int]:
         if ignore_dirs is None:
             ignore_dirs = []
         total_warnings = 0

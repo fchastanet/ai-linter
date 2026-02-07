@@ -12,14 +12,16 @@ class CodeSnippetValidator:
         self.logger = logger
         self.max_lines = max_lines
 
-    def validate_code_snippets(self, file_path: Path, base_directory: Path, content: str) -> tuple[int, int]:
+    def validate_code_snippets(
+        self, file_path: Path, base_directory: Path, content: str, content_start_line_number: int = 0
+    ) -> tuple[int, int]:
         """
         Validate code snippets in a markdown file
         Returns tuple of (warning_count, error_count)
         """
         # Find all code blocks using regex
-        # Matches ```language\ncode\n``` or ```\ncode\n```
-        code_block_pattern = re.compile(r"```(?:\w+)?\n(.*?)```", re.DOTALL)
+        # Matches fences of 3+ backticks or tildes, ensures closing fence matches opening fence
+        code_block_pattern = re.compile(r"((?:`{3,}|~{3,}))[ \t]*(?:\w+)?\n(?P<content>.*?)(?:\1)", re.DOTALL)
         matches = list(code_block_pattern.finditer(content))
         warnings = 0
 
@@ -28,7 +30,7 @@ class CodeSnippetValidator:
             return 0, 0
 
         for match in matches:
-            code_content = match.group(1)
+            code_content = match.group("content")
             # Count lines in the code block
             lines = code_content.split("\n")
             line_count = len([line for line in lines if line.strip()])  # Count non-empty lines
@@ -36,7 +38,7 @@ class CodeSnippetValidator:
             if line_count > self.max_lines:
                 # Calculate line number in the file where the code block starts
                 start_pos = match.start()
-                line_number = content[:start_pos].count("\n") + 1
+                line_number = content[:start_pos].count("\n") + 1 + content_start_line_number
 
                 self.logger.logRule(
                     LogLevel.WARNING,

@@ -1,6 +1,5 @@
 from pathlib import Path
-
-from pyparsing import Sequence
+from typing import Sequence
 
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -76,14 +75,14 @@ class AgentValidator:
 
         return nb_warnings, nb_errors
 
-    def validate_agents_files(self, project_dir: Path, ignore_dirs: Sequence[Path] = []) -> tuple[int, int]:
+    def validate_agents_files(self, project_dir: Path, ignore_dirs: Sequence[Path] | None) -> tuple[int, int]:
         """Validate all AGENTS.md files in the project directory"""
         project_dir = Path(project_dir)
         agent_files = list(project_dir.rglob("AGENTS.md"))
         nb_warnings = 0
         nb_errors = 0
         for agent_file in agent_files:
-            if any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
+            if ignore_dirs is not None and any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
                 self.logger.logRule(
                     LogLevel.DEBUG,
                     "ignoring-agents-file",

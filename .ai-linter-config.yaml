@@ -14,7 +14,7 @@ log_level: INFO
 log_format: file-digest
 
 # Maximum warnings before the linter fails
-# Set to a number or use 'inf' for unlimited warnings
+# Set to a number, or use -1 for unlimited warnings
 max_warnings: 10
 
 # Directories to ignore during validation

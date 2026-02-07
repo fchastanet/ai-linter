@@ -388,8 +388,9 @@ compatibility: object
   their purposes. This satisfies the reference requirement and improves discoverability.
 - **Can I disable specific validators?** Yes, set severity to `INFO` in config, or use `--ignore-dirs` to skip
   directories.
-- **How are tokens counted?** Currently a simple whitespace split approximation. Actual AI tokenization may differ
-  slightly. The limit provides a reasonable guideline.
+- **How are tokens counted?** When available, AI Linter uses the `tiktoken` library to approximate token counts. If
+  `tiktoken` is not installed, it falls back to a heuristic of `len(text) // 4`. Actual model tokenization may still
+  differ slightly, so the limit should be treated as a practical guideline rather than an exact value.
 - **Do I need AGENTS.md if my project is tiny?** Even small projects benefit from basic documentation. A minimal
   AGENTS.md can be just a few lines explaining the project's purpose.
 

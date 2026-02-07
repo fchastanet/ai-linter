@@ -17,10 +17,12 @@ class UnreferencedFileValidator:
         if ignore_dirs is None:
             ignore_dirs = []
 
+        # Compare directory names (strings) instead of Path objects against md_file.parts
+        ignore_dir_names = {ignored.name for ignored in ignore_dirs}
         markdown_files = []
         for md_file in directory.rglob("*.md"):
             # Skip ignored directories
-            if any(ignored in md_file.parts for ignored in ignore_dirs):
+            if any(ignored_name in md_file.parts for ignored_name in ignore_dir_names):
                 continue
             markdown_files.append(md_file)
 
@@ -110,6 +112,8 @@ class UnreferencedFileValidator:
         if ignore_dirs is None:
             ignore_dirs = []
 
+        ignore_paths = [project_dir / ignore_dir for ignore_dir in ignore_dirs]
+
         warnings = 0
         errors = 0
 
@@ -137,10 +141,19 @@ class UnreferencedFileValidator:
                     except ValueError:
                         # File is outside project directory, skip
                         pass
-                except Exception:  # nosec B110, B112 - Skip any unresolvable references
-                    # Could not resolve path, skip it
-                    pass
+                except (OSError, RuntimeError) as exc:  # nosec B110, B112 - Skip any unresolvable references
+                    # Could not resolve path, log and skip it
+                    self.logger.logRule(
+                        LogLevel.WARNING,
+                        "reference-resolution-failed",
+                        f"Could not resolve reference '{ref}' in markdown file '{md_file}': {exc}",
+                        md_file,
+                    )
 
+        self.logger.log(
+            LogLevel.DEBUG,
+            f"Found the following references: {all_referenced_files}",
+        )
         # Check each resource directory
         for resource_dir in resource_dirs:
             resource_path = project_dir / resource_dir
@@ -155,16 +168,16 @@ class UnreferencedFileValidator:
             for file_path in resource_path.rglob("*"):
                 self.logger.log(
                     LogLevel.DEBUG,
-                    f"Checking file: {file_path} against references: {all_referenced_files}",
+                    f"Checking file: {file_path} against above references",
                 )
                 if file_path.is_file():
                     # Skip ignored directories
-                    if any(part == Path(ignored).name for part in file_path.parts for ignored in ignore_dirs):
+                    if any(part == ignored.name for part in file_path.parts for ignored in ignore_paths):
                         continue
 
                     self.logger.log(
                         LogLevel.DEBUG,
-                        f"Checking non ignored file: {file_path} against references: {all_referenced_files}",
+                        f"Checking non ignored file: {file_path} against above references",
                     )
                     try:
                         relative_path = file_path.relative_to(relative_to)
@@ -185,7 +198,7 @@ class UnreferencedFileValidator:
                                 level,
                                 "unreferenced-resource-file",
                                 f"File '{file_path_relative_to_project}' in resource directory "
-                                f"is not referenced in any markdown file of the dir²ectory {project_dir_relative}.",
+                                f"is not referenced in any markdown file of the directory {project_dir_relative}.",
                                 file=relative_path,
                             )
                             if level == LogLevel.ERROR:
