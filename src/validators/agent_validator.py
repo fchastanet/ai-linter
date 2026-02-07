@@ -5,6 +5,7 @@ from pyparsing import Sequence
 from lib.log import Logger, LogLevel
 from lib.parser import Parser
 from validators.file_reference_validator import FileReferenceValidator
+from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 
 class AgentValidator:
@@ -16,10 +17,12 @@ class AgentValidator:
         logger: Logger,
         parser: Parser,
         file_reference_validator: FileReferenceValidator,
+        unreferenced_file_validator: UnreferencedFileValidator,
     ):
         self.logger = logger
         self.parser = parser
         self.file_reference_validator = file_reference_validator
+        self.unreferenced_file_validator = unreferenced_file_validator
 
     def validate_agent_file(self, base_dirs: Sequence[str | Path], agent_file: Path) -> tuple[int, int]:
         """Validate a single AGENTS.md file"""
@@ -62,6 +65,13 @@ class AgentValidator:
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
+
+        # Validate unreferenced files in agent directory
+        nb_warnings_unref, nb_errors_unref = self.unreferenced_file_validator.validate_unreferenced_files(
+            agent_file.parent, agent_file, agent_content
+        )
+        nb_warnings += nb_warnings_unref
+        nb_errors += nb_errors_unref
 
         return nb_warnings, nb_errors
 

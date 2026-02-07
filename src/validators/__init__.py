@@ -6,4 +6,5 @@ This module contains validators for different file types:
 - SkillValidator: Validates SKILL.md files
 - FileReferenceValidator: Validates file references in content
 - FrontMatterValidator: Validates YAML frontmatter
+- UnreferencedFileValidator: Validates that files in specific directories are referenced
 """

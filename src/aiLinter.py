@@ -17,6 +17,7 @@ from validators.agent_validator import AgentValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
 from validators.skill_validator import SkillValidator
+from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 try:
     from _version import version as AI_LINTER_VERSION
@@ -29,8 +30,9 @@ logger = Logger(LogLevel.INFO)
 parser = Parser(logger)
 file_reference_validator = FileReferenceValidator(logger)
 front_matter_validator = FrontMatterValidator(logger, parser)
-skill_validator = SkillValidator(logger, parser, file_reference_validator, front_matter_validator)
-agent_validator = AgentValidator(logger, parser, file_reference_validator)
+unreferenced_file_validator = UnreferencedFileValidator(logger)
+skill_validator = SkillValidator(logger, parser, file_reference_validator, front_matter_validator, unreferenced_file_validator)
+agent_validator = AgentValidator(logger, parser, file_reference_validator, unreferenced_file_validator)
 process_skills = ProcessSkills(logger, parser, skill_validator)
 process_agents = ProcessAgents(logger, parser, agent_validator)
 
