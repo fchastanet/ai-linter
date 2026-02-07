@@ -1,6 +1,5 @@
 import re
 from pathlib import Path
-from typing import Sequence
 
 from lib.log import Logger, LogLevel
 
@@ -14,9 +13,7 @@ class UnreferencedFileValidator:
     def __init__(self, logger: Logger):
         self.logger = logger
 
-    def validate_unreferenced_files(
-        self, base_dir: Path, main_file: Path, content: str
-    ) -> tuple[int, int]:
+    def validate_unreferenced_files(self, base_dir: Path, main_file: Path, content: str) -> tuple[int, int]:
         """
         Validate that all files in assets/, references/, and scripts/ directories
         are referenced in the provided markdown content.

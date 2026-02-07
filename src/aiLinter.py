@@ -31,7 +31,9 @@ parser = Parser(logger)
 file_reference_validator = FileReferenceValidator(logger)
 front_matter_validator = FrontMatterValidator(logger, parser)
 unreferenced_file_validator = UnreferencedFileValidator(logger)
-skill_validator = SkillValidator(logger, parser, file_reference_validator, front_matter_validator, unreferenced_file_validator)
+skill_validator = SkillValidator(
+    logger, parser, file_reference_validator, front_matter_validator, unreferenced_file_validator
+)
 agent_validator = AgentValidator(logger, parser, file_reference_validator, unreferenced_file_validator)
 process_skills = ProcessSkills(logger, parser, skill_validator)
 process_agents = ProcessAgents(logger, parser, agent_validator)
