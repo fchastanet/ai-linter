@@ -1,7 +1,8 @@
 import re
 from pathlib import Path
 
-from lib.log import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from lib.parser import Parser
 
 
@@ -17,16 +18,16 @@ class FrontMatterValidator:
         self.parser = parser
 
     def validate_keys(
-        self, frontmatter: dict, file: str | Path, allowed_keys: set[str], line_number: int = 1
+        self, frontmatter: dict, file: Path, allowed_keys: set[str], project_dir: Path, line_number: int = 1
     ) -> tuple[int, int]:
         """Validate that frontmatter contains only allowed keys"""
         unexpected_keys = set(frontmatter.keys()) - allowed_keys
         if unexpected_keys:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "unexpected-properties",
                 f"Unexpected key(s) in frontmatter: {', '.join(sorted(unexpected_keys))}. ",
-                file=file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
                 detail=f"Allowed properties are: {', '.join(sorted(allowed_keys))}",
             )
@@ -34,15 +35,21 @@ class FrontMatterValidator:
         return 0, 0
 
     def validate_name(
-        self, frontmatter: dict, file: str | Path, frontmatter_text: str, file_path: Path, line_number: int = 2
+        self,
+        frontmatter: dict,
+        file: Path,
+        frontmatter_text: str,
+        file_path: Path,
+        project_dir: Path,
+        line_number: int = 2,
     ) -> tuple[int, int]:
         # Check required fields
         if "name" not in frontmatter:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "missing-name",
                 "Missing 'name' in frontmatter",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -50,11 +57,11 @@ class FrontMatterValidator:
         # Extract name for validation
         name = frontmatter.get("name", "")
         if name is None or not isinstance(name, str):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-type",
                 f"Name must be a string, got {type(name).__name__}",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -63,11 +70,11 @@ class FrontMatterValidator:
         nb_errors = 0
         name = name.strip()
         if not name:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "empty-name",
                 "Name in frontmatter cannot be empty",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
@@ -75,43 +82,43 @@ class FrontMatterValidator:
         line_number += self.parser.get_frontmatter_line_number(frontmatter_text, "name") + 1
         # Check naming convention (hyphen-case: lowercase with hyphens)
         if not re.match(r"^[a-z0-9-]+$", name):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-format",
                 f"Name '{name}' should be hyphen-case (lowercase letters, digits, and hyphens only)",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
 
         if name.startswith("-") or name.endswith("-") or "--" in name:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-format",
                 f"Name '{name}' cannot start/end with hyphen or contain consecutive hyphens",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
 
         # Check name length (max 64 characters per spec)
         if len(name) > self.MAX_NAME_LENGTH:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-name-length",
                 f"Name is too long ({len(name)}/{self.MAX_NAME_LENGTH} characters).",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
 
         # check if name matches directory name
         if name != file_path.name:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.WARNING,
                 "name-directory-mismatch",
                 f"Name '{name}' does not match directory name '{file_path.name}'",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_warnings += 1
@@ -119,70 +126,70 @@ class FrontMatterValidator:
         return nb_warnings, nb_errors
 
     def validate_description(
-        self, frontmatter: dict, file: str | Path, frontmatter_text: str, line_number: int = 1
+        self, frontmatter: dict, file: Path, frontmatter_text: str, project_dir: Path, line_number: int = 1
     ) -> tuple[int, int]:
         """Validate the description field in frontmatter"""
         nb_warnings = 0
         nb_errors = 0
         if "description" not in frontmatter:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "missing-description",
                 "Missing 'description' in frontmatter",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
 
         line_number = self.parser.get_frontmatter_line_number(frontmatter_text, "description") + 1
         if frontmatter["description"] is None or not isinstance(frontmatter["description"], str):
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-description-type",
                 f"Description must be a string, got {type(frontmatter['description']).__name__}",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
 
         description = frontmatter["description"].strip()
         if not description:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "empty-description",
                 "Description in frontmatter cannot be empty",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             return 0, 1
 
         # Check for angle brackets
         if "<" in description or ">" in description:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-description-format",
                 "Description cannot contain angle brackets (< or >)",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
 
         # Check description length (max 1024 characters per spec)
         if len(description) > self.MAX_DESCRIPTION_LENGTH:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.ERROR,
                 "invalid-description-length",
                 f"Description is too long ({len(description)}/{self.MAX_DESCRIPTION_LENGTH} characters).",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
             nb_errors += 1
         else:
-            self.logger.log(
+            self.logger.logRule(
                 LogLevel.INFO,
                 "description-length",
                 f"Description length: {len(description)}/{self.MAX_DESCRIPTION_LENGTH} characters.",
-                file,
+                file=file.relative_to(project_dir),
                 line_number=line_number,
             )
 

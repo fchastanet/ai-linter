@@ -13,7 +13,7 @@ frontmatter validation, content limits, and file reference checking.
 ```text
 ai-linter/
 ├── src/                          # Source code
-│   ├── aiLinter.py              # Main entry point and CLI
+│   ├── ai_linter.py              # Main entry point and CLI
 │   ├── lib/                     # Core utilities
 │   │   ├── config.py           # Configuration loading
 │   │   ├── log.py              # Logging system
@@ -136,10 +136,11 @@ make install-dev
 pre-commit install
 
 # Code quality checks
-make format          # Format with black & isort
+make format         # Format with black & isort
 make lint           # Run flake8 & mypy
 make test           # Run pytest
 make check-all      # Run all checks
+pre-commit run -a   # Run pre-commit hooks on all files
 
 # Package management
 make clean          # Clean build artifacts
@@ -277,7 +278,7 @@ No frontmatter allowed.
 
 **Key Files to Understand:**
 
-1. `src/aiLinter.py` - Main CLI and entry point
+1. `src/ai_linter.py` - Main CLI and entry point
 2. `src/validators/*.py` - Core validation logic
 3. `src/**/*.test.py` - Each python file should have its associated unit test
 4. `pyproject.toml` - Package configuration
@@ -334,7 +335,7 @@ pytest -v
 
 1. Create validator class in `src/validators/`
 2. Implement validation logic
-3. Add to main processing flow in `src/aiLinter.py`
+3. Add to main processing flow in `src/ai_linter.py`
 4. Add configuration options if needed
 5. Update documentation
 

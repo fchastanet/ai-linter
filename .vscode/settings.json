@@ -25,5 +25,22 @@
       "file": "../copilot-prompts/.github/commit-message.instructions.md"
     }
   ],
-  "python.analysis.extraPaths": ["src"]
+  "python.analysis.extraPaths": [
+    "src"
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "/^cd /home/wsl/fchastanet/ai-linter && python -m pytest --cov=src --cov-report=term-missing 2>&1 \\| tail -50$/": {
+      "approve": true,
+      "matchCommandLine": true
+    },
+    "/^cd /home/wsl/fchastanet/ai-linter && python -m pytest --tb=short 2>&1 \\| tail -100$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  },
+  "python.testing.pytestArgs": [
+    "src"
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }

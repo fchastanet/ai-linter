@@ -2,6 +2,7 @@
 name: CI/CD
 
 "on":
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -24,6 +25,9 @@ jobs:
           - "3.10"
           - "3.11"
           - "3.12"
+    permissions:
+      # needed by ouzi-dev/commit-status-updater@v2
+      statuses: write
 
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +41,11 @@ jobs:
         run: |
           make install
           make install-dev
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        with:
+          name: test-python-${{ matrix.python-version }}
+          status: pending
 
       - name: Test and lint
         run: |
@@ -62,6 +71,11 @@ jobs:
 
       - uses: pre-commit-ci/lite-action@v1.1.0
         if: always()
+
+      - uses: ouzi-dev/commit-status-updater@v2
+        with:
+          name: test-python-${{ matrix.python-version }}
+          status: ${{ job.status }}
 
   build:
     needs:

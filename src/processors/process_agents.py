@@ -2,20 +2,24 @@ import fnmatch
 from pathlib import Path
 from typing import Sequence, Tuple
 
-from lib.log import Logger, LogLevel
+from lib.log.log_level import LogLevel
+from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.agent_validator import AgentValidator
 
 
 class ProcessAgents:
-    def __init__(self, logger: Logger, parser: Parser, agent_validator: AgentValidator) -> None:
+    def __init__(
+        self,
+        logger: Logger,
+        parser: Parser,
+        agent_validator: AgentValidator,
+    ) -> None:
         self.logger = logger
         self.parser = parser
         self.agent_validator = agent_validator
 
-    def process_agents(
-        self, project_dirs: Sequence[str | Path], ignore_dirs: Sequence[str | Path] = []
-    ) -> Tuple[int, int]:
+    def process_agents(self, project_dirs: Sequence[Path], ignore_dirs: Sequence[Path] | None) -> Tuple[int, int]:
         if ignore_dirs is None:
             ignore_dirs = []
         total_warnings = 0
@@ -25,7 +29,6 @@ class ProcessAgents:
             # check if project dir is one of the ignore directories
             self.logger.log(
                 LogLevel.DEBUG,
-                "validating-agents-in-project-dir",
                 f"Validating AGENTS.md files in project directory: {project_dir} {ignore_dirs}",
             )
 
@@ -33,7 +36,6 @@ class ProcessAgents:
             if any(fnmatch.fnmatch(str(project_dir), str(pattern)) for pattern in ignore_dirs):
                 self.logger.log(
                     LogLevel.DEBUG,
-                    "ignoring-project-dir",
                     f"Ignoring project directory '{project_dir}' due to ignore_dirs setting: {ignore_dirs}",
                 )
                 continue

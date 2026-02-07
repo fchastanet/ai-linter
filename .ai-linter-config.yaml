@@ -3,11 +3,18 @@
 # Place this file in your project root as .ai-linter-config.yaml
 
 # Logging configuration
-# Options: DEBUG, INFO, WARNING, ERROR
+# Level options: DEBUG, INFO, WARNING, ERROR
 log_level: INFO
 
+# Logging output format
+# Options: file-digest (default), logfmt, yaml
+# - file-digest: Human-readable format grouped by file
+# - logfmt: Key=value pairs on each line (original format)
+# - yaml: Structured YAML output (machine-readable)
+log_format: file-digest
+
 # Maximum warnings before the linter fails
-# Set to a number or use 'inf' for unlimited warnings
+# Set to a number, or use -1 for unlimited warnings
 max_warnings: 10
 
 # Directories to ignore during validation
@@ -22,3 +29,33 @@ ignore_dirs:
   - ".pytest_cache"
   - "venv"
   - "env"
+  - ".history"
+  - "doc"
+
+# Code snippet validation
+# Maximum number of lines allowed in a code snippet before warning
+# Helps prevent bloated AI context by encouraging externalization of large code blocks
+code_snippet_max_lines: 3
+
+# Prompt and agent directories to validate
+# These directories will be checked for token count, references, skills, and tools
+prompt_dirs:
+  - ".github/prompts"
+
+agent_dirs:
+  - ".github/agents"
+
+# Resource directories to check for unreferenced files
+# All files in these directories should be referenced somewhere in markdown files
+resource_dirs:
+  - "references"
+  - "assets"
+  - "scripts"
+
+# Log level for unreferenced files in resource directories
+# Options: ERROR, WARNING, INFO
+unreferenced_file_level: ERROR
+
+# Log level for missing AGENTS.md file in project root
+# Options: ERROR, WARNING, INFO
+missing_agents_file_level: WARNING

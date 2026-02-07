@@ -5,11 +5,14 @@
       "name": "Debug AI Linter - Pendulum Guide",
       "type": "debugpy",
       "request": "launch",
-      "program": "src/aiLinter.py",
+      "program": "src/ai_linter.py",
       "args": [
         "../pendulum-guide",
         "--log-level",
-        "DEBUG"
+        "DEBUG",
+        "--skills",
+        "--log-format",
+        "logfmt"
       ],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
@@ -23,7 +26,7 @@
       "name": "Debug AI Linter - Current Directory",
       "type": "debugpy",
       "request": "launch",
-      "program": "src/aiLinter.py",
+      "program": "src/ai_linter.py",
       "args": [
         ".",
         "--skills",

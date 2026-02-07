@@ -15,7 +15,8 @@ We welcome contributions to the AI Linter project! This document provides guidel
 
    ```bash
    python -m venv venv
-   source venv/bin/activate # On Windows: venv\Scripts\activate
+   # On Windows: venv\Scripts\activate
+   source venv/bin/activate
    ```
 
 3. **Install in development mode**
@@ -130,7 +131,7 @@ refactor/validator-structure
 
 ### 4.3. New Command Line Arguments
 
-1. Add to argument parser in `src/aiLinter.py`
+1. Add to argument parser in `src/ai_linter.py`
 2. Update help text
 3. Document in README.md
 4. Consider adding to configuration file options
@@ -164,7 +165,7 @@ refactor/validator-structure
 ```text
 ai-linter/
 ├── src/
-│   ├── aiLinter.py          # Main entry point
+│   ├── ai_linter.py          # Main entry point
 │   ├── lib/                 # Core utilities
 │   ├── processors/          # Data processors
 │   └── validators/          # Validation logic
