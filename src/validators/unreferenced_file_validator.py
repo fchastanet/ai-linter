@@ -102,6 +102,7 @@ class UnreferencedFileValidator:
         resource_dirs: list[Path],
         markdown_content: str,
         markdown_file: Path,
+        content_start_line_number: int = 0,
         ignore_dirs: list[Path] | None = None,
         level: LogLevel = LogLevel.ERROR,
     ) -> tuple[int, int]:
@@ -113,8 +114,9 @@ class UnreferencedFileValidator:
             project_dir: Directory to search for resource files
             relative_to: Base directory for relative path resolution
             resource_dirs: List of resource directories to check (e.g., ['assets', 'references', 'scripts'])
-            markdown_content: Content of the main markdown file (SKILL.md or AGENTS.md)
+            markdown_content: Content of the main markdown file (SKILL.md or AGENTS.md) without the front matter
             markdown_file: Path to the main markdown file
+            content_start_line_number: Line number where the markdown content starts (used for accurate logging)
             ignore_dirs: List of directories to ignore
             level: Log level for unreferenced files (ERROR or WARNING)
 
@@ -136,7 +138,9 @@ class UnreferencedFileValidator:
 
         # Process references from the main markdown file
         for ref in refs:
-            self._add_resolved_reference(ref, markdown_file, project_dir, all_referenced_files)
+            self._add_resolved_reference(
+                ref, markdown_file, project_dir, all_referenced_files, content_start_line_number
+            )
 
         # Also check any markdown files referenced in the main markdown file
         for ref in refs:
@@ -155,7 +159,11 @@ class UnreferencedFileValidator:
                             nested_refs = self.extract_file_references(referenced_content)
                             for nested_ref in nested_refs:
                                 self._add_resolved_reference(
-                                    nested_ref, referenced_md, project_dir, all_referenced_files
+                                    nested_ref,
+                                    referenced_md,
+                                    project_dir,
+                                    all_referenced_files,
+                                    content_start_line_number,
                                 )
                         except Exception as e:
                             self.logger.logRule(
@@ -170,6 +178,7 @@ class UnreferencedFileValidator:
                         "reference-resolution-failed",
                         f"Could not resolve markdown reference '{ref}': {exc}",
                         markdown_file,
+                        content_start_line_number,
                     )
 
         self.logger.log(
@@ -225,6 +234,7 @@ class UnreferencedFileValidator:
                                 f"File '{relative_path_from_project}' in resource directory "
                                 f"is not referenced in any markdown file of the directory {project_dir_relative}.",
                                 file=relative_path_from_relative_to,
+                                line_number=content_start_line_number,
                             )
                             if level == LogLevel.ERROR:
                                 errors += 1
@@ -238,7 +248,12 @@ class UnreferencedFileValidator:
         return warnings, errors
 
     def _add_resolved_reference(
-        self, ref: str, markdown_file: Path, project_dir: Path, all_referenced_files: set[str]
+        self,
+        ref: str,
+        markdown_file: Path,
+        project_dir: Path,
+        all_referenced_files: set[str],
+        content_start_line_number: int,
     ) -> None:
         """
         Resolve a file reference and add it to the set of all referenced files.
@@ -248,6 +263,7 @@ class UnreferencedFileValidator:
             markdown_file: The markdown file containing the reference
             project_dir: The project directory
             all_referenced_files: Set to add the resolved reference to
+            content_start_line_number: Line number where the markdown content starts (used for accurate logging)
         """
         try:
             if ref.startswith("/"):
@@ -271,4 +287,5 @@ class UnreferencedFileValidator:
                 "reference-resolution-failed",
                 f"Could not resolve reference '{ref}' in markdown file '{markdown_file}': {exc}",
                 markdown_file,
+                line_number=content_start_line_number,
             )

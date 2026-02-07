@@ -5,6 +5,7 @@ from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.code_snippet_validator import CodeSnippetValidator
+from validators.content_length_validator import ContentLengthValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
 from validators.unreferenced_file_validator import UnreferencedFileValidator
@@ -26,6 +27,7 @@ class SkillValidator:
         self,
         logger: Logger,
         parser: Parser,
+        content_length_validator: ContentLengthValidator,
         file_ref_validator: FileReferenceValidator,
         front_matter_validator: FrontMatterValidator,
         unreferenced_file_validator: UnreferencedFileValidator,
@@ -34,6 +36,7 @@ class SkillValidator:
     ):
         self.logger = logger
         self.parser = parser
+        self.content_length_validator = content_length_validator
         self.file_ref_validator = file_ref_validator
         self.code_snippet_validator = code_snippet_validator
         self.front_matter_validator = front_matter_validator
@@ -104,7 +107,7 @@ class SkillValidator:
         line_number = frontmatter_text.count("\n") + 3
 
         # Validate skill content length
-        nb_warnings_content, nb_errors_content = self.file_ref_validator.validate_content_length(
+        nb_warnings_content, nb_errors_content = self.content_length_validator.validate_content_length(
             skill_content,
             skill_md,
             line_number,
