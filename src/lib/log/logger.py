@@ -36,9 +36,11 @@ class Logger:
         self.messages: list[RuleMessage] = []
 
         # Create internal Python logger
-        self.general_logger = logging.getLogger("ai_linter")
+        self.general_logger = logging.getLogger(f"ai_linter.{id(self)}")
         self.general_logger.setLevel(level.to_python_level())
-        self.general_logger.handlers.clear()  # Clear any existing handlers
+        self.general_logger.propagate = (
+            False  # Prevent messages from propagating to root logger and being printed multiple times
+        )
 
         # Add handlers to logger
         self.general_handler = logging.StreamHandler(sys.stderr)

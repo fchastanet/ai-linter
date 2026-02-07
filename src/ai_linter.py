@@ -114,7 +114,7 @@ def main() -> None:
     # Update logger with config values (config file overridden by CLI args)
     logger.set_level(log_level)
     logger.set_format(log_format)
-    code_snippet_validator_intance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
+    code_snippet_validator_instance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
     unreferenced_file_validator = UnreferencedFileValidator(logger)
     skill_validator = SkillValidator(
         logger,
@@ -122,10 +122,10 @@ def main() -> None:
         file_reference_validator,
         front_matter_validator,
         unreferenced_file_validator,
-        code_snippet_validator_intance,
+        code_snippet_validator_instance,
         config,
     )
-    agent_validator = AgentValidator(logger, parser, file_reference_validator, code_snippet_validator_intance)
+    agent_validator = AgentValidator(logger, parser, file_reference_validator, code_snippet_validator_instance)
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
 

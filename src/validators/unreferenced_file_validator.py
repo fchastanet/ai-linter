@@ -108,7 +108,6 @@ class UnreferencedFileValidator:
         Returns tuple of (warning_count, error_count)
         """
 
-        project_dir = Path(project_dir)
         if ignore_dirs is None:
             ignore_dirs = []
 

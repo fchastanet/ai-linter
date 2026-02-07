@@ -79,6 +79,38 @@ class TestUnreferencedFileValidator:
         assert warnings == 0
         assert errors == 0
 
+    def test_referenced_files_ok_with_project_dir_different_from_relative_to(
+        self, validator: UnreferencedFileValidator, tmp_path: Path
+    ) -> None:
+        """Test that referenced files don't generate warnings when project_dir is different from relative_to"""
+        # Create project dir
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+
+        # Create skill dir structure
+        skill_dir = project_dir / "skill"
+        skill_dir.mkdir()
+
+        # Create resource file
+        ref_dir = skill_dir / "references"
+        ref_dir.mkdir()
+        test_file = ref_dir / "test.txt"
+        test_file.write_text("content")
+
+        # Create markdown file referencing it
+        md_file = skill_dir / "README.md"
+        md_file.write_text("[Link](references/test.txt)")
+
+        warnings, errors = validator.validate_unreferenced_files(
+            project_dir=project_dir,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            ignore_dirs=[],
+        )
+
+        assert warnings == 0
+        assert errors == 0
+
     def test_unreferenced_file_detected(self, validator: UnreferencedFileValidator, tmp_path: Path) -> None:
         """Test that unreferenced files are detected"""
         # Create resource file without any references
@@ -93,6 +125,35 @@ class TestUnreferencedFileValidator:
 
         warnings, errors = validator.validate_unreferenced_files(
             tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+        )
+        assert errors == 1  # Validator is set to ERROR level
+        assert warnings == 0
+
+    def test_unreferenced_file_detected_with_project_dir_different_from_relative_to(
+        self, validator: UnreferencedFileValidator, tmp_path: Path
+    ) -> None:
+        """Test that unreferenced files are detected when project_dir is different from relative_to"""
+
+        # Create project dir
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+
+        # Create resource file without any references
+        ref_dir = project_dir / "references"
+        ref_dir.mkdir()
+        test_file = ref_dir / "unreferenced.txt"
+        test_file.write_text("content")
+
+        # Create markdown file NOT referencing it
+        md_file = project_dir / "README.md"
+        md_file.write_text("# No references here")
+
+        warnings, errors = validator.validate_unreferenced_files(
+            project_dir=project_dir,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            ignore_dirs=[],
+            level=LogLevel.ERROR,
         )
         assert errors == 1  # Validator is set to ERROR level
         assert warnings == 0

@@ -21,7 +21,9 @@ class CodeSnippetValidator:
         """
         # Find all code blocks using regex
         # Matches fences of 3+ backticks or tildes, ensures closing fence matches opening fence
-        code_block_pattern = re.compile(r"((?:`{3,}|~{3,}))[ \t]*(?:\w+)?\n(?P<content>.*?)(?:\1)", re.DOTALL)
+        code_block_pattern = re.compile(
+            r"(?m)((?:`{3,}|~{3,}))[ \t]*(?:\w+)?[^\n]*\n(?P<content>.*?)(?:^\1)", re.DOTALL | re.MULTILINE
+        )
         matches = list(code_block_pattern.finditer(content))
         warnings = 0
 
