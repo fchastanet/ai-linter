@@ -4,8 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+# Add src to path for imports (this file is in src/validators/)
+# We need to go up one level to src/ which should already be in the path
+# But to be safe, we add the parent of the parent (project root) and then src
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from lib.log import Logger, LogLevel
 from validators.unreferenced_file_validator import UnreferencedFileValidator

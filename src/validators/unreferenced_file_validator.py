@@ -94,7 +94,12 @@ class UnreferencedFileValidator:
         # Match backtick content that looks like a file path
         for match in re.finditer(r"(?<!`)`(?P<link>[^`\n]+)`(?!`)", content):
             link = match.group("link")
-            # Check if it looks like a file path (contains at least one /)
+            # Check if it looks like a file path:
+            # - Must contain at least one forward slash
+            # - Cannot contain wildcards (* or ?)
+            # - Cannot contain special shell/filesystem characters (\ < > $ | : " ')
+            # This regex pattern uses a positive lookahead to ensure a slash is present,
+            # then matches characters that are valid in file paths
             if re.search(r"^(?=[^*?]*\/)[^*?\\<>$|:\"']+$", link):
                 references.add(link)
                 references.add(self._normalize_path(link))
