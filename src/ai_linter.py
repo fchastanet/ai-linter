@@ -215,7 +215,7 @@ def main() -> None:
         f"Linting completed in {elapsed_time:.2f} seconds",
     )
 
-    sys.exit(0 if total_errors == 0 and total_warnings <= max_warnings else 1)
+    sys.exit(0 if total_errors == 0 and (max_warnings == -1 or total_warnings <= max_warnings) else 1)
 
 
 if __name__ == "__main__":
