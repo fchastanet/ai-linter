@@ -100,12 +100,26 @@ class UnreferencedFileValidator:
         project_dir: Path,
         relative_to: Path,
         resource_dirs: list[Path],
+        markdown_content: str,
+        markdown_file: Path,
         ignore_dirs: list[Path] | None = None,
         level: LogLevel = LogLevel.ERROR,
     ) -> tuple[int, int]:
         """
-        Validate that all files in resource directories are referenced in markdown files
-        Returns tuple of (warning_count, error_count)
+        Validate that all files in resource directories are referenced in the provided markdown content
+        and any markdown files referenced by it.
+
+        Args:
+            project_dir: Directory to search for resource files
+            relative_to: Base directory for relative path resolution
+            resource_dirs: List of resource directories to check (e.g., ['assets', 'references', 'scripts'])
+            markdown_content: Content of the main markdown file (SKILL.md or AGENTS.md)
+            markdown_file: Path to the main markdown file
+            ignore_dirs: List of directories to ignore
+            level: Log level for unreferenced files (ERROR or WARNING)
+
+        Returns:
+            Tuple of (warning_count, error_count)
         """
 
         if ignore_dirs is None:
@@ -116,43 +130,53 @@ class UnreferencedFileValidator:
         warnings = 0
         errors = 0
 
-        # Get all references from markdown files
-        all_refs = self.get_all_references_in_directory(project_dir, ignore_dirs)
-        all_referenced_files = set()
+        # Extract references from the provided markdown content
+        all_referenced_files: set[str] = set()
+        refs = self.extract_file_references(markdown_content)
 
-        # Normalize all references
-        for md_file, refs in all_refs.items():
-            md_path = Path(md_file)
-            for ref in refs:
-                # Try to resolve relative to markdown file location
+        # Process references from the main markdown file
+        for ref in refs:
+            self._add_resolved_reference(ref, markdown_file, project_dir, all_referenced_files)
+
+        # Also check any markdown files referenced in the main markdown file
+        for ref in refs:
+            if ref.endswith(".md"):
                 try:
+                    # Resolve the referenced markdown file
                     if ref.startswith("/"):
-                        # Absolute path from project root
-                        resolved = project_dir / ref.lstrip("/")
+                        referenced_md = project_dir / ref.lstrip("/")
                     else:
-                        # Relative to markdown file
-                        resolved = (md_path.parent / ref).resolve()
+                        referenced_md = (markdown_file.parent / ref).resolve()
 
-                    # Normalize to relative path from project root
-                    try:
-                        relative = resolved.relative_to(project_dir)
-                        all_referenced_files.add(str(relative))
-                    except ValueError:
-                        # File is outside project directory, skip
-                        pass
+                    if referenced_md.exists() and referenced_md.is_file():
+                        # Read and extract references from the referenced markdown file
+                        try:
+                            referenced_content = referenced_md.read_text()
+                            nested_refs = self.extract_file_references(referenced_content)
+                            for nested_ref in nested_refs:
+                                self._add_resolved_reference(
+                                    nested_ref, referenced_md, project_dir, all_referenced_files
+                                )
+                        except Exception as e:
+                            self.logger.logRule(
+                                LogLevel.WARNING,
+                                "file-read-error",
+                                f"Failed to read referenced markdown file: {e}",
+                                referenced_md,
+                            )
                 except (OSError, RuntimeError) as exc:  # nosec B110, B112 - Skip any unresolvable references
-                    # Could not resolve path, log and skip it
                     self.logger.logRule(
                         LogLevel.WARNING,
                         "reference-resolution-failed",
-                        f"Could not resolve reference '{ref}' in markdown file '{md_file}': {exc}",
-                        md_file,
+                        f"Could not resolve markdown reference '{ref}': {exc}",
+                        markdown_file,
                     )
 
         self.logger.log(
             LogLevel.DEBUG,
             f"Found the following references: {all_referenced_files}",
         )
+
         # Check each resource directory
         for resource_dir in resource_dirs:
             resource_path = project_dir / resource_dir
@@ -179,26 +203,28 @@ class UnreferencedFileValidator:
                         f"Checking non ignored file: {file_path} against above references",
                     )
                     try:
-                        relative_path = file_path.relative_to(relative_to)
-                        relative_path_str = str(relative_path)
+                        # Create both relative paths for comparison
+                        relative_path_from_relative_to = file_path.relative_to(relative_to)
+                        relative_path_from_project = file_path.relative_to(project_dir)
+
+                        project_relative_str = str(relative_path_from_project)
 
                         # Check if this file is referenced
                         is_referenced = False
                         for ref in all_referenced_files:
-                            # Check exact match or if ref ends with this path
-                            if ref == relative_path_str or ref.endswith(relative_path_str):
+                            # Check exact match or if ref ends with this path (comparing with project-relative path)
+                            if ref == project_relative_str or ref.endswith(project_relative_str):
                                 is_referenced = True
                                 break
 
                         if not is_referenced:
-                            file_path_relative_to_project = file_path.relative_to(project_dir)
                             project_dir_relative = project_dir.relative_to(relative_to)
                             self.logger.logRule(
                                 level,
                                 "unreferenced-resource-file",
-                                f"File '{file_path_relative_to_project}' in resource directory "
+                                f"File '{relative_path_from_project}' in resource directory "
                                 f"is not referenced in any markdown file of the directory {project_dir_relative}.",
-                                file=relative_path,
+                                file=relative_path_from_relative_to,
                             )
                             if level == LogLevel.ERROR:
                                 errors += 1
@@ -210,3 +236,39 @@ class UnreferencedFileValidator:
                         pass
 
         return warnings, errors
+
+    def _add_resolved_reference(
+        self, ref: str, markdown_file: Path, project_dir: Path, all_referenced_files: set[str]
+    ) -> None:
+        """
+        Resolve a file reference and add it to the set of all referenced files.
+
+        Args:
+            ref: The file reference to resolve
+            markdown_file: The markdown file containing the reference
+            project_dir: The project directory
+            all_referenced_files: Set to add the resolved reference to
+        """
+        try:
+            if ref.startswith("/"):
+                # Absolute path from project root
+                resolved = project_dir / ref.lstrip("/")
+            else:
+                # Relative to markdown file
+                resolved = (markdown_file.parent / ref).resolve()
+
+            # Normalize to relative path from project root
+            try:
+                relative = resolved.relative_to(project_dir)
+                all_referenced_files.add(str(relative))
+            except ValueError:
+                # File is outside project directory, skip
+                pass
+        except (OSError, RuntimeError) as exc:  # nosec B110, B112 - Skip any unresolvable references
+            # Could not resolve path, log and skip it
+            self.logger.logRule(
+                LogLevel.WARNING,
+                "reference-resolution-failed",
+                f"Could not resolve reference '{ref}' in markdown file '{markdown_file}': {exc}",
+                markdown_file,
+            )

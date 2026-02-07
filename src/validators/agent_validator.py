@@ -1,11 +1,13 @@
 from pathlib import Path
 from typing import Sequence
 
+from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.code_snippet_validator import CodeSnippetValidator
 from validators.file_reference_validator import FileReferenceValidator
+from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 
 class AgentValidator:
@@ -18,11 +20,15 @@ class AgentValidator:
         parser: Parser,
         file_reference_validator: FileReferenceValidator,
         code_snippet_validator: CodeSnippetValidator,
+        unreferenced_file_validator: UnreferencedFileValidator,
+        config: Config,
     ):
         self.logger = logger
         self.parser = parser
         self.file_reference_validator = file_reference_validator
         self.code_snippet_validator = code_snippet_validator
+        self.unreferenced_file_validator = unreferenced_file_validator
+        self.config = config
 
     def validate_agent_file(self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path) -> tuple[int, int]:
         """Validate a single AGENTS.md file"""
@@ -72,6 +78,21 @@ class AgentValidator:
         )
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors
+
+        # Validate unreferenced files in resource directories
+        # Pass the agent content directly to avoid re-reading the file
+        full_content = frontmatter_text + "\n---\n" + agent_content if frontmatter_text else agent_content
+        unref_warnings, unref_errors = self.unreferenced_file_validator.validate_unreferenced_files(
+            project_dir=agent_file.parent,
+            relative_to=project_dir,
+            resource_dirs=[Path(d) for d in self.config.resource_dirs],
+            markdown_content=full_content,
+            markdown_file=agent_file,
+            ignore_dirs=[Path(d) for d in self.config.ignore_dirs],
+            level=self.config.unreferenced_file_level,
+        )
+        nb_warnings += unref_warnings
+        nb_errors += unref_errors
 
         return nb_warnings, nb_errors
 

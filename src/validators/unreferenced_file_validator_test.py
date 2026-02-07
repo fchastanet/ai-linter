@@ -70,10 +70,16 @@ class TestUnreferencedFileValidator:
 
         # Create markdown file referencing it
         md_file = tmp_path / "README.md"
-        md_file.write_text("[Link](references/test.txt)")
+        md_content = "[Link](references/test.txt)"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
         )
 
         assert warnings == 0
@@ -99,12 +105,15 @@ class TestUnreferencedFileValidator:
 
         # Create markdown file referencing it
         md_file = skill_dir / "README.md"
-        md_file.write_text("[Link](references/test.txt)")
+        md_content = "[Link](references/test.txt)"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
-            project_dir=project_dir,
+            project_dir=skill_dir,
             relative_to=tmp_path,
             resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
             ignore_dirs=[],
         )
 
@@ -121,10 +130,16 @@ class TestUnreferencedFileValidator:
 
         # Create markdown file NOT referencing it
         md_file = tmp_path / "README.md"
-        md_file.write_text("# No references here")
+        md_content = "# No references here"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
         )
         assert errors == 1  # Validator is set to ERROR level
         assert warnings == 0
@@ -146,12 +161,15 @@ class TestUnreferencedFileValidator:
 
         # Create markdown file NOT referencing it
         md_file = project_dir / "README.md"
-        md_file.write_text("# No references here")
+        md_content = "# No references here"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
             project_dir=project_dir,
             relative_to=tmp_path,
             resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
             ignore_dirs=[],
             level=LogLevel.ERROR,
         )
@@ -167,12 +185,15 @@ class TestUnreferencedFileValidator:
             (dir_path / "file.txt").write_text("content")
 
         md_file = tmp_path / "README.md"
-        md_file.write_text("[Link](references/file.txt)")
+        md_content = "[Link](references/file.txt)"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path,
+            project_dir=tmp_path,
             relative_to=tmp_path,
             resource_dirs=[Path("references"), Path("assets"), Path("scripts")],
+            markdown_content=md_content,
+            markdown_file=md_file,
             ignore_dirs=[],
         )
 
@@ -192,10 +213,16 @@ class TestUnreferencedFileValidator:
 
         # Create markdown file in docs/ referencing ../references/test.txt
         md_file = docs_dir / "guide.md"
-        md_file.write_text("[Link](../references/test.txt)")
+        md_content = "[Link](../references/test.txt)"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[]
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
         )
 
         assert warnings == 0
@@ -210,10 +237,16 @@ class TestUnreferencedFileValidator:
         ignored.mkdir()
         (ignored / "file.txt").write_text("content")
 
+        md_file = tmp_path / "README.md"
+        md_content = "# No references"
+        md_file.write_text(md_content)
+
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path,
+            project_dir=tmp_path,
             relative_to=tmp_path,
             resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
             ignore_dirs=[Path(".git")],
             level=LogLevel.ERROR,
         )
@@ -232,11 +265,116 @@ class TestUnreferencedFileValidator:
         (ref_dir / "test.txt").write_text("content")
 
         md_file = tmp_path / "README.md"
-        md_file.write_text("# No references")
+        md_content = "# No references"
+        md_file.write_text(md_content)
 
         warnings, errors = validator.validate_unreferenced_files(
-            tmp_path, relative_to=tmp_path, resource_dirs=[Path("references")], ignore_dirs=[], level=LogLevel.WARNING
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
+            level=LogLevel.WARNING,
         )
 
         assert warnings == 1
+        assert errors == 0
+
+    def test_nested_markdown_references(self, validator: UnreferencedFileValidator, tmp_path: Path) -> None:
+        """Test that references from nested markdown files are detected"""
+        # Create resource files
+        ref_dir = tmp_path / "references"
+        ref_dir.mkdir()
+        (ref_dir / "main.txt").write_text("main content")
+        (ref_dir / "nested.txt").write_text("nested content")
+
+        # Create a nested markdown file
+        nested_md = tmp_path / "docs.md"
+        nested_md.write_text("[Link to nested](references/nested.txt)")
+
+        # Create main markdown file referencing the nested markdown
+        md_file = tmp_path / "README.md"
+        md_content = "[Link to main](references/main.txt)\n[Nested doc](docs.md)"
+        md_file.write_text(md_content)
+
+        warnings, errors = validator.validate_unreferenced_files(
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
+        )
+
+        # Both files should be referenced
+        assert warnings == 0
+        assert errors == 0
+
+    def test_nonexistent_resource_dir(self, validator: UnreferencedFileValidator, tmp_path: Path) -> None:
+        """Test that nonexistent resource directories are handled gracefully"""
+        md_file = tmp_path / "README.md"
+        md_content = "# No references"
+        md_file.write_text(md_content)
+
+        warnings, errors = validator.validate_unreferenced_files(
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("nonexistent")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
+        )
+
+        # Should not error on missing directory
+        assert warnings == 0
+        assert errors == 0
+
+    def test_markdown_reference_to_nonexistent_file(self, validator: UnreferencedFileValidator, tmp_path: Path) -> None:
+        """Test that references to nonexistent markdown files are handled"""
+        # Create resource file
+        ref_dir = tmp_path / "references"
+        ref_dir.mkdir()
+        (ref_dir / "test.txt").write_text("content")
+
+        # Create main markdown file referencing nonexistent markdown
+        md_file = tmp_path / "README.md"
+        md_content = "[Link](references/test.txt)\n[Bad link](nonexistent.md)"
+        md_file.write_text(md_content)
+
+        warnings, errors = validator.validate_unreferenced_files(
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
+        )
+
+        # File is referenced, nonexistent markdown is silently ignored
+        assert warnings == 0
+        assert errors == 0
+
+    def test_absolute_path_reference(self, validator: UnreferencedFileValidator, tmp_path: Path) -> None:
+        """Test absolute path references from project root"""
+        # Create resource file
+        ref_dir = tmp_path / "references"
+        ref_dir.mkdir()
+        (ref_dir / "test.txt").write_text("content")
+
+        # Create markdown with absolute path reference
+        md_file = tmp_path / "README.md"
+        md_content = "[Link](/references/test.txt)"
+        md_file.write_text(md_content)
+
+        warnings, errors = validator.validate_unreferenced_files(
+            project_dir=tmp_path,
+            relative_to=tmp_path,
+            resource_dirs=[Path("references")],
+            markdown_content=md_content,
+            markdown_file=md_file,
+            ignore_dirs=[],
+        )
+
+        assert warnings == 0
         assert errors == 0

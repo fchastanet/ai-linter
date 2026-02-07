@@ -133,12 +133,16 @@ class SkillValidator:
         nb_errors += snippet_errors
 
         # Validate unreferenced files in resource directories
+        # Pass the skill content directly to avoid re-reading the file
+        full_content = frontmatter_text + "\n---\n" + skill_content if frontmatter_text else skill_content
         unref_warnings, unref_errors = self.unreferenced_file_validator.validate_unreferenced_files(
-            Path(skill_path),
-            Path(project_root_dir),
-            [Path(d) for d in self.config.resource_dirs],
-            [Path(d) for d in self.config.ignore_dirs],
-            self.config.unreferenced_file_level,
+            project_dir=Path(skill_path),
+            relative_to=Path(project_root_dir),
+            resource_dirs=[Path(d) for d in self.config.resource_dirs],
+            markdown_content=full_content,
+            markdown_file=skill_md,
+            ignore_dirs=[Path(d) for d in self.config.ignore_dirs],
+            level=self.config.unreferenced_file_level,
         )
         nb_warnings += unref_warnings
         nb_errors += unref_errors

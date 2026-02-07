@@ -125,7 +125,14 @@ def main() -> None:
         code_snippet_validator_instance,
         config,
     )
-    agent_validator = AgentValidator(logger, parser, file_reference_validator, code_snippet_validator_instance)
+    agent_validator = AgentValidator(
+        logger,
+        parser,
+        file_reference_validator,
+        code_snippet_validator_instance,
+        unreferenced_file_validator,
+        config,
+    )
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
 
