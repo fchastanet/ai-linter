@@ -9,7 +9,12 @@ from validators.agent_validator import AgentValidator
 
 
 class ProcessAgents:
-    def __init__(self, logger: Logger, parser: Parser, agent_validator: AgentValidator) -> None:
+    def __init__(
+        self,
+        logger: Logger,
+        parser: Parser,
+        agent_validator: AgentValidator,
+    ) -> None:
         self.logger = logger
         self.parser = parser
         self.agent_validator = agent_validator

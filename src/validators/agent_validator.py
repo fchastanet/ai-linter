@@ -5,6 +5,7 @@ from pyparsing import Sequence
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
+from validators.code_snippet_validator import CodeSnippetValidator
 from validators.file_reference_validator import FileReferenceValidator
 
 
@@ -17,10 +18,12 @@ class AgentValidator:
         logger: Logger,
         parser: Parser,
         file_reference_validator: FileReferenceValidator,
+        code_snippet_validator: CodeSnippetValidator,
     ):
         self.logger = logger
         self.parser = parser
         self.file_reference_validator = file_reference_validator
+        self.code_snippet_validator = code_snippet_validator
 
     def validate_agent_file(self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path) -> tuple[int, int]:
         """Validate a single AGENTS.md file"""
@@ -64,6 +67,12 @@ class AgentValidator:
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
+
+        snippet_warnings, snippet_errors = self.code_snippet_validator.validate_code_snippets(
+            agent_file, project_dir, agent_content
+        )
+        nb_warnings += snippet_warnings
+        nb_errors += snippet_errors
 
         return nb_warnings, nb_errors
 

@@ -4,6 +4,7 @@ from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
+from validators.code_snippet_validator import CodeSnippetValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
 from validators.unreferenced_file_validator import UnreferencedFileValidator
@@ -28,11 +29,13 @@ class SkillValidator:
         file_ref_validator: FileReferenceValidator,
         front_matter_validator: FrontMatterValidator,
         unreferenced_file_validator: UnreferencedFileValidator,
+        code_snippet_validator: CodeSnippetValidator,
         config: Config,
     ):
         self.logger = logger
         self.parser = parser
         self.file_ref_validator = file_ref_validator
+        self.code_snippet_validator = code_snippet_validator
         self.front_matter_validator = front_matter_validator
         self.unreferenced_file_validator = unreferenced_file_validator
         self.config = config
@@ -122,6 +125,12 @@ class SkillValidator:
         )
         nb_warnings += nb_warnings_ref
         nb_errors += nb_errors_ref
+
+        snippet_warnings, snippet_errors = self.code_snippet_validator.validate_code_snippets(
+            skill_path, project_dir, skill_content
+        )
+        nb_warnings += snippet_warnings
+        nb_errors += snippet_errors
 
         # Validate unreferenced files in resource directories
         unref_warnings, unref_errors = self.unreferenced_file_validator.validate_unreferenced_files(

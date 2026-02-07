@@ -12,38 +12,16 @@ class CodeSnippetValidator:
         self.logger = logger
         self.max_lines = max_lines
 
-    def validate_code_snippets(self, file_path: Path, base_directory: Path) -> tuple[int, int]:
+    def validate_code_snippets(self, file_path: Path, base_directory: Path, content: str) -> tuple[int, int]:
         """
         Validate code snippets in a markdown file
         Returns tuple of (warning_count, error_count)
         """
-        if not file_path.exists():
-            self.logger.logRule(
-                LogLevel.ERROR,
-                "file-not-found",
-                f"File not found: {file_path}",
-                file_path.relative_to(base_directory),
-            )
-            return 0, 1
-
-        try:
-            content = file_path.read_text()
-        except Exception as e:
-            self.logger.logRule(
-                LogLevel.ERROR,
-                "file-read-error",
-                f"Failed to read file: {e}",
-                file_path.relative_to(base_directory),
-            )
-            return 0, 1
-
-        warnings = 0
-        errors = 0
-
         # Find all code blocks using regex
         # Matches ```language\ncode\n``` or ```\ncode\n```
         code_block_pattern = re.compile(r"```(?:\w+)?\n(.*?)```", re.DOTALL)
         matches = list(code_block_pattern.finditer(content))
+        warnings = 0
 
         if not matches:
             # No code blocks found - this is fine
@@ -71,28 +49,4 @@ class CodeSnippetValidator:
                 )
                 warnings += 1
 
-        return warnings, errors
-
-    def validate_all_markdown_files(self, directory: Path, ignore_dirs: list[Path] | None = None) -> tuple[int, int]:
-        """
-        Validate code snippets in all markdown files within a directory
-        Returns tuple of (warning_count, error_count)
-        """
-        if ignore_dirs is None:
-            ignore_dirs = []
-
-        total_warnings = 0
-        total_errors = 0
-
-        # Find all .md files recursively
-        for md_file in directory.rglob("*.md"):
-            # Check if md_file is inside any ignored directory by comparing path parts
-            rel_parts = md_file.relative_to(directory).parts
-            if any(str(ignored) in rel_parts for ignored in ignore_dirs):
-                continue
-
-            warnings, errors = self.validate_code_snippets(md_file, directory)
-            total_warnings += warnings
-            total_errors += errors
-
-        return total_warnings, total_errors
+        return warnings, 0

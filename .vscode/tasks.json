@@ -169,7 +169,7 @@
       "label": "AI Linter: Debug Pendulum Guide",
       "type": "shell",
       "command": "python",
-      "args": ["src/aiLinter.py", ".", "--skills", "--log-level", "DEBUG"],
+      "args": ["src/ai_linter.py", ".", "--skills", "--log-level", "DEBUG"],
       "group": "test",
       "problemMatcher": {
         "owner": "ai-linter",

@@ -184,8 +184,8 @@ class UnreferencedFileValidator:
                             self.logger.logRule(
                                 level,
                                 "unreferenced-resource-file",
-                                f"File '{file_path_relative_to_project}' in resource directory is not referenced"
-                                f" in any markdown file of the directory {project_dir_relative}.",
+                                f"File '{file_path_relative_to_project}' in resource directory "
+                                f"is not referenced in any markdown file of the dir²ectory {project_dir_relative}.",
                                 file=relative_path,
                             )
                             if level == LogLevel.ERROR:

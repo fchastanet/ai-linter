@@ -23,7 +23,7 @@ class TestCodeSnippetValidator:
         test_file = tmp_path / "test.md"
         test_file.write_text("# Header\n\nJust some text without code blocks.")
 
-        warnings, errors = validator.validate_code_snippets(test_file, tmp_path)
+        warnings, errors = validator.validate_code_snippets(test_file, tmp_path, test_file.read_text())
         assert warnings == 0
         assert errors == 0
 
@@ -39,7 +39,7 @@ y = 2
         test_file = tmp_path / "test.md"
         test_file.write_text(content)
 
-        warnings, errors = validator.validate_code_snippets(test_file, tmp_path)
+        warnings, errors = validator.validate_code_snippets(test_file, tmp_path, test_file.read_text())
         assert warnings == 0
         assert errors == 0
 
@@ -58,7 +58,7 @@ b = 5
         test_file = tmp_path / "test.md"
         test_file.write_text(content)
 
-        warnings, errors = validator.validate_code_snippets(test_file, tmp_path)
+        warnings, errors = validator.validate_code_snippets(test_file, tmp_path, test_file.read_text())
         assert warnings == 1
         assert errors == 0
 
@@ -66,23 +66,23 @@ b = 5
         """Test file with multiple code blocks"""
         content = """# Test
 
-```python
+````python
 x = 1
-```
+`````
 
 Some text
 
-```javascript
+````javascript
 let a = 1;
 let b = 2;
 let c = 3;
 let d = 4;
-```
+````
 """
         test_file = tmp_path / "test.md"
         test_file.write_text(content)
 
-        warnings, errors = validator.validate_code_snippets(test_file, tmp_path)
+        warnings, errors = validator.validate_code_snippets(test_file, tmp_path, test_file.read_text())
         assert warnings == 1  # Only the large JavaScript block
         assert errors == 0
 
@@ -90,17 +90,18 @@ let d = 4;
         """Test code block with language specifier"""
         content = """# Test
 
-```typescript
+````typescript
 const x: number = 1;
 const y: string = "hello";
 const z: boolean = true;
 const a: any = null;
-```
+````
+
 """
         test_file = tmp_path / "test.md"
         test_file.write_text(content)
 
-        warnings, errors = validator.validate_code_snippets(test_file, tmp_path)
+        warnings, errors = validator.validate_code_snippets(test_file, tmp_path, test_file.read_text())
         assert warnings == 1
         assert errors == 0
 
@@ -108,37 +109,16 @@ const a: any = null;
         """Test that empty lines are not counted"""
         content = """# Test
 
-```python
+````python
 x = 1
 
 y = 2
 
-```
+````
 """
         test_file = tmp_path / "test.md"
         test_file.write_text(content)
 
-        warnings, errors = validator.validate_code_snippets(test_file, tmp_path)
+        warnings, errors = validator.validate_code_snippets(test_file, tmp_path, test_file.read_text())
         assert warnings == 0  # Only 2 non-empty lines
-        assert errors == 0
-
-    def test_validate_all_markdown_files(self, validator: CodeSnippetValidator, tmp_path: Path) -> None:
-        """Test validating all markdown files in a directory"""
-        # Create multiple markdown files
-        (tmp_path / "file1.md").write_text("```python\nx = 1\n```")
-        (tmp_path / "file2.md").write_text("```python\na = 1\nb = 2\nc = 3\nd = 4\n```")
-
-        warnings, errors = validator.validate_all_markdown_files(tmp_path)
-        assert warnings == 1
-        assert errors == 0
-
-    def test_ignore_directories(self, validator: CodeSnippetValidator, tmp_path: Path) -> None:
-        """Test that ignored directories are skipped"""
-        # Create ignored directory
-        ignored_dir = tmp_path / "node_modules"
-        ignored_dir.mkdir()
-        (ignored_dir / "test.md").write_text("```python\na = 1\nb = 2\nc = 3\nd = 4\n```")
-
-        warnings, errors = validator.validate_all_markdown_files(tmp_path, ignore_dirs=[Path("node_modules")])
-        assert warnings == 0
         assert errors == 0

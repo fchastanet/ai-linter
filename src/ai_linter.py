@@ -20,7 +20,6 @@ from validators.agent_validator import AgentValidator
 from validators.code_snippet_validator import CodeSnippetValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
-from validators.prompt_agent_validator import PromptAgentValidator
 from validators.skill_validator import SkillValidator
 from validators.unreferenced_file_validator import UnreferencedFileValidator
 
@@ -36,7 +35,6 @@ parser = Parser(logger)
 ai_stats = AiStats(logger)
 file_reference_validator = FileReferenceValidator(logger, ai_stats)
 front_matter_validator = FrontMatterValidator(logger, parser)
-agent_validator = AgentValidator(logger, parser, file_reference_validator)
 
 
 def main() -> None:
@@ -116,17 +114,20 @@ def main() -> None:
     # Update logger with config values (config file overridden by CLI args)
     logger.set_level(log_level)
     logger.set_format(log_format)
-    code_snippet_validator = CodeSnippetValidator(logger, config.code_snippet_max_lines)
+    code_snippet_validator_intance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
     unreferenced_file_validator = UnreferencedFileValidator(logger)
     skill_validator = SkillValidator(
-        logger, parser, file_reference_validator, front_matter_validator, unreferenced_file_validator, config
+        logger,
+        parser,
+        file_reference_validator,
+        front_matter_validator,
+        unreferenced_file_validator,
+        code_snippet_validator_intance,
+        config,
     )
+    agent_validator = AgentValidator(logger, parser, file_reference_validator, code_snippet_validator_intance)
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
-    ai_stats = AiStats(logger)
-    prompt_agent_validator = PromptAgentValidator(
-        logger, parser, file_reference_validator, ai_stats, config.missing_agents_file_level
-    )
 
     # start processing
     start_time = os.times()
@@ -197,27 +198,6 @@ def main() -> None:
     )
     total_warnings += nb_warnings
     total_errors += nb_errors
-
-    # Process each project directory with new validators
-    for project_dir in project_dirs:
-        logger.log(
-            LogLevel.INFO,
-            f"Running additional validations for project: {project_dir}",
-        )
-
-        # Validate code snippets in all markdown files
-        snippet_warnings, snippet_errors = code_snippet_validator.validate_all_markdown_files(
-            Path(project_dir), [Path(d) for d in config.ignore_dirs]
-        )
-        total_warnings += snippet_warnings
-        total_errors += snippet_errors
-
-        # Validate prompt and agent directories
-        prompt_warnings, prompt_errors = prompt_agent_validator.validate_prompt_agent_directories(
-            Path(project_dir), [Path(d) for d in config.prompt_dirs], [Path(d) for d in config.agent_dirs]
-        )
-        total_warnings += prompt_warnings
-        total_errors += prompt_errors
 
     # Flush buffered log messages
     logger.flush()
