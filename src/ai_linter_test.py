@@ -25,6 +25,7 @@ class TestAILinter(unittest.TestCase):
             from lib.parser import Parser  # noqa: F401
             from validators.agent_validator import AgentValidator  # noqa: F401
             from validators.skill_validator import SkillValidator  # noqa: F401
+            from validators.unreferenced_file_validator import UnreferencedFileValidator  # noqa: F401
 
             self.assertTrue(True, "All imports successful")
         except ImportError as e:
