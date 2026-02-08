@@ -85,12 +85,17 @@ class Parser:
         matches = list(re.finditer(pattern, string, flags))
         if not matches:
             return
-        end = matches[-1].start()
-        newline_table = {-1: 0}
-        for i, m in enumerate(re.finditer(r"\n", string), 1):
-            if m.start() > end:
-                break
-            newline_table[m.start()] = i
-        for m in matches:
-            line_number = newline_table[string.rfind(r"\n", 0, m.start())]
-            yield m, line_number
+
+        # Compute the starting index of each line
+        line_starts = [0]
+        for m in re.finditer("\n", string):
+            line_starts.append(m.end())
+
+        for match in matches:
+            # Find the line number for match.start()
+            # Use bisect to find the right line
+            import bisect
+
+            pos = match.start()
+            line_number = bisect.bisect_right(line_starts, pos)
+            yield match, line_number

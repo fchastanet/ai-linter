@@ -55,7 +55,7 @@ class AgentValidator:
             nb_errors += 1
             return nb_warnings, nb_errors
 
-        line_number = frontmatter_text.count("\n") + 3 if frontmatter_text else 1
+        line_number = frontmatter_text.count("\n") + 3 if frontmatter_text else 0
         desc_warnings, desc_errors = self.file_reference_validator.validate_content_file_references(
             base_dirs,
             agent_file,

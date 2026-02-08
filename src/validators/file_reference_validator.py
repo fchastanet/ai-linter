@@ -37,7 +37,7 @@ class FileReferenceValidator:
                     "file-link-not-found",
                     f"File link '{link}' not found in any of the base directories: {base_dirs}",
                     file=file.relative_to(project_dir),
-                    line_number=content_start_line_number + line_number - 1,
+                    line_number=content_start_line_number + line_number,
                 )
                 file_error_count += 1
 
@@ -183,7 +183,7 @@ class FileReferenceValidator:
         try:
             full_path = Path.resolve(file.parent / link)
             if full_path.exists():
-                relative_link = str(full_path.relative_to(file.parent)).replace("\\", "/")
+                relative_link = str(full_path).replace("\\", "/")
         except ValueError:
             pass
 
@@ -192,7 +192,7 @@ class FileReferenceValidator:
                 try:
                     full_path = Path.resolve(base_dir / link)
                     if full_path.exists():
-                        relative_link = str(full_path.relative_to(file.parent)).replace("\\", "/")
+                        relative_link = str(full_path).replace("\\", "/")
                         break
                 except ValueError:
                     continue
