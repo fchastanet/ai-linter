@@ -29,7 +29,7 @@ This agent focuses on content validation:
 
 **Files processed:**
 
-- [SKILL.md](../sample-skill/SKILL.md) files in skill directories
+- [SKILL.md](sample-skill/SKILL.md) files in skill directories
 - Configuration files
 - Documentation files
 

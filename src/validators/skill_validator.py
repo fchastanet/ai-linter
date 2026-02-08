@@ -111,6 +111,8 @@ class SkillValidator:
             self.MAX_SKILL_CONTENT_TOKEN_COUNT,
             self.MAX_SKILL_CONTENT_LINES_COUNT,
             project_dir=project_dir,
+            file_type="Skill",
+            warning_threshold=self.config.report_warning_threshold,
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content

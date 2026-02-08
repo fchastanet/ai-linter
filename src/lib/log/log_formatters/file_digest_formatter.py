@@ -5,7 +5,9 @@ from collections import defaultdict
 from lib.log.log_colors import RESET
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
+from lib.log.log_formatters.report_entry import ReportEntry
 from lib.log.log_formatters.rule_message import RuleMessage
+from lib.table.tabulate_adapter import TabulateAdapter
 
 
 class FileDigestFormatter(BaseLogFormatter):
@@ -47,6 +49,28 @@ class FileDigestFormatter(BaseLogFormatter):
             for msg in unknown_messages:
                 output_lines.append(f"  ^-- {msg.rule} ({msg.level.name}): {msg.message}")
                 output_lines.append("")
+
+        return "\n".join(output_lines)
+
+    def format_report(self, entries: list[ReportEntry]) -> str:
+        """Format report entries as a table"""
+        if not entries:
+            return ""
+
+        # Generate table using tabulate adapter
+        table = TabulateAdapter.generate_report_table(entries)
+        # compute first line length
+        first_line_length = len(table.splitlines()[1]) if table else 0
+
+        output_lines = [
+            "\n" + "=" * first_line_length,
+            "Content Length Validation Report",
+            "=" * first_line_length,
+            "",
+        ]
+
+        output_lines.append(table)
+        output_lines.append("")
 
         return "\n".join(output_lines)
 

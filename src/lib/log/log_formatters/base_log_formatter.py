@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 
 from lib.log.log_format import LogFormat
+from lib.log.log_formatters.report_entry import ReportEntry
 from lib.log.log_formatters.rule_message import RuleMessage
 
 
@@ -12,6 +13,11 @@ class BaseLogFormatter(ABC):
     @abstractmethod
     def format(self, messages: list[RuleMessage]) -> str:
         """Format a list of messages for output"""
+        pass
+
+    @abstractmethod
+    def format_report(self, entries: list[ReportEntry]) -> str:
+        """Format a report from content length validation entries"""
         pass
 
     @abstractmethod

@@ -5,6 +5,7 @@ from typing import Any, Mapping, Tuple, Union
 
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.formatter_factory import LogFormatterFactory
+from lib.log.log_formatters.report_entry import ReportEntry
 from lib.log.log_formatters.rule_message import RuleMessage
 from lib.log.log_level import LogLevel
 
@@ -34,6 +35,7 @@ class Logger:
         self.level = level
         self.log_format = format
         self.messages: list[RuleMessage] = []
+        self.report_entries: list[ReportEntry] = []
 
         # Create internal Python logger
         self.general_logger = logging.getLogger(f"ai_linter.{id(self)}")
@@ -154,3 +156,80 @@ class Logger:
         if output != "":
             print(output, file=sys.stdout, end="")
         self.messages.clear()
+
+    def logReportEntry(
+        self,
+        file_path: str,
+        line_number: int,
+        file_type: str,
+        tokens: int,
+        max_tokens: int,
+        lines: int,
+        max_lines: int,
+        warning_threshold: float = 0.8,
+    ) -> tuple[int, int]:
+        """Log a report entry for content length validation.
+
+        Args:
+            file_path: Path to the validated file
+            file_type: Type of file ("Agent", "Prompt", "Skill")
+            tokens: Actual token count
+            max_tokens: Maximum allowed tokens
+            lines: Actual line count
+            max_lines: Maximum allowed lines
+            warning_threshold: Threshold (0-1) for warning status (default 0.8 = 80%)
+        """
+        # Determine status based on thresholds
+        status = "✅ Valid"
+        nb_warnings = 0
+        nb_errors = 0
+
+        # Check for errors (exceeds limits)
+        if tokens > max_tokens or lines > max_lines:
+            if tokens > max_tokens and lines > max_lines:
+                status = f"❌ Exceeds token limit ({tokens}/{max_tokens}) and line limit ({lines}/{max_lines})"
+            elif tokens > max_tokens:
+                status = f"❌ Exceeds token limit ({tokens}/{max_tokens})"
+            else:
+                status = f"❌ Exceeds line limit ({lines}/{max_lines})"
+            nb_errors += 1
+
+        # Check for warnings (approaching limits)
+        elif tokens >= max_tokens * warning_threshold or lines >= max_lines * warning_threshold:
+            token_percent = int((tokens / max_tokens) * 100)
+            line_percent = int((lines / max_lines) * 100)
+            if tokens >= max_tokens * warning_threshold and lines >= max_lines * warning_threshold:
+                status = f"⚠️ Approaching token limit ({token_percent}%) and line limit ({line_percent}%)"
+            elif tokens >= max_tokens * warning_threshold:
+                status = f"⚠️ Approaching token limit ({token_percent}%)"
+            else:
+                status = f"⚠️ Approaching line limit ({line_percent}%)"
+            nb_warnings += 1
+
+        relative_path = str(self.try_relative_path(file_path))
+        self.report_entries.append(
+            ReportEntry(
+                file_path=relative_path,
+                line_number=line_number,
+                file_type=file_type,
+                tokens=tokens,
+                max_tokens=max_tokens,
+                lines=lines,
+                max_lines=max_lines,
+                status=status,
+            )
+        )
+
+        return nb_warnings, nb_errors
+
+    def get_report_entries(self) -> list[ReportEntry]:
+        """Get all collected report entries"""
+        return self.report_entries
+
+    def flush_report(self) -> None:
+        """Output the content length report using the configured formatter"""
+        if not self.report_entries:
+            return
+        output = self.formatter.format_report(self.report_entries)
+        if output != "":
+            print(output, file=sys.stdout, end="")

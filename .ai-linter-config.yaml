@@ -59,3 +59,20 @@ unreferenced_file_level: ERROR
 # Log level for missing AGENTS.md file in project root
 # Options: ERROR, WARNING, INFO
 missing_agents_file_level: WARNING
+
+# Content length report configuration
+# Warning threshold (0.0-1.0) for content length (default: 0.8 = 80%)
+# Files that reach this percentage of the limit will show a warning in the report
+report_warning_threshold: 0.8
+
+# Maximum token count for prompts in .github/prompts directories
+prompt_max_tokens: 5000
+
+# Maximum line count for prompts in .github/prompts directories
+prompt_max_lines: 500
+
+# Maximum token count for agents in .github/agents directories
+agent_max_tokens: 5000
+
+# Maximum line count for agents in .github/agents directories
+agent_max_lines: 500

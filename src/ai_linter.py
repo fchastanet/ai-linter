@@ -15,6 +15,7 @@ from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
 from processors.process_agents import ProcessAgents
+from processors.process_prompts import ProcessPrompts
 from processors.process_skills import ProcessSkills
 from validators.agent_validator import AgentValidator
 from validators.code_snippet_validator import CodeSnippetValidator
@@ -69,6 +70,7 @@ def validate(
     )
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
+    process_prompts = ProcessPrompts(logger, parser, content_length_validator, file_reference_validator)
     # start processing
     start_time = os.times()
 
@@ -134,8 +136,37 @@ def validate(
     total_warnings += nb_warnings
     total_errors += nb_errors
 
+    # Process prompts in .github/prompts directories
+    nb_warnings, nb_errors = process_prompts.process_sub_directories(
+        [Path(d) for d in project_dirs],
+        config.prompt_dirs,
+        "Prompt",
+        config.prompt_max_tokens,
+        config.prompt_max_lines,
+        config.report_warning_threshold,
+        [Path(d) for d in ignore_dirs],
+    )
+    total_warnings += nb_warnings
+    total_errors += nb_errors
+
+    # Process agents in .github/agents directories (excluding AGENTS.md)
+    nb_warnings, nb_errors = process_prompts.process_sub_directories(
+        [Path(d) for d in project_dirs],
+        config.agent_dirs,
+        "Agent",
+        config.agent_max_tokens,
+        config.agent_max_lines,
+        config.report_warning_threshold,
+        [Path(d) for d in ignore_dirs],
+    )
+    total_warnings += nb_warnings
+    total_errors += nb_errors
+
     # Flush buffered log messages
     logger.flush()
+
+    # Display content length report
+    logger.flush_report()
 
     logger.log(
         LogLevel.INFO,
