@@ -22,7 +22,6 @@ from validators.content_length_validator import ContentLengthValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
 from validators.skill_validator import SkillValidator
-from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 try:
     from _version import version as AI_LINTER_VERSION
@@ -35,7 +34,7 @@ logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
 parser = Parser(logger)
 ai_stats = AiStats(logger)
 content_length_validator = ContentLengthValidator(logger, ai_stats)
-file_reference_validator = FileReferenceValidator(logger)
+file_reference_validator = FileReferenceValidator(logger, parser)
 front_matter_validator = FrontMatterValidator(logger, parser)
 
 
@@ -117,14 +116,12 @@ def main() -> None:
     logger.set_level(log_level)
     logger.set_format(log_format)
     code_snippet_validator_instance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
-    unreferenced_file_validator = UnreferencedFileValidator(logger)
     skill_validator = SkillValidator(
         logger,
         parser,
         content_length_validator,
         file_reference_validator,
         front_matter_validator,
-        unreferenced_file_validator,
         code_snippet_validator_instance,
         config,
     )
@@ -134,7 +131,6 @@ def main() -> None:
         content_length_validator,
         file_reference_validator,
         code_snippet_validator_instance,
-        unreferenced_file_validator,
         config,
     )
     process_skills = ProcessSkills(logger, parser, skill_validator)

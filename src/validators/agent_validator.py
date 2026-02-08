@@ -8,7 +8,6 @@ from lib.parser import Parser
 from validators.code_snippet_validator import CodeSnippetValidator
 from validators.content_length_validator import ContentLengthValidator
 from validators.file_reference_validator import FileReferenceValidator
-from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 
 class AgentValidator:
@@ -22,7 +21,6 @@ class AgentValidator:
         content_length_validator: ContentLengthValidator,
         file_reference_validator: FileReferenceValidator,
         code_snippet_validator: CodeSnippetValidator,
-        unreferenced_file_validator: UnreferencedFileValidator,
         config: Config,
     ):
         self.logger = logger
@@ -30,7 +28,6 @@ class AgentValidator:
         self.content_length_validator = content_length_validator
         self.file_reference_validator = file_reference_validator
         self.code_snippet_validator = code_snippet_validator
-        self.unreferenced_file_validator = unreferenced_file_validator
         self.config = config
 
     def validate_agent_file(self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path) -> tuple[int, int]:
@@ -60,7 +57,12 @@ class AgentValidator:
 
         line_number = frontmatter_text.count("\n") + 3 if frontmatter_text else 1
         desc_warnings, desc_errors = self.file_reference_validator.validate_content_file_references(
-            base_dirs, agent_file, agent_content, line_number, project_dir=project_dir
+            base_dirs,
+            agent_file,
+            agent_content,
+            line_number,
+            project_dir=project_dir,
+            resource_dirs=self.config.resource_dirs,
         )
         nb_warnings += desc_warnings
         nb_errors += desc_errors
@@ -81,21 +83,6 @@ class AgentValidator:
         )
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors
-
-        # Validate unreferenced files in resource directories
-        # Pass the agent content directly to avoid re-reading the file
-        unref_warnings, unref_errors = self.unreferenced_file_validator.validate_unreferenced_files(
-            project_dir=agent_file.parent,
-            relative_to=project_dir,
-            resource_dirs=[Path(d) for d in self.config.resource_dirs],
-            markdown_content=agent_content,
-            markdown_file=agent_file,
-            ignore_dirs=[Path(d) for d in self.config.ignore_dirs],
-            level=self.config.unreferenced_file_level,
-            content_start_line_number=line_number,
-        )
-        nb_warnings += unref_warnings
-        nb_errors += unref_errors
 
         return nb_warnings, nb_errors
 
