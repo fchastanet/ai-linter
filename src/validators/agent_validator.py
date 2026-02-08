@@ -1,10 +1,12 @@
 from pathlib import Path
 from typing import Sequence
 
+from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.code_snippet_validator import CodeSnippetValidator
+from validators.content_length_validator import ContentLengthValidator
 from validators.file_reference_validator import FileReferenceValidator
 
 
@@ -16,13 +18,17 @@ class AgentValidator:
         self,
         logger: Logger,
         parser: Parser,
+        content_length_validator: ContentLengthValidator,
         file_reference_validator: FileReferenceValidator,
         code_snippet_validator: CodeSnippetValidator,
+        config: Config,
     ):
         self.logger = logger
         self.parser = parser
+        self.content_length_validator = content_length_validator
         self.file_reference_validator = file_reference_validator
         self.code_snippet_validator = code_snippet_validator
+        self.config = config
 
     def validate_agent_file(self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path) -> tuple[int, int]:
         """Validate a single AGENTS.md file"""
@@ -49,14 +55,19 @@ class AgentValidator:
             nb_errors += 1
             return nb_warnings, nb_errors
 
-        line_number = frontmatter_text.count("\n") + 3 if frontmatter_text else 1
+        line_number = frontmatter_text.count("\n") + 3 if frontmatter_text else 0
         desc_warnings, desc_errors = self.file_reference_validator.validate_content_file_references(
-            base_dirs, agent_file, agent_content, line_number, project_dir=project_dir
+            base_dirs,
+            agent_file,
+            agent_content,
+            line_number,
+            project_dir=project_dir,
+            resource_dirs=self.config.resource_dirs,
         )
         nb_warnings += desc_warnings
         nb_errors += desc_errors
 
-        nb_warnings_content, nb_errors_content = self.file_reference_validator.validate_content_length(
+        nb_warnings_content, nb_errors_content = self.content_length_validator.validate_content_length(
             agent_content,
             agent_file,
             line_number,
@@ -68,7 +79,7 @@ class AgentValidator:
         nb_errors += nb_errors_content
 
         snippet_warnings, snippet_errors = self.code_snippet_validator.validate_code_snippets(
-            agent_file, project_dir, agent_content
+            agent_file, project_dir, agent_content, line_number
         )
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors

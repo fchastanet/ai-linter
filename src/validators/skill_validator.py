@@ -5,9 +5,9 @@ from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
 from validators.code_snippet_validator import CodeSnippetValidator
+from validators.content_length_validator import ContentLengthValidator
 from validators.file_reference_validator import FileReferenceValidator
 from validators.front_matter_validator import FrontMatterValidator
-from validators.unreferenced_file_validator import UnreferencedFileValidator
 
 
 class SkillValidator:
@@ -26,18 +26,18 @@ class SkillValidator:
         self,
         logger: Logger,
         parser: Parser,
+        content_length_validator: ContentLengthValidator,
         file_ref_validator: FileReferenceValidator,
         front_matter_validator: FrontMatterValidator,
-        unreferenced_file_validator: UnreferencedFileValidator,
         code_snippet_validator: CodeSnippetValidator,
         config: Config,
     ):
         self.logger = logger
         self.parser = parser
+        self.content_length_validator = content_length_validator
         self.file_ref_validator = file_ref_validator
         self.code_snippet_validator = code_snippet_validator
         self.front_matter_validator = front_matter_validator
-        self.unreferenced_file_validator = unreferenced_file_validator
         self.config = config
 
     def validate_skill(self, skill_path: Path, project_dir: Path) -> tuple[int, int]:
@@ -54,11 +54,11 @@ class SkillValidator:
                 "SKILL.md not found",
                 skill_md,
             )
-            return 1, 0
+            return 0, 1
 
         frontmatter_text, skill_content = self.parser.parse_content_and_frontmatter(skill_md)
         if frontmatter_text is None or skill_content is None:
-            return 1, 0
+            return 0, 1
 
         frontmatter, warning_count, error_count = self.parser.parse_frontmatter(frontmatter_text, skill_md)
         if error_count > 0:
@@ -104,7 +104,7 @@ class SkillValidator:
         line_number = frontmatter_text.count("\n") + 3
 
         # Validate skill content length
-        nb_warnings_content, nb_errors_content = self.file_ref_validator.validate_content_length(
+        nb_warnings_content, nb_errors_content = self.content_length_validator.validate_content_length(
             skill_content,
             skill_md,
             line_number,
@@ -122,6 +122,7 @@ class SkillValidator:
             skill_content,
             line_number,
             project_dir=project_dir,
+            resource_dirs=self.config.resource_dirs,
         )
         nb_warnings += nb_warnings_ref
         nb_errors += nb_errors_ref
@@ -131,17 +132,6 @@ class SkillValidator:
         )
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors
-
-        # Validate unreferenced files in resource directories
-        unref_warnings, unref_errors = self.unreferenced_file_validator.validate_unreferenced_files(
-            Path(skill_path),
-            Path(project_root_dir),
-            [Path(d) for d in self.config.resource_dirs],
-            [Path(d) for d in self.config.ignore_dirs],
-            self.config.unreferenced_file_level,
-        )
-        nb_warnings += unref_warnings
-        nb_errors += unref_errors
 
         return nb_warnings, nb_errors
 

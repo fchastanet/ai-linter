@@ -1,5 +1,6 @@
 import re
 from pathlib import Path
+from typing import Generator
 
 import yaml
 
@@ -75,3 +76,26 @@ class Parser:
             return None, 1, 0
 
         return frontmatter, 0, 0
+
+    def finditer_with_line_numbers(
+        self, pattern: str, string: str, flags: int = 0
+    ) -> Generator[tuple["re.Match[str]", int], None, None]:
+        import re
+
+        matches = list(re.finditer(pattern, string, flags))
+        if not matches:
+            return
+
+        # Compute the starting index of each line
+        line_starts = [0]
+        for m in re.finditer("\n", string):
+            line_starts.append(m.end())
+
+        for match in matches:
+            # Find the line number for match.start()
+            # Use bisect to find the right line
+            import bisect
+
+            pos = match.start()
+            line_number = bisect.bisect_right(line_starts, pos)
+            yield match, line_number
