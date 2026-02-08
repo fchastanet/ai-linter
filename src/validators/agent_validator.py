@@ -92,6 +92,15 @@ class AgentValidator:
         agent_files = list(project_dir.rglob("AGENTS.md"))
         nb_warnings = 0
         nb_errors = 0
+        if not agent_files:
+            self.logger.logRule(
+                LogLevel.WARNING,
+                "no-agents-found",
+                "No AGENTS.md file found in the project directory",
+                project_dir,
+            )
+            nb_warnings += 1
+            return nb_warnings, nb_errors
         for agent_file in agent_files:
             if ignore_dirs is not None and any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
                 self.logger.logRule(

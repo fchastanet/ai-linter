@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from lib.ai.stats import AiStats
-from lib.config import load_config
+from lib.config import Config, load_config
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -38,7 +38,122 @@ file_reference_validator = FileReferenceValidator(logger, parser)
 front_matter_validator = FrontMatterValidator(logger, parser)
 
 
-def main() -> None:
+def validate(
+    ignore_dirs: list[str],
+    log_level: LogLevel,
+    log_format: LogFormat,
+    config: Config,
+    skills: bool,
+    directories: list[str],
+) -> tuple[int, int]:
+    # Update logger with config values (config file overridden by CLI args)
+    logger.set_level(log_level)
+    logger.set_format(log_format)
+    code_snippet_validator_instance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
+    skill_validator = SkillValidator(
+        logger,
+        parser,
+        content_length_validator,
+        file_reference_validator,
+        front_matter_validator,
+        code_snippet_validator_instance,
+        config,
+    )
+    agent_validator = AgentValidator(
+        logger,
+        parser,
+        content_length_validator,
+        file_reference_validator,
+        code_snippet_validator_instance,
+        config,
+    )
+    process_skills = ProcessSkills(logger, parser, skill_validator)
+    process_agents = ProcessAgents(logger, parser, agent_validator)
+    # start processing
+    start_time = os.times()
+
+    # collect skill directories
+    skill_directories = {}
+    project_dirs = set()
+    skills_count = 0
+    for directory in directories:
+        directory = os.path.abspath(directory)
+        project_dirs.add(directory)
+
+        if skills:
+            # look for skills in .github/skills subdirectory
+            skills_dir = os.path.abspath(f"{directory}/.github/skills")
+            if os.path.exists(skills_dir) and os.path.isdir(skills_dir):
+                dirs = [
+                    name
+                    for name in os.listdir(skills_dir)
+                    if os.path.isdir(os.path.join(skills_dir, name))
+                    and os.path.exists(os.path.join(skills_dir, name, "SKILL.md"))
+                ]
+                for skill_dir in dirs:
+                    full_skill_dir = os.path.join(skills_dir, skill_dir)
+                    if full_skill_dir not in skill_directories:
+                        skill_directories[full_skill_dir] = directory
+            new_skills_count = len(skill_directories.keys())
+            logger.log(
+                LogLevel.INFO,
+                f"Found {new_skills_count - skills_count} skills in directory '{directory}'",
+            )
+            skills_count = new_skills_count
+            for skill_dir in skill_directories.keys():
+                if os.path.isdir(skill_dir):
+                    project_dirs.add(str(skill_validator.deduce_project_root_dir_from_skill_dir(skill_dir)))
+        else:
+            # add the directory if not already present
+            if directory not in skill_directories:
+                project_dirs.add(directory)
+
+    logger.log(
+        LogLevel.INFO,
+        f"Found {len(project_dirs)} unique project directories to process: {project_dirs} ",
+    )
+
+    total_warnings = 0
+    total_errors = 0
+
+    # process skills
+    if skills:
+        for skill_dir, project_dir in skill_directories.items():
+            logger.log(
+                LogLevel.INFO,
+                f"Processing skill directory: {skill_dir} (project: {project_dir})",
+            )
+
+            nb_warnings, nb_errors = process_skills.process_skill(Path(skill_dir), Path(project_dir))
+            total_warnings += nb_warnings
+            total_errors += nb_errors
+
+    nb_warnings, nb_errors = process_agents.process_agents(
+        [Path(d) for d in project_dirs], [Path(d) for d in ignore_dirs]
+    )
+    total_warnings += nb_warnings
+    total_errors += nb_errors
+
+    # Flush buffered log messages
+    logger.flush()
+
+    logger.log(
+        LogLevel.INFO,
+        f"Total warnings: {total_warnings}, Total errors: {total_errors}",
+    )
+
+    # finish processing
+    end_time = os.times()
+    elapsed_time = end_time.elapsed - start_time.elapsed
+    logger.log(
+        LogLevel.INFO,
+        f"Linting completed in {elapsed_time:.2f} seconds",
+    )
+
+    return total_warnings, total_errors
+
+
+def main() -> int:
     """Main entry point for the AI Linter"""
     arg_parser = argparse.ArgumentParser(description="Quick validation script for skills")
     arg_parser.add_argument(
@@ -103,6 +218,16 @@ def main() -> None:
     # unique directories
     args.directories = list(set(args.directories))
 
+    # check that directories exist
+    for directory in args.directories:
+        directory = os.path.abspath(directory)
+        if not os.path.isdir(directory):
+            logger.log(
+                LogLevel.ERROR,
+                f"Directory '{directory}' does not exist or is not a directory",
+            )
+            return 1
+
     # config file
     config_file = args.config_file if args.config_file else AI_LINTER_CONFIG_FILE
 
@@ -112,118 +237,18 @@ def main() -> None:
         args, logger, config_path, log_level, log_format, ignore_dirs, max_warnings
     )
 
-    # Update logger with config values (config file overridden by CLI args)
-    logger.set_level(log_level)
-    logger.set_format(log_format)
-    code_snippet_validator_instance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
-    skill_validator = SkillValidator(
-        logger,
-        parser,
-        content_length_validator,
-        file_reference_validator,
-        front_matter_validator,
-        code_snippet_validator_instance,
+    nb_warnings, nb_errors = validate(
+        ignore_dirs,
+        log_level,
+        log_format,
         config,
-    )
-    agent_validator = AgentValidator(
-        logger,
-        parser,
-        content_length_validator,
-        file_reference_validator,
-        code_snippet_validator_instance,
-        config,
-    )
-    process_skills = ProcessSkills(logger, parser, skill_validator)
-    process_agents = ProcessAgents(logger, parser, agent_validator)
-
-    # start processing
-    start_time = os.times()
-
-    # collect skill directories
-    skill_directories = {}
-    project_dirs = set()
-    skills_count = 0
-    for directory in args.directories:
-        directory = os.path.abspath(directory)
-        if not os.path.isdir(directory):
-            logger.log(
-                LogLevel.ERROR,
-                f"Directory '{directory}' does not exist or is not a directory",
-            )
-            sys.exit(1)
-
-        if args.skills:
-            # look for skills in .github/skills subdirectory
-            skills_dir = os.path.abspath(f"{directory}/.github/skills")
-            if os.path.exists(skills_dir) and os.path.isdir(skills_dir):
-                dirs = [
-                    name
-                    for name in os.listdir(skills_dir)
-                    if os.path.isdir(os.path.join(skills_dir, name))
-                    and os.path.exists(os.path.join(skills_dir, name, "SKILL.md"))
-                ]
-                for skill_dir in dirs:
-                    full_skill_dir = os.path.join(skills_dir, skill_dir)
-                    if full_skill_dir not in skill_directories:
-                        skill_directories[full_skill_dir] = directory
-            new_skills_count = len(skill_directories.keys())
-            logger.log(
-                LogLevel.INFO,
-                f"Found {new_skills_count - skills_count} skills in directory '{directory}'",
-            )
-            skills_count = new_skills_count
-            for skill_dir in skill_directories.keys():
-                if os.path.isdir(skill_dir):
-                    project_dirs.add(str(skill_validator.deduce_project_root_dir_from_skill_dir(skill_dir)))
-        else:
-            # add the directory if not already present
-            if directory not in skill_directories:
-                project_dirs.add(directory)
-
-    logger.log(
-        LogLevel.INFO,
-        f"Found {len(project_dirs)} unique project directories to process: {project_dirs} ",
+        args.skills,
+        args.directories,
     )
 
-    total_warnings = 0
-    total_errors = 0
-
-    # process skills
-    if args.skills:
-        for skill_dir, project_dir in skill_directories.items():
-            logger.log(
-                LogLevel.INFO,
-                f"Processing skill directory: {skill_dir} (project: {project_dir})",
-            )
-
-            nb_warnings, nb_errors = process_skills.process_skill(Path(skill_dir), Path(project_dir))
-            total_warnings += nb_warnings
-            total_errors += nb_errors
-
-    nb_warnings, nb_errors = process_agents.process_agents(
-        [Path(d) for d in project_dirs], [Path(d) for d in ignore_dirs]
-    )
-    total_warnings += nb_warnings
-    total_errors += nb_errors
-
-    # Flush buffered log messages
-    logger.flush()
-
-    logger.log(
-        LogLevel.INFO,
-        f"Total warnings: {total_warnings}, Total errors: {total_errors}",
-    )
-
-    # finish processing
-    end_time = os.times()
-    elapsed_time = end_time.elapsed - start_time.elapsed
-    logger.log(
-        LogLevel.INFO,
-        f"Linting completed in {elapsed_time:.2f} seconds",
-    )
-
-    sys.exit(0 if total_errors == 0 and (max_warnings == -1 or total_warnings <= max_warnings) else 1)
+    return 0 if nb_errors == 0 and (max_warnings == -1 or nb_warnings <= max_warnings) else 1
 
 
 if __name__ == "__main__":
-    main()
+    ret = main()
+    sys.exit(ret)
