@@ -258,7 +258,8 @@ def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:
     levelStr = levelStr.upper()
     result = LogLevel.from_string(levelStr)
     # from_string returns INFO for invalid values, so check if we got what we asked for
-    # or if it fell back to INFO (unless that's what we wanted)
-    if result == LogLevel.INFO and levelStr != "INFO" and levelStr != "INFORMATION":
+    # Check against all INFO synonyms to properly detect when fallback occurred
+    info_synonyms = ["INFO", "INFORMATION", "INFOR"]
+    if result == LogLevel.INFO and levelStr not in info_synonyms:
         return default
     return result

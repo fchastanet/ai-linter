@@ -14,8 +14,9 @@ from validators.file_reference_validator import FileReferenceValidator
 class AgentValidator:
     MAX_AGENT_CONTENT_TOKEN_COUNT = 5000  # Maximum allowed token count for skill content
     MAX_AGENT_CONTENT_LINES_COUNT = 500  # Maximum allowed lines in skill content
-    # Compile regex pattern once for better performance
+    # Compile regex patterns once for better performance
     HEADER_PATTERN = re.compile(r'^#{1,6}\s+(.+)$', re.MULTILINE)
+    TRAILING_HASH_PATTERN = re.compile(r'\s*#+\s*$')
 
     def __init__(
         self,
@@ -151,8 +152,8 @@ class AgentValidator:
         for match in matches:
             # Remove markdown formatting and normalize
             section_title = match.strip()
-            # Remove trailing hash symbols and whitespace
-            section_title = re.sub(r'\s*#+\s*$', '', section_title)
+            # Remove trailing hash symbols and whitespace using pre-compiled pattern
+            section_title = self.TRAILING_HASH_PATTERN.sub('', section_title)
             # Normalize to lowercase for case-insensitive comparison
             sections.append(section_title.lower())
 

@@ -49,6 +49,10 @@ class TestConfig:
         assert get_log_level_from_string("error", LogLevel.INFO) == LogLevel.ERROR
         assert get_log_level_from_string("advice", LogLevel.INFO) == LogLevel.ADVICE
 
+        # Test INFO synonyms
+        assert get_log_level_from_string("INFORMATION", LogLevel.ERROR) == LogLevel.INFO
+        assert get_log_level_from_string("INFOR", LogLevel.ERROR) == LogLevel.INFO
+
         # Test invalid values return default
         assert get_log_level_from_string("INVALID", LogLevel.WARNING) == LogLevel.WARNING
         assert get_log_level_from_string("UNKNOWN", LogLevel.ERROR) == LogLevel.ERROR
