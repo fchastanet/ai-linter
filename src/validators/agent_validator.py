@@ -74,6 +74,8 @@ class AgentValidator:
             self.MAX_AGENT_CONTENT_TOKEN_COUNT,
             self.MAX_AGENT_CONTENT_LINES_COUNT,
             project_dir=project_dir,
+            file_type="Agent",
+            warning_threshold=self.config.report_warning_threshold,
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
@@ -92,6 +94,19 @@ class AgentValidator:
         agent_files = list(project_dir.rglob("AGENTS.md"))
         nb_warnings = 0
         nb_errors = 0
+        if not agent_files:
+            level = self.config.missing_agents_file_level
+            self.logger.logRule(
+                level,
+                "no-agents-found",
+                "No AGENTS.md file found in the project directory",
+                project_dir,
+            )
+            if level == LogLevel.ERROR:
+                nb_errors += 1
+            elif level == LogLevel.WARNING:
+                nb_warnings += 1
+
         for agent_file in agent_files:
             if ignore_dirs is not None and any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
                 self.logger.logRule(
@@ -107,4 +122,5 @@ class AgentValidator:
             )
             nb_warnings += agent_warnings
             nb_errors += agent_errors
+
         return nb_warnings, nb_errors

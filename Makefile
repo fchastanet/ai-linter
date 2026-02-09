@@ -31,7 +31,7 @@ pre-commit:
 	pre-commit run --all-files
 
 test:
-	pytest --cov=src --cov-branch --cov-report=xml --junitxml=junit.xml -o junit_family=legacy src || echo "No tests found"
+	pytest --capture=sys --cov=src --cov-branch --cov-report=xml --junitxml=junit.xml -o junit_family=legacy src || echo "No tests found"
 
 # Run AI Linter on current directory
 ai-linter:

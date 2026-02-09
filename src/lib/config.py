@@ -22,6 +22,12 @@ class Config:
         self.resource_dirs: list[str] = ["references", "assets", "scripts"]
         self.unreferenced_file_level: LogLevel = LogLevel.ERROR  # Can be ERROR, WARNING, or INFO
         self.missing_agents_file_level: LogLevel = LogLevel.WARNING  # Level for missing AGENTS.md
+        # Report configuration
+        self.report_warning_threshold: float = 0.8  # 80% of limit triggers warning
+        self.prompt_max_tokens: int = 5000
+        self.prompt_max_lines: int = 500
+        self.agent_max_tokens: int = 5000
+        self.agent_max_lines: int = 500
 
 
 def load_config(
@@ -135,6 +141,44 @@ def load_config(
                             LogLevel.INFO,
                             "Missing AGENTS.md file level set to "
                             f"{config_obj.missing_agents_file_level} from config file",
+                        )
+
+                    # Report configuration options
+                    if "report_warning_threshold" in config and isinstance(
+                        config["report_warning_threshold"], (int, float)
+                    ):
+                        config_obj.report_warning_threshold = float(config["report_warning_threshold"])
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Report warning threshold set to {config_obj.report_warning_threshold} from config file",
+                        )
+
+                    if "prompt_max_tokens" in config and isinstance(config["prompt_max_tokens"], int):
+                        config_obj.prompt_max_tokens = config["prompt_max_tokens"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Prompt max tokens set to {config_obj.prompt_max_tokens} from config file",
+                        )
+
+                    if "prompt_max_lines" in config and isinstance(config["prompt_max_lines"], int):
+                        config_obj.prompt_max_lines = config["prompt_max_lines"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Prompt max lines set to {config_obj.prompt_max_lines} from config file",
+                        )
+
+                    if "agent_max_tokens" in config and isinstance(config["agent_max_tokens"], int):
+                        config_obj.agent_max_tokens = config["agent_max_tokens"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Agent max tokens set to {config_obj.agent_max_tokens} from config file",
+                        )
+
+                    if "agent_max_lines" in config and isinstance(config["agent_max_lines"], int):
+                        config_obj.agent_max_lines = config["agent_max_lines"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Agent max lines set to {config_obj.agent_max_lines} from config file",
                         )
 
                 else:

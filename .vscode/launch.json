@@ -12,7 +12,7 @@
         "DEBUG",
         "--skills",
         "--log-format",
-        "logfmt"
+        "file-digest"
       ],
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",

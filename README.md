@@ -36,6 +36,7 @@
   - [9.1. Installation](#91-installation)
   - [9.2. Pre-commit](#92-pre-commit)
   - [9.3. Development Workflow](#93-development-workflow)
+  - [9.4. Pytest cuseful commands](#94-pytest-cuseful-commands)
 - [10. Inspiration](#10-inspiration)
 - [11. Contributing](#11-contributing)
 - [12. License](#12-license)
@@ -438,6 +439,27 @@ make check-all
 
 # Test the linter
 make validate
+```
+
+### 9.4. Pytest cuseful commands
+
+To hide the coverage report and get the full output when an assertion fails, use:
+
+```bash
+# Option 1: Disable coverage entirely
+pytest -v --no-cov
+
+# Option 2: Show full assertion output without coverage
+pytest -v --no-cov --tb=short
+
+# Option 3: Longest traceback with full details
+pytest -v --no-cov --tb=long
+
+# Option 4: Local variables in traceback
+pytest -v --no-cov --tb=long -l
+
+# Option 5: Stop at first failure with full output
+pytest -x --no-cov -vv
 ```
 
 ## 10. Inspiration

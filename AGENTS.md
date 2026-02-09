@@ -350,7 +350,7 @@ pytest -v
 ### Custom Error Handling
 
 1. Add error codes to validators
-2. Update logging in `src/lib/log.py`
+2. Update logging in `src/lib/log/logger.py`
 3. Add problem matchers for VS Code integration
 4. Update documentation
 

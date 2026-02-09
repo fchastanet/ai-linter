@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from lib.ai.stats import AiStats
-from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 
 
@@ -11,41 +10,31 @@ class ContentLengthValidator:
         self.aiStats = aiStats
 
     def validate_content_length(
-        self, content: str, file: Path, line_number: int, max_tokens: int, max_lines: int, project_dir: Path
+        self,
+        content: str,
+        file: Path,
+        line_number: int,
+        max_tokens: int,
+        max_lines: int,
+        project_dir: Path,
+        file_type: str = "Unknown",
+        warning_threshold: float = 0.8,
     ) -> tuple[int, int]:
-        """Validate the length of the content"""
-        nb_warnings = 0
-        nb_errors = 0
+        """Validate the length of the content and log report entry"""
         # Check content token count
         token_count = self.aiStats.compute_token_count_accurate(content)
-        if token_count > max_tokens:
-            self.logger.logRule(
-                LogLevel.WARNING,
-                "too-complex-content",
-                f"Content is too complex ({token_count}/{max_tokens} tokens).",
-                file=file.relative_to(project_dir),
-                line_number=line_number,
-            )
-            nb_warnings += 1
-        else:
-            self.logger.logRule(
-                LogLevel.INFO,
-                "content-complexity",
-                f"Content token count: {token_count}/{max_tokens} tokens.",
-                file=file.relative_to(project_dir),
-                line_number=line_number,
-            )
 
         # Check content line count (max 500 lines per spec)
         line_count = content.count("\n") + 1
-        if line_count > max_lines:
-            self.logger.logRule(
-                LogLevel.ERROR,
-                "too-many-lines",
-                f"Content has too many lines ({line_count}/{max_lines} lines).",
-                file=file.relative_to(project_dir),
-                line_number=line_number,
-            )
-            nb_errors += 1
 
-        return nb_warnings, nb_errors
+        # Log report entry for the file
+        return self.logger.logReportEntry(
+            file_path=str(file.relative_to(project_dir)),
+            file_type=file_type,
+            tokens=token_count,
+            max_tokens=max_tokens,
+            lines=line_count,
+            max_lines=max_lines,
+            warning_threshold=warning_threshold,
+            line_number=line_number,
+        )
