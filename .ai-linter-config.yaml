@@ -76,3 +76,29 @@ agent_max_tokens: 5000
 
 # Maximum line count for agents in .github/agents directories
 agent_max_lines: 500
+
+# Agent section validation configuration
+# Enable or disable advice-level recommendations
+enable_advices: true
+
+# Log level for missing mandatory sections in AGENTS.md
+# Options: ERROR, WARNING, ADVICE, INFO
+missing_section_level: WARNING
+
+# List of mandatory sections that must be present in AGENTS.md files
+# These sections help ensure agents have proper documentation
+mandatory_sections:
+  - "navigating the codebase"
+  - "build & commands"
+  - "using subagents"
+  - "code style"
+  - "testing"
+  - "security"
+  - "configuration"
+
+# List of recommended sections for AGENTS.md files
+# Missing these will trigger advice-level messages (if enable_advices is true)
+recommended_sections:
+  - "git commit conventions"
+  - "architecture"
+  - "build process"

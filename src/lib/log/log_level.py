@@ -1,7 +1,7 @@
 import logging
 from enum import Enum
 
-from lib.log.log_colors import BLUE, GRAY, RED, RESET, YELLOW
+from lib.log.log_colors import BLUE, CYAN, GRAY, RED, RESET, YELLOW
 
 
 class LogLevel(Enum):
@@ -9,8 +9,9 @@ class LogLevel(Enum):
 
     ERROR = 0
     WARNING = 1
-    INFO = 2
-    DEBUG = 3
+    ADVICE = 2
+    INFO = 3
+    DEBUG = 4
 
     @classmethod
     def from_string(cls, value: str) -> "LogLevel":
@@ -28,6 +29,7 @@ class LogLevel(Enum):
             "INFORMATION": "INFO",
             "INFOR": "INFO",
             "DBG": "DEBUG",
+            "ADV": "ADVICE",
         }
         key = synonyms.get(key, key)
         if key in cls.__members__:
@@ -40,6 +42,7 @@ class LogLevel(Enum):
         level_map = {
             LogLevel.ERROR: logging.ERROR,
             LogLevel.WARNING: logging.WARNING,
+            LogLevel.ADVICE: logging.INFO,
             LogLevel.INFO: logging.INFO,
             LogLevel.DEBUG: logging.DEBUG,
         }
@@ -63,6 +66,8 @@ class LogLevel(Enum):
             return RED
         elif self.value == LogLevel.WARNING.value:
             return YELLOW
+        elif self.value == LogLevel.ADVICE.value:
+            return CYAN
         elif self.value == LogLevel.INFO.value:
             return BLUE
         elif self.value == LogLevel.DEBUG.value:
@@ -75,6 +80,8 @@ class LogLevel(Enum):
             return "ERROR"
         elif self == LogLevel.WARNING:
             return "WARN"
+        elif self == LogLevel.ADVICE:
+            return "ADVICE"
         elif self == LogLevel.INFO:
             return "INFO"
         elif self == LogLevel.DEBUG:

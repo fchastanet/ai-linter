@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from typing import Sequence
 
 from lib.config import Config
@@ -86,6 +87,13 @@ class AgentValidator:
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors
 
+        # Section validation
+        section_warnings, section_errors = self._validate_sections(
+            agent_content, agent_file, project_dir
+        )
+        nb_warnings += section_warnings
+        nb_errors += section_errors
+
         return nb_warnings, nb_errors
 
     def validate_agents_files(self, project_dir: Path, ignore_dirs: Sequence[Path] | None) -> tuple[int, int]:
@@ -122,5 +130,79 @@ class AgentValidator:
             )
             nb_warnings += agent_warnings
             nb_errors += agent_errors
+
+        return nb_warnings, nb_errors
+
+    def _extract_sections(self, content: str) -> list[str]:
+        """Extract section titles from markdown content
+
+        Args:
+            content: The markdown content to parse
+
+        Returns:
+            List of section titles (normalized to lowercase)
+        """
+        sections = []
+        # Match markdown headers (# Header, ## Header, ### Header, etc.)
+        header_pattern = re.compile(r'^#{1,6}\s+(.+)$', re.MULTILINE)
+        matches = header_pattern.findall(content)
+
+        for match in matches:
+            # Remove markdown formatting and normalize
+            section_title = match.strip()
+            # Remove trailing hash symbols and whitespace
+            section_title = re.sub(r'\s*#+\s*$', '', section_title)
+            # Normalize to lowercase for case-insensitive comparison
+            sections.append(section_title.lower())
+
+        return sections
+
+    def _validate_sections(
+        self, content: str, agent_file: Path, project_dir: Path
+    ) -> tuple[int, int]:
+        """Validate that agent content contains required sections
+
+        Args:
+            content: The agent content to validate
+            agent_file: Path to the agent file
+            project_dir: Project root directory
+
+        Returns:
+            Tuple of (warnings, errors) counts
+        """
+        nb_warnings = 0
+        nb_errors = 0
+
+        # Extract sections from content
+        found_sections = self._extract_sections(content)
+
+        # Check mandatory sections
+        for mandatory_section in self.config.mandatory_sections:
+            mandatory_lower = mandatory_section.lower()
+            if mandatory_lower not in found_sections:
+                level = self.config.missing_section_level
+                self.logger.logRule(
+                    level,
+                    "missing-mandatory-section",
+                    f'Missing mandatory section: "{mandatory_section}"',
+                    agent_file.relative_to(project_dir),
+                )
+                if level == LogLevel.ERROR:
+                    nb_errors += 1
+                elif level == LogLevel.WARNING:
+                    nb_warnings += 1
+
+        # Check recommended sections (only if advices are enabled)
+        if self.config.enable_advices:
+            for recommended_section in self.config.recommended_sections:
+                recommended_lower = recommended_section.lower()
+                if recommended_lower not in found_sections:
+                    self.logger.logRule(
+                        LogLevel.ADVICE,
+                        "missing-recommended-section",
+                        f'Consider adding recommended section: "{recommended_section}"',
+                        agent_file.relative_to(project_dir),
+                    )
+                    # Advices don't count as warnings or errors
 
         return nb_warnings, nb_errors

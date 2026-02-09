@@ -28,6 +28,23 @@ class Config:
         self.prompt_max_lines: int = 500
         self.agent_max_tokens: int = 5000
         self.agent_max_lines: int = 500
+        # Agent section validation configuration
+        self.enable_advices: bool = True  # Enable advice-level recommendations
+        self.missing_section_level: LogLevel = LogLevel.WARNING  # Level for missing mandatory sections
+        self.mandatory_sections: list[str] = [
+            "navigating the codebase",
+            "build & commands",
+            "using subagents",
+            "code style",
+            "testing",
+            "security",
+            "configuration",
+        ]
+        self.recommended_sections: list[str] = [
+            "git commit conventions",
+            "architecture",
+            "build process",
+        ]
 
 
 def load_config(
@@ -181,6 +198,37 @@ def load_config(
                             f"Agent max lines set to {config_obj.agent_max_lines} from config file",
                         )
 
+                    # Agent section validation configuration
+                    if "enable_advices" in config and isinstance(config["enable_advices"], bool):
+                        config_obj.enable_advices = config["enable_advices"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Enable advices set to {config_obj.enable_advices} from config file",
+                        )
+
+                    if "missing_section_level" in config and isinstance(config["missing_section_level"], str):
+                        config_obj.missing_section_level = get_log_level_from_string(
+                            config["missing_section_level"], LogLevel.WARNING
+                        )
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Missing section level set to {config_obj.missing_section_level} from config file",
+                        )
+
+                    if "mandatory_sections" in config and isinstance(config["mandatory_sections"], list):
+                        config_obj.mandatory_sections = config["mandatory_sections"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Mandatory sections set to {config_obj.mandatory_sections} from config file",
+                        )
+
+                    if "recommended_sections" in config and isinstance(config["recommended_sections"], list):
+                        config_obj.recommended_sections = config["recommended_sections"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Recommended sections set to {config_obj.recommended_sections} from config file",
+                        )
+
                 else:
                     logger.log(
                         LogLevel.WARNING,
@@ -208,4 +256,6 @@ def load_config(
 def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:
     """Convert string to LogLevel, with default fallback"""
     levelStr = levelStr.upper()
-    return LogLevel.from_string(levelStr) if levelStr in ["ERROR", "WARNING", "INFO"] else default
+    return (
+        LogLevel.from_string(levelStr) if levelStr in ["ERROR", "WARNING", "ADVICE", "INFO", "DEBUG"] else default
+    )
