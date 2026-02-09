@@ -256,6 +256,9 @@ def load_config(
 def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:
     """Convert string to LogLevel, with default fallback"""
     levelStr = levelStr.upper()
-    return (
-        LogLevel.from_string(levelStr) if levelStr in ["ERROR", "WARNING", "ADVICE", "INFO", "DEBUG"] else default
-    )
+    result = LogLevel.from_string(levelStr)
+    # from_string returns INFO for invalid values, so check if we got what we asked for
+    # or if it fell back to INFO (unless that's what we wanted)
+    if result == LogLevel.INFO and levelStr != "INFO" and levelStr != "INFORMATION":
+        return default
+    return result
