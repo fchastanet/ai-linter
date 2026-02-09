@@ -1,5 +1,8 @@
 """Adapter for tabulate library to generate formatted tables"""
 
+from collections.abc import Iterable, Sequence
+from typing import Any, Optional, Union
+
 from tabulate import SEPARATING_LINE
 
 from lib.log.log_formatters.report_entry import ReportEntry
@@ -27,7 +30,7 @@ class TabulateAdapter:
             # Fallback to simple formatting if tabulate is not available
             return TabulateAdapter._generate_simple_table(entries)
 
-        # Sort by severity (error, warning, valid) then by file path
+        # Sort entries by severity then by file path
         sorted_entries = sorted(entries, key=lambda e: (e.get_severity(), e.file_path))
 
         # Prepare table data
@@ -83,6 +86,36 @@ class TabulateAdapter:
 
         headers = ["File Path", "Type", "Tokens", "Lines", "Status"]
         return tabulate(table_data, headers=headers, tablefmt="simple", maxcolwidths=[50, None, None, None, 30])
+
+    @staticmethod
+    def display_table(
+        tabular_data: Any,
+        headers: str | dict[str, str] | Sequence[str] = (),
+        tablefmt: str = "simple",
+        showindex: str = "default",
+        disable_numparse: bool = False,
+        colalign: Optional[Sequence[Optional[str]]] = None,
+        maxcolwidths: Optional[Union[int, Sequence[Optional[int]]]] = None,
+        rowalign: str | Iterable[str] | None = None,
+        maxheadercolwidths: int | Iterable[int] | None = None,
+    ) -> str:
+        """Display the generated table (can be extended for different output formats)"""
+        try:
+            from tabulate import tabulate
+        except ImportError:
+            print("Tabulate library is not installed, cannot display table")
+            return ""
+        return tabulate(
+            tabular_data,
+            headers=headers,
+            tablefmt=tablefmt,
+            showindex=showindex,
+            disable_numparse=disable_numparse,
+            colalign=colalign,
+            maxcolwidths=maxcolwidths,
+            rowalign=rowalign,
+            maxheadercolwidths=maxheadercolwidths,
+        )
 
     @staticmethod
     def _generate_simple_table(entries: list[ReportEntry]) -> str:

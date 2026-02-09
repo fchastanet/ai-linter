@@ -1,5 +1,7 @@
 """Unit tests for FileDigestFormatter"""
 
+import os
+
 import pytest
 
 from lib.log.log_format import LogFormat
@@ -32,7 +34,7 @@ class TestFileDigestFormatter:
                 otherParam="param1",
             )
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         assert "test.py" in result
         assert "line 42" in result
         assert "test-error" in result
@@ -58,7 +60,7 @@ class TestFileDigestFormatter:
                 otherParam="param2",
             ),
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         assert "test.py" in result
         assert "line 5" in result
         assert "line 10" in result
@@ -85,7 +87,7 @@ class TestFileDigestFormatter:
                 otherParam="param1",
             ),
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         assert "file1.py" in result
         assert "file2.py" in result
 
@@ -101,14 +103,19 @@ class TestFileDigestFormatter:
                 otherParam="param1",
             )
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         assert "<unknown>" in result
         assert "config-set" in result
 
     def test_format_empty_messages(self, formatter: FileDigestFormatter) -> None:
         """Test formatting empty message list"""
-        result = formatter.format([])
-        assert result == ""
+        result = formatter.format([], [], os.times())
+        # Should contain report header and summary metrics
+        assert "Content Length Validation Report" in result
+        assert "Content Complexity Warnings" in result
+        assert "Content Complexity Errors" in result
+        assert "Rule Warnings" in result
+        assert "Rule Errors" in result
 
     def test_format_messages_sorted_by_line(self, formatter: FileDigestFormatter) -> None:
         """Test that messages are sorted by line number within each file"""
@@ -138,7 +145,7 @@ class TestFileDigestFormatter:
                 otherParam="param1",
             ),
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         line10_pos = result.find("Line 10")
         line20_pos = result.find("Line 20")
         line30_pos = result.find("Line 30")

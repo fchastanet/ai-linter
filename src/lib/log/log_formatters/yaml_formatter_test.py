@@ -1,5 +1,7 @@
 """Unit tests for YamlFormatter"""
 
+import os
+
 import pytest
 import yaml as pyyaml
 
@@ -33,7 +35,7 @@ class TestYamlFormatter:
                 otherParam="param1",
             )
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         data = pyyaml.safe_load(result)
         assert "files" in data
         assert "test.py" in data["files"]
@@ -62,7 +64,7 @@ class TestYamlFormatter:
                 otherParam="param2",
             ),
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         data = pyyaml.safe_load(result)
         assert len(data["files"]["test.py"]) == 2
 
@@ -86,7 +88,7 @@ class TestYamlFormatter:
                 otherParam="param1",
             ),
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         data = pyyaml.safe_load(result)
         assert "file1.py" in data["files"]
         assert "file2.py" in data["files"]
@@ -103,7 +105,7 @@ class TestYamlFormatter:
                 otherParam="param1",
             )
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         data = pyyaml.safe_load(result)
         assert "<unknown>" in data["files"]
         assert data["files"]["<unknown>"][0]["rule"] == "config-set"
@@ -120,12 +122,12 @@ class TestYamlFormatter:
                 otherParam="param1",
             )
         ]
-        result = formatter.format(messages)
+        result = formatter.format([], messages, os.times())
         data = pyyaml.safe_load(result)
         assert "line" not in data["files"]["test.py"][0]
 
     def test_format_empty_messages(self, formatter: YamlFormatter) -> None:
         """Test formatting empty message list"""
-        result = formatter.format([])
+        result = formatter.format([], [], os.times())
         data = pyyaml.safe_load(result)
         assert data["files"] == {}

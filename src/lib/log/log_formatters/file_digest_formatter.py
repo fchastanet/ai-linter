@@ -1,5 +1,6 @@
 """File-digest formatter - human-readable format grouped by file"""
 
+import os
 from collections import defaultdict
 
 from lib.log.log_colors import RESET
@@ -13,7 +14,7 @@ from lib.table.tabulate_adapter import TabulateAdapter
 class FileDigestFormatter(BaseLogFormatter):
     """Formats messages in file-digest format with line content and errors grouped by file"""
 
-    def format(self, messages: list[RuleMessage]) -> str:
+    def format(self, entries: list[ReportEntry], messages: list[RuleMessage], start_time: os.times_result) -> str:
         """Format messages in file-digest format"""
         # Group messages by file
         by_file: dict[str, list[RuleMessage]] = defaultdict(list)
@@ -24,53 +25,79 @@ class FileDigestFormatter(BaseLogFormatter):
             else:
                 by_file[msg.file].append(msg)
 
-        output_lines = []
+        rules_output_lines = []
 
         # Format file-grouped messages
         for file_path in sorted(by_file.keys()):
-            output_lines.append(f"\n{file_path}")
+            rules_output_lines.append(f"\n{file_path}")
             for msg in sorted(by_file[file_path], key=lambda m: m.line_number or 0):
                 line_num = msg.line_number
                 color = msg.level.get_level_color()
 
                 if line_num:
-                    output_lines.append(f"  (line {line_num}):")
+                    rules_output_lines.append(f"  (line {line_num}):")
                     if msg.line_content:
-                        output_lines.append(f"    {msg.line_content}")
-                    output_lines.append(f"    ^-- {color}{msg.rule} ({msg.level.name}): {msg.message}{RESET}")
+                        rules_output_lines.append(f"    {msg.line_content}")
+                    rules_output_lines.append(f"    ^-- {color}{msg.rule} ({msg.level.name}): {msg.message}{RESET}")
                 else:
-                    output_lines.append("  (no line number):")
-                    output_lines.append(f"    ^-- {color}{msg.rule} ({msg.level.name}): {msg.message}{RESET}")
-                output_lines.append("")
+                    rules_output_lines.append("  (no line number):")
+                    rules_output_lines.append(f"    ^-- {color}{msg.rule} ({msg.level.name}): {msg.message}{RESET}")
+                rules_output_lines.append("")
 
         # Format unknown messages (no file)
         if unknown_messages:
-            output_lines.append("\n<unknown>")
+            rules_output_lines.append("\n<unknown>")
             for msg in unknown_messages:
-                output_lines.append(f"  ^-- {msg.rule} ({msg.level.name}): {msg.message}")
-                output_lines.append("")
-
-        return "\n".join(output_lines)
-
-    def format_report(self, entries: list[ReportEntry]) -> str:
-        """Format report entries as a table"""
-        if not entries:
-            return ""
+                rules_output_lines.append(f"  ^-- {msg.rule} ({msg.level.name}): {msg.message}")
+                rules_output_lines.append("")
 
         # Generate table using tabulate adapter
-        table = TabulateAdapter.generate_report_table(entries)
+        sorted_entries = self.get_entries_sorted_by_severity(entries)
+        content_length_output_lines = TabulateAdapter.generate_report_table(sorted_entries)
         # compute first line length
-        first_line_length = len(table.splitlines()[1]) if table else 0
+        first_line_length = len(content_length_output_lines.splitlines()[1]) if content_length_output_lines else 80
 
-        output_lines = [
-            "\n" + "=" * first_line_length,
-            "Content Length Validation Report",
-            "=" * first_line_length,
-            "",
-        ]
+        # Format a summary report from all entries
+        data = self.get_summary(entries, messages, start_time)
+        summary_output_lines = TabulateAdapter.display_table(
+            tabular_data=[
+                [
+                    "Content Complexity Warnings",
+                    f"{data['content_complexity_warning_count']}/{data['content_complexity_files_count']}",
+                ],
+                [
+                    "Content Complexity Errors",
+                    f"{data['content_complexity_error_count']}/{data['content_complexity_files_count']}",
+                ],
+                [
+                    "Content Complexity Valid",
+                    f"{data['content_complexity_valid_count']}/{data['content_complexity_files_count']}",
+                ],
+                ["Rule Warnings", data["rule_warning_count"]],
+                ["Rule Errors", data["rule_error_count"]],
+                ["Total Elapsed Time (seconds)", f"{data['total_elapsed_time_seconds']:.2f}"],
+            ],
+            headers=["Metric", "Value"],
+        )
 
-        output_lines.append(table)
-        output_lines.append("")
+        output_lines = []
+        if rules_output_lines:
+            output_lines.extend(["\n" + "=" * first_line_length, "Rule Violations", "=" * first_line_length])
+            output_lines.extend(rules_output_lines)
+        if content_length_output_lines:
+            output_lines.extend(
+                ["\n" + "=" * first_line_length, "Content Length Validation Report", "=" * first_line_length, ""]
+            )
+            output_lines.append(content_length_output_lines)
+        if summary_output_lines:
+            output_lines.extend(
+                [
+                    "\n" + "=" * first_line_length,
+                    "Content Length Validation Report",
+                    "=" * first_line_length,
+                ]
+            )
+            output_lines.append(summary_output_lines)
 
         return "\n".join(output_lines)
 

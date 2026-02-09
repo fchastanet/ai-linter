@@ -1,5 +1,6 @@
 """YAML formatter - structured YAML output"""
 
+import os
 from collections import defaultdict
 from typing import Any
 
@@ -14,7 +15,7 @@ from lib.log.log_formatters.rule_message import RuleMessage
 class YamlFormatter(BaseLogFormatter):
     """Formats messages in YAML structure grouped by file"""
 
-    def format(self, messages: list[RuleMessage]) -> str:
+    def format(self, entries: list[ReportEntry], messages: list[RuleMessage], start_time: os.times_result) -> str:
         """Format messages in YAML format"""
 
         # Group messages by file
@@ -56,19 +57,22 @@ class YamlFormatter(BaseLogFormatter):
                 )
             output_data["files"]["<unknown>"] = unknown_file_messages
 
+        output_data["report"] = self._get_report_data(entries)
+        output_data["summary"] = self.get_summary(entries, messages, start_time)
+
         # Convert to YAML
         try:
             return yaml.dump(output_data, default_flow_style=False, sort_keys=False)
         except ImportError:
             raise RuntimeError("PyYAML is not installed, cannot format logs as YAML")
 
-    def format_report(self, entries: list[ReportEntry]) -> str:
+    def _get_report_data(self, entries: list[ReportEntry]) -> list[dict[str, Any]]:
         """Format report entries in YAML format"""
         if not entries:
-            return ""
+            return []
 
         # Sort by severity then by file path
-        sorted_entries = sorted(entries, key=lambda e: (e.get_severity(), e.file_path))
+        sorted_entries = self.get_entries_sorted_by_severity(entries)
 
         total_tokens = 0
         total_lines = 0
@@ -101,22 +105,7 @@ class YamlFormatter(BaseLogFormatter):
             else:
                 error_count += 1
 
-        output_data: dict[str, Any] = {
-            "report": report_data,
-            "summary": {
-                "total_files": len(entries),
-                "total_tokens": total_tokens,
-                "total_lines": total_lines,
-                "valid": valid_count,
-                "warnings": warning_count,
-                "errors": error_count,
-            },
-        }
-
-        try:
-            return yaml.dump(output_data, default_flow_style=False, sort_keys=False)
-        except ImportError:
-            raise RuntimeError("PyYAML is not installed, cannot format report as YAML")
+        return report_data
 
     def get_format(self) -> LogFormat:
         """Return YAML format"""

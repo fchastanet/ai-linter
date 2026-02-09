@@ -1,7 +1,5 @@
 """Unit tests for Logger report functionality"""
 
-import pytest
-
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -143,24 +141,3 @@ class TestLoggerReport:
 
         entries = logger.get_report_entries()
         assert len(entries) == 3
-
-    def test_flush_report_no_entries(self, capsys: pytest.CaptureFixture) -> None:
-        """Test flushing report with no entries"""
-        logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
-
-        logger.flush_report()
-
-        captured = capsys.readouterr()
-        assert captured.out == ""
-
-    def test_flush_report_with_entries(self, capsys: pytest.CaptureFixture) -> None:
-        """Test flushing report with entries"""
-        logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
-
-        logger.logReportEntry("test.md", 42, "Agent", 100, 5000, 10, 500, 0.8)
-
-        logger.flush_report()
-
-        captured = capsys.readouterr()
-        assert "test.md" in captured.out
-        assert "Agent" in captured.out

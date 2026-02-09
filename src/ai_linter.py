@@ -71,8 +71,6 @@ def validate(
     process_skills = ProcessSkills(logger, parser, skill_validator)
     process_agents = ProcessAgents(logger, parser, agent_validator)
     process_prompts = ProcessPrompts(logger, parser, content_length_validator, file_reference_validator)
-    # start processing
-    start_time = os.times()
 
     # collect skill directories
     skill_directories = {}
@@ -164,22 +162,6 @@ def validate(
 
     # Flush buffered log messages
     logger.flush()
-
-    # Display content length report
-    logger.flush_report()
-
-    logger.log(
-        LogLevel.INFO,
-        f"Total warnings: {total_warnings}, Total errors: {total_errors}",
-    )
-
-    # finish processing
-    end_time = os.times()
-    elapsed_time = end_time.elapsed - start_time.elapsed
-    logger.log(
-        LogLevel.INFO,
-        f"Linting completed in {elapsed_time:.2f} seconds",
-    )
 
     return total_warnings, total_errors
 

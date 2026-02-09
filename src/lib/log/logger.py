@@ -1,4 +1,5 @@
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any, Mapping, Tuple, Union
@@ -36,6 +37,7 @@ class Logger:
         self.log_format = format
         self.messages: list[RuleMessage] = []
         self.report_entries: list[ReportEntry] = []
+        self.start_time = os.times()
 
         # Create internal Python logger
         self.general_logger = logging.getLogger(f"ai_linter.{id(self)}")
@@ -152,10 +154,12 @@ class Logger:
         """Output all buffered rule messages using the configured formatter"""
         if not self.messages:
             return
-        output = self.formatter.format(self.messages)
+        output = self.formatter.format(self.report_entries, self.messages, self.start_time)
         if output != "":
-            print(output, file=sys.stdout, end="")
+            print(output, file=sys.stdout, end="\n")
+
         self.messages.clear()
+        self.report_entries.clear()
 
     def logReportEntry(
         self,
@@ -225,11 +229,3 @@ class Logger:
     def get_report_entries(self) -> list[ReportEntry]:
         """Get all collected report entries"""
         return self.report_entries
-
-    def flush_report(self) -> None:
-        """Output the content length report using the configured formatter"""
-        if not self.report_entries:
-            return
-        output = self.formatter.format_report(self.report_entries)
-        if output != "":
-            print(output, file=sys.stdout, end="")

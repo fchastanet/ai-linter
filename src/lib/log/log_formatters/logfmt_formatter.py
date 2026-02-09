@@ -1,5 +1,7 @@
 """Logfmt formatter - space-separated key=value pairs"""
 
+import os
+
 from lib.log.log_colors import RESET
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
@@ -11,7 +13,7 @@ from lib.log.log_level import LogLevel
 class LogfmtFormatter(BaseLogFormatter):
     """Formats messages as logfmt (space-separated key=value pairs)"""
 
-    def format(self, messages: list[RuleMessage]) -> str:
+    def format(self, entries: list[ReportEntry], messages: list[RuleMessage], start_time: os.times_result) -> str:
         """Print a message in logfmt format immediately to stderr"""
         output = ""
         for msg in messages:
@@ -22,6 +24,27 @@ class LogfmtFormatter(BaseLogFormatter):
                 line_number=msg.line_number,
                 message=msg.message,
             )
+
+        output += self.format_report(entries)
+
+        # Add summary
+        summary_data = self.get_summary(entries, [], start_time)
+        output += self._format_single_message(
+            level=LogLevel.INFO,
+            rule="summary",
+            relative_path="<report>",
+            line_number=None,
+            message="",
+            content_complexity_files_count=str(summary_data["content_complexity_files_count"]),
+            content_complexity_total_tokens=str(summary_data["content_complexity_total_tokens"]),
+            content_complexity_total_lines=str(summary_data["content_complexity_total_lines"]),
+            content_complexity_valid_count=str(summary_data["content_complexity_valid_count"]),
+            content_complexity_warning_count=str(summary_data["content_complexity_warning_count"]),
+            content_complexity_error_count=str(summary_data["content_complexity_error_count"]),
+            rule_warning_count=str(summary_data["rule_warning_count"]),
+            rule_error_count=str(summary_data["rule_error_count"]),
+            total_elapsed_time_seconds=str(summary_data["total_elapsed_time_seconds"]),
+        )
 
         return output
 
@@ -61,7 +84,7 @@ class LogfmtFormatter(BaseLogFormatter):
         error_count = 0
 
         # Sort by severity then by file path
-        sorted_entries = sorted(entries, key=lambda e: (e.get_severity(), e.file_path))
+        sorted_entries = self.get_entries_sorted_by_severity(entries)
 
         for entry in sorted_entries:
             # Determine level based on status
@@ -89,21 +112,6 @@ class LogfmtFormatter(BaseLogFormatter):
                 warning_count += 1
             else:
                 error_count += 1
-
-        # Add summary
-        output += self._format_single_message(
-            level=LogLevel.INFO,
-            rule="summary",
-            relative_path="<report>",
-            line_number=None,
-            message="",
-            total_files=str(len(entries)),
-            total_tokens=str(total_tokens),
-            total_lines=str(total_lines),
-            valid=str(valid_count),
-            warnings=str(warning_count),
-            errors=str(error_count),
-        )
 
         return output
 
