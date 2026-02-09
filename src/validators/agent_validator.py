@@ -1,5 +1,5 @@
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Sequence
 
 from lib.config import Config
@@ -16,9 +16,9 @@ class AgentValidator:
     MAX_AGENT_CONTENT_LINES_COUNT = 500  # Maximum allowed lines in skill content
     # Compile regex patterns once for better performance
     # Matches markdown headers (# through ######) and captures the header text
-    HEADER_PATTERN = re.compile(r'^#{1,6}\s+(.+)$', re.MULTILINE)
+    HEADER_PATTERN = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
     # Matches trailing hash symbols and whitespace in headers
-    TRAILING_HASH_PATTERN = re.compile(r'\s*#+\s*$')
+    TRAILING_HASH_PATTERN = re.compile(r"\s*#+\s*$")
 
     def __init__(
         self,
@@ -93,9 +93,7 @@ class AgentValidator:
         nb_errors += snippet_errors
 
         # Section validation
-        section_warnings, section_errors = self._validate_sections(
-            agent_content, agent_file, project_dir
-        )
+        section_warnings, section_errors = self._validate_sections(agent_content, agent_file, project_dir)
         nb_warnings += section_warnings
         nb_errors += section_errors
 
@@ -155,15 +153,13 @@ class AgentValidator:
             # Remove markdown formatting and normalize
             section_title = match.strip()
             # Remove trailing hash symbols and whitespace using pre-compiled pattern
-            section_title = self.TRAILING_HASH_PATTERN.sub('', section_title)
+            section_title = self.TRAILING_HASH_PATTERN.sub("", section_title)
             # Normalize to lowercase for case-insensitive comparison
             sections.append(section_title.lower())
 
         return sections
 
-    def _validate_sections(
-        self, content: str, agent_file: Path, project_dir: Path
-    ) -> tuple[int, int]:
+    def _validate_sections(self, content: str, agent_file: Path, project_dir: Path) -> tuple[int, int]:
         """Validate that agent content contains required sections
 
         Args:
@@ -181,23 +177,24 @@ class AgentValidator:
         found_sections = self._extract_sections(content)
 
         # Check mandatory sections
-        for mandatory_section in self.config.mandatory_sections:
-            mandatory_lower = mandatory_section.lower()
-            if mandatory_lower not in found_sections:
-                level = self.config.missing_section_level
-                self.logger.logRule(
-                    level,
-                    "missing-mandatory-section",
-                    f'Missing mandatory section: "{mandatory_section}"',
-                    agent_file.relative_to(project_dir),
-                )
-                if level == LogLevel.ERROR:
-                    nb_errors += 1
-                elif level == LogLevel.WARNING:
-                    nb_warnings += 1
+        if self.config.enable_section_mandatory:
+            for mandatory_section in self.config.mandatory_sections:
+                mandatory_lower = mandatory_section.lower()
+                if mandatory_lower not in found_sections:
+                    level = self.config.missing_section_level
+                    self.logger.logRule(
+                        level,
+                        "missing-mandatory-section",
+                        f'Missing mandatory section: "{mandatory_section}"',
+                        agent_file.relative_to(project_dir),
+                    )
+                    if level == LogLevel.ERROR:
+                        nb_errors += 1
+                    elif level == LogLevel.WARNING:
+                        nb_warnings += 1
 
         # Check recommended sections (only if advices are enabled)
-        if self.config.enable_advices:
+        if self.config.enable_section_advices:
             for recommended_section in self.config.recommended_sections:
                 recommended_lower = recommended_section.lower()
                 if recommended_lower not in found_sections:

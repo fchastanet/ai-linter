@@ -29,21 +29,24 @@ class Config:
         self.agent_max_tokens: int = 5000
         self.agent_max_lines: int = 500
         # Agent section validation configuration
-        self.enable_advices: bool = True  # Enable advice-level recommendations
+        self.enable_section_advices: bool = True  # Enable advice-level recommendations
+        self.enable_section_mandatory: bool = True  # Enable mandatory section validation
         self.missing_section_level: LogLevel = LogLevel.WARNING  # Level for missing mandatory sections
         self.mandatory_sections: list[str] = [
-            "navigating the codebase",
-            "build & commands",
-            "using subagents",
-            "code style",
-            "testing",
-            "security",
-            "configuration",
+            "Overview",
+            "Limitations",
+            "Navigating the Codebase",
+            "Build & Commands",
+            "Code Style",
+            "Testing",
+            "Security",
+            "Configuration",
         ]
         self.recommended_sections: list[str] = [
-            "git commit conventions",
-            "architecture",
-            "build process",
+            "Architecture",
+            "Build Process",
+            "Git Commit Conventions",
+            "Troubleshooting",
         ]
 
 
@@ -199,11 +202,19 @@ def load_config(
                         )
 
                     # Agent section validation configuration
-                    if "enable_advices" in config and isinstance(config["enable_advices"], bool):
-                        config_obj.enable_advices = config["enable_advices"]
+                    if "enable_section_advices" in config and isinstance(config["enable_section_advices"], bool):
+                        config_obj.enable_section_advices = config["enable_section_advices"]
                         logger.log(
                             LogLevel.INFO,
-                            f"Enable advices set to {config_obj.enable_advices} from config file",
+                            f"Enable advices set to {config_obj.enable_section_advices} from config file",
+                        )
+
+                    if "enable_section_mandatory" in config and isinstance(config["enable_section_mandatory"], bool):
+                        config_obj.enable_section_mandatory = config["enable_section_mandatory"]
+                        logger.log(
+                            LogLevel.INFO,
+                            f"Enable mandatory section validation set to "
+                            f"{config_obj.enable_section_mandatory} from config file",
                         )
 
                     if "missing_section_level" in config and isinstance(config["missing_section_level"], str):

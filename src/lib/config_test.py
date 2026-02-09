@@ -1,11 +1,11 @@
-from pathlib import Path
 from argparse import Namespace
+from pathlib import Path
 
 import yaml
 
-from lib.config import Config, load_config, get_log_level_from_string
-from lib.log.log_level import LogLevel
+from lib.config import Config, get_log_level_from_string, load_config
 from lib.log.log_format import LogFormat
+from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 
 
@@ -27,15 +27,16 @@ class TestConfig:
         assert config.missing_agents_file_level == LogLevel.WARNING
 
         # Test new defaults
-        assert config.enable_advices is True
+        assert config.enable_section_mandatory is True
+        assert config.enable_section_advices is True
         assert config.missing_section_level == LogLevel.WARNING
-        assert len(config.mandatory_sections) == 7
-        assert "navigating the codebase" in config.mandatory_sections
-        assert "build & commands" in config.mandatory_sections
-        assert "security" in config.mandatory_sections
-        assert len(config.recommended_sections) == 3
-        assert "git commit conventions" in config.recommended_sections
-        assert "architecture" in config.recommended_sections
+        assert len(config.mandatory_sections) == 8
+        assert "Navigating the Codebase" in config.mandatory_sections
+        assert "Build & Commands" in config.mandatory_sections
+        assert "Security" in config.mandatory_sections
+        assert len(config.recommended_sections) == 4
+        assert "Git Commit Conventions" in config.recommended_sections
+        assert "Architecture" in config.recommended_sections
 
     def test_get_log_level_from_string(self) -> None:
         """Test get_log_level_from_string function"""
@@ -93,7 +94,8 @@ class TestConfig:
         config_path = tmp_path / "config.yaml"
 
         config_data = {
-            "enable_advices": False,
+            "enable_section_mandatory": False,
+            "enable_section_advices": False,
             "missing_section_level": "ERROR",
             "mandatory_sections": ["security", "testing"],
             "recommended_sections": ["architecture", "deployment"],
@@ -104,7 +106,8 @@ class TestConfig:
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
 
-        assert config.enable_advices is False
+        assert config.enable_section_advices is False
+        assert config.enable_section_mandatory is False
         assert config.missing_section_level == LogLevel.ERROR
         assert config.mandatory_sections == ["security", "testing"]
         assert config.recommended_sections == ["architecture", "deployment"]
@@ -167,7 +170,8 @@ class TestConfig:
             "prompt_max_lines": 600,
             "agent_max_tokens": 7000,
             "agent_max_lines": 700,
-            "enable_advices": False,
+            "enable_section_advices": False,
+            "enable_section_mandatory": False,
             "missing_section_level": "ERROR",
             "mandatory_sections": ["testing"],
             "recommended_sections": ["architecture"],
@@ -193,7 +197,8 @@ class TestConfig:
         assert config.prompt_max_lines == 600
         assert config.agent_max_tokens == 7000
         assert config.agent_max_lines == 700
-        assert config.enable_advices is False
+        assert config.enable_section_advices is False
+        assert config.enable_section_mandatory is False
         assert config.missing_section_level == LogLevel.ERROR
         assert config.mandatory_sections == ["testing"]
         assert config.recommended_sections == ["architecture"]

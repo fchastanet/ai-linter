@@ -215,6 +215,14 @@ Final content.
         """Test validation when all mandatory sections are present"""
         content = """# Agent Documentation
 
+## Overview
+
+Description of the agent.
+
+## Limitations
+
+Known limitations of the agent.
+
 ## Navigating the Codebase
 
 Description here.
@@ -222,10 +230,6 @@ Description here.
 ## Build & Commands
 
 More info.
-
-## Using Subagents
-
-Details.
 
 ## Code Style
 
@@ -294,12 +298,13 @@ Just some content.
         content = """# Agent Documentation
 
 ## NAVIGATING THE CODEBASE
-## build & COMMANDS
-## Using SubAgents
-## CODE style
+## OVERVIEW
+## LIMITATIONS
+## BUILD & COMMANDS
+## CODE STYLE
 ## TESTING
-## Security
-## configuration
+## SECURITY
+## CONFIGURATION
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
@@ -315,11 +320,13 @@ Just some content.
     ) -> None:
         """Test that missing recommended sections generate advice messages"""
         # Ensure advices are enabled
-        config.enable_advices = True
+        config.enable_section_advices = True
         validator.config = config
 
         content = """# Agent Documentation
 
+## Overview
+## Limitations
 ## Navigating the Codebase
 ## Build & Commands
 ## Using Subagents
@@ -337,15 +344,41 @@ Just some content.
         assert errors == 0
         assert warnings == 0
 
+    def test_validate_sections_recommended_disabled(
+        self, validator: AgentValidator, config: Config, tmp_path: Path
+    ) -> None:
+        """Test that missing recommended sections do not generate advice messages when disabled"""
+        config.enable_section_mandatory = False
+        validator.config = config
+
+        content = """# Agent Documentation
+## Navigating the Codebase
+## Build & Commands
+## Using Subagents
+## Code Style
+## Testing
+## Security
+## Configuration
+"""
+        agent_file = tmp_path / "AGENTS.md"
+        agent_file.write_text(content)
+
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        # Should not generate any messages when advices disabled
+        assert errors == 0
+        assert warnings == 0
+
     def test_validate_sections_advices_disabled(
         self, validator: AgentValidator, config: Config, tmp_path: Path
     ) -> None:
         """Test that advices can be disabled"""
-        config.enable_advices = False
+        config.enable_section_advices = False
         validator.config = config
 
         content = """# Agent Documentation
 
+## Overview
+## Limitations
 ## Navigating the Codebase
 ## Build & Commands
 ## Using Subagents
