@@ -173,7 +173,7 @@ More content.
 Final content.
 """
         sections = validator._extract_sections(content)
-        
+
         assert "main title" in sections
         assert "section one" in sections
         assert "subsection" in sections
@@ -189,7 +189,7 @@ Final content.
 ###### H6 Header
 """
         sections = validator._extract_sections(content)
-        
+
         assert len(sections) == 6
         assert "h1 header" in sections
         assert "h6 header" in sections
@@ -201,7 +201,7 @@ Final content.
 ## Git Commit Conventions
 """
         sections = validator._extract_sections(content)
-        
+
         assert "build & commands" in sections
         assert "using sub-agents" in sections
         assert "git commit conventions" in sections
@@ -245,9 +245,9 @@ Config details.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # All mandatory sections present, should have no errors
         assert errors == 0
         assert warnings == 0
@@ -262,9 +262,9 @@ Just some content.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # Should have warnings for missing mandatory sections (default is WARNING level)
         assert warnings == 7  # All 7 mandatory sections missing
 
@@ -274,7 +274,7 @@ Just some content.
         """Test validation when mandatory sections are missing with ERROR level"""
         config.missing_section_level = LogLevel.ERROR
         validator.config = config
-        
+
         content = """# Agent Documentation
 
 ## Some Other Section
@@ -283,9 +283,9 @@ Just some content.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # Should have errors for missing mandatory sections
         assert errors == 7  # All 7 mandatory sections missing
 
@@ -303,9 +303,9 @@ Just some content.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # All mandatory sections present (case-insensitive match)
         assert errors == 0
         assert warnings == 0
@@ -317,7 +317,7 @@ Just some content.
         # Ensure advices are enabled
         config.enable_advices = True
         validator.config = config
-        
+
         content = """# Agent Documentation
 
 ## Navigating the Codebase
@@ -330,9 +330,9 @@ Just some content.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # No warnings or errors, just advice messages (not counted)
         assert errors == 0
         assert warnings == 0
@@ -343,7 +343,7 @@ Just some content.
         """Test that advices can be disabled"""
         config.enable_advices = False
         validator.config = config
-        
+
         content = """# Agent Documentation
 
 ## Navigating the Codebase
@@ -356,9 +356,9 @@ Just some content.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # Should not generate any messages when advices disabled
         assert errors == 0
         assert warnings == 0
@@ -369,7 +369,7 @@ Just some content.
         """Test validation with custom mandatory sections"""
         config.mandatory_sections = ["testing", "security"]
         validator.config = config
-        
+
         content = """# Agent Documentation
 
 ## Testing
@@ -378,9 +378,9 @@ Test info here.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # Should warn about missing "security" section only
         assert warnings == 1
 
@@ -391,7 +391,7 @@ Test info here.
         config.recommended_sections = ["deployment", "monitoring"]
         config.mandatory_sections = []  # No mandatory sections
         validator.config = config
-        
+
         content = """# Agent Documentation
 
 ## Deployment
@@ -400,9 +400,9 @@ Deployment info.
 """
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
-        
+
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        
+
         # Should not error or warn, just advice about missing "monitoring"
         assert errors == 0
         assert warnings == 0

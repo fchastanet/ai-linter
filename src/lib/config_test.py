@@ -1,7 +1,6 @@
 from pathlib import Path
 from argparse import Namespace
 
-import pytest
 import yaml
 
 from lib.config import Config, load_config, get_log_level_from_string
@@ -16,7 +15,7 @@ class TestConfig:
     def test_config_defaults(self) -> None:
         """Test that Config has expected default values"""
         config = Config()
-        
+
         assert config.log_level == LogLevel.INFO
         assert config.log_format == LogFormat.FILE_DIGEST
         assert config.max_warnings == -1
@@ -26,7 +25,7 @@ class TestConfig:
         assert config.report_warning_threshold == 0.8
         assert config.unreferenced_file_level == LogLevel.ERROR
         assert config.missing_agents_file_level == LogLevel.WARNING
-        
+
         # Test new defaults
         assert config.enable_advices is True
         assert config.missing_section_level == LogLevel.WARNING
@@ -45,11 +44,11 @@ class TestConfig:
         assert get_log_level_from_string("ADVICE", LogLevel.INFO) == LogLevel.ADVICE
         assert get_log_level_from_string("INFO", LogLevel.ERROR) == LogLevel.INFO
         assert get_log_level_from_string("DEBUG", LogLevel.ERROR) == LogLevel.DEBUG
-        
+
         # Test case insensitivity
         assert get_log_level_from_string("error", LogLevel.INFO) == LogLevel.ERROR
         assert get_log_level_from_string("advice", LogLevel.INFO) == LogLevel.ADVICE
-        
+
         # Test invalid values return default
         assert get_log_level_from_string("INVALID", LogLevel.WARNING) == LogLevel.WARNING
         assert get_log_level_from_string("UNKNOWN", LogLevel.ERROR) == LogLevel.ERROR
@@ -59,11 +58,11 @@ class TestConfig:
         logger = Logger(LogLevel.INFO)
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = str(tmp_path / "nonexistent.yaml")
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, config_path, LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         assert log_level == LogLevel.INFO
         assert log_format == LogFormat.FILE_DIGEST
         assert max_warnings == -1
@@ -75,11 +74,11 @@ class TestConfig:
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = tmp_path / "empty.yaml"
         config_path.write_text("")
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         assert log_level == LogLevel.INFO
         assert isinstance(config, Config)
 
@@ -88,7 +87,7 @@ class TestConfig:
         logger = Logger(LogLevel.INFO)
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = tmp_path / "config.yaml"
-        
+
         config_data = {
             "enable_advices": False,
             "missing_section_level": "ERROR",
@@ -96,11 +95,11 @@ class TestConfig:
             "recommended_sections": ["architecture", "deployment"],
         }
         config_path.write_text(yaml.dump(config_data))
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         assert config.enable_advices is False
         assert config.missing_section_level == LogLevel.ERROR
         assert config.mandatory_sections == ["security", "testing"]
@@ -111,14 +110,14 @@ class TestConfig:
         logger = Logger(LogLevel.INFO)
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = tmp_path / "config.yaml"
-        
+
         config_data = {"log_level": "WARNING"}
         config_path.write_text(yaml.dump(config_data))
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         assert log_level == LogLevel.WARNING
         assert config.log_level == LogLevel.WARNING
 
@@ -127,17 +126,17 @@ class TestConfig:
         logger = Logger(LogLevel.INFO)
         args = Namespace(log_level="DEBUG", log_format=None, max_warnings=5, ignore_dirs=None)
         config_path = tmp_path / "config.yaml"
-        
+
         config_data = {
             "log_level": "WARNING",
             "max_warnings": 10,
         }
         config_path.write_text(yaml.dump(config_data))
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.DEBUG, LogFormat.FILE_DIGEST, [], 5
         )
-        
+
         # CLI overrides file
         assert log_level == LogLevel.DEBUG
         assert max_warnings == 5
@@ -147,7 +146,7 @@ class TestConfig:
         logger = Logger(LogLevel.INFO)
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = tmp_path / "config.yaml"
-        
+
         config_data = {
             "log_level": "DEBUG",
             "log_format": "yaml",
@@ -170,11 +169,11 @@ class TestConfig:
             "recommended_sections": ["architecture"],
         }
         config_path.write_text(yaml.dump(config_data))
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         assert log_level == LogLevel.DEBUG
         assert log_format == LogFormat.YAML
         assert max_warnings == 20
@@ -201,11 +200,11 @@ class TestConfig:
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = tmp_path / "invalid.yaml"
         config_path.write_text("invalid: yaml: content:")
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         # Should fallback to defaults
         assert log_level == LogLevel.INFO
         assert isinstance(config, Config)
@@ -216,11 +215,11 @@ class TestConfig:
         args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = tmp_path / "list.yaml"
         config_path.write_text("- item1\n- item2")
-        
+
         ignore_dirs, log_level, log_format, max_warnings, config = load_config(
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
-        
+
         # Should fallback to defaults
         assert log_level == LogLevel.INFO
         assert isinstance(config, Config)

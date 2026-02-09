@@ -1,7 +1,5 @@
 import logging
 
-import pytest
-
 from lib.log.log_level import LogLevel
 
 
