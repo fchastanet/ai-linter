@@ -86,3 +86,30 @@ class TestLogLevel:
         assert str(LogLevel.ADVICE) == "ADVICE"
         assert str(LogLevel.INFO) == "INFO"
         assert str(LogLevel.DEBUG) == "DEBUG"
+
+    def test_is_valid_string(self) -> None:
+        """Test is_valid_string method"""
+        # Valid log levels
+        assert LogLevel.is_valid_string("ERROR") is True
+        assert LogLevel.is_valid_string("WARNING") is True
+        assert LogLevel.is_valid_string("ADVICE") is True
+        assert LogLevel.is_valid_string("INFO") is True
+        assert LogLevel.is_valid_string("DEBUG") is True
+
+        # Case insensitive
+        assert LogLevel.is_valid_string("error") is True
+        assert LogLevel.is_valid_string("Warning") is True
+
+        # Valid synonyms
+        assert LogLevel.is_valid_string("ERR") is True
+        assert LogLevel.is_valid_string("WARN") is True
+        assert LogLevel.is_valid_string("ADV") is True
+        assert LogLevel.is_valid_string("INFORMATION") is True
+        assert LogLevel.is_valid_string("INFOR") is True
+        assert LogLevel.is_valid_string("DBG") is True
+
+        # Invalid values
+        assert LogLevel.is_valid_string("INVALID") is False
+        assert LogLevel.is_valid_string("UNKNOWN") is False
+        assert LogLevel.is_valid_string("") is False
+        assert LogLevel.is_valid_string(None) is False  # type: ignore[arg-type]

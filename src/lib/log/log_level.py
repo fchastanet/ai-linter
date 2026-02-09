@@ -37,6 +37,24 @@ class LogLevel(Enum):
         # Fallback to INFO if unknown
         return cls.INFO
 
+    @classmethod
+    def is_valid_string(cls, value: str) -> bool:
+        """Check if a string is a valid log level (including synonyms)."""
+        if value is None:
+            return False
+        key = str(value).strip().upper()
+        # Accept common synonyms
+        synonyms = {
+            "ERR": "ERROR",
+            "WARN": "WARNING",
+            "INFORMATION": "INFO",
+            "INFOR": "INFO",
+            "DBG": "DEBUG",
+            "ADV": "ADVICE",
+        }
+        key = synonyms.get(key, key)
+        return key in cls.__members__
+
     def to_python_level(self) -> int:
         """Convert LogLevel to Python logging level"""
         level_map = {
