@@ -3,8 +3,6 @@
 from collections.abc import Iterable, Sequence
 from typing import Any, Optional, Union
 
-from tabulate import SEPARATING_LINE
-
 from lib.log.log_formatters.report_entry import ReportEntry
 
 
@@ -25,12 +23,12 @@ class TabulateAdapter:
             return ""
 
         try:
-            from tabulate import tabulate
+            from tabulate import SEPARATING_LINE, tabulate
         except ImportError:
             # Fallback to simple formatting if tabulate is not available
             return TabulateAdapter._generate_simple_table(entries)
 
-        # Sort entries by severity then by file path
+        # Sort by severity (valid, warning, error) then by file path
         sorted_entries = sorted(entries, key=lambda e: (e.get_severity(), e.file_path))
 
         # Prepare table data

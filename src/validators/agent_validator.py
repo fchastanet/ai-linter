@@ -95,14 +95,18 @@ class AgentValidator:
         nb_warnings = 0
         nb_errors = 0
         if not agent_files:
+            level = self.config.missing_agents_file_level
             self.logger.logRule(
-                LogLevel.WARNING,
+                level,
                 "no-agents-found",
                 "No AGENTS.md file found in the project directory",
                 project_dir,
             )
-            nb_warnings += 1
-            return nb_warnings, nb_errors
+            if level == LogLevel.ERROR:
+                nb_errors += 1
+            elif level == LogLevel.WARNING:
+                nb_warnings += 1
+
         for agent_file in agent_files:
             if ignore_dirs is not None and any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
                 self.logger.logRule(
@@ -118,4 +122,5 @@ class AgentValidator:
             )
             nb_warnings += agent_warnings
             nb_errors += agent_errors
+
         return nb_warnings, nb_errors

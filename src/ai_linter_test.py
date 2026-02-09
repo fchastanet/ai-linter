@@ -39,7 +39,7 @@ class TestAILinter:
             (False),
         ],
     )
-    def test_validate_at_least_one_agent_should_exists_in_project_directory(
+    def test_validate_at_least_one_agent_should_exist_in_project_directory(
         self, capsys: pytest.CaptureFixture, skills: bool
     ) -> None:
         """Test that at least one agent exists in the project directory"""

@@ -55,7 +55,8 @@ class FileDigestFormatter(BaseLogFormatter):
         sorted_entries = self.get_entries_sorted_by_severity(entries)
         content_length_output_lines = TabulateAdapter.generate_report_table(sorted_entries)
         # compute first line length
-        first_line_length = len(content_length_output_lines.splitlines()[1]) if content_length_output_lines else 80
+        lines = content_length_output_lines.splitlines() if content_length_output_lines else []
+        banner_width = max((len(line) for line in lines), default=80)
 
         # Format a summary report from all entries
         data = self.get_summary(entries, messages, start_time)
@@ -82,19 +83,17 @@ class FileDigestFormatter(BaseLogFormatter):
 
         output_lines = []
         if rules_output_lines:
-            output_lines.extend(["\n" + "=" * first_line_length, "Rule Violations", "=" * first_line_length])
+            output_lines.extend(["\n" + "=" * banner_width, "Rule Violations", "=" * banner_width])
             output_lines.extend(rules_output_lines)
         if content_length_output_lines:
-            output_lines.extend(
-                ["\n" + "=" * first_line_length, "Content Length Validation Report", "=" * first_line_length, ""]
-            )
+            output_lines.extend(["\n" + "=" * banner_width, "Content Length Validation Report", "=" * banner_width, ""])
             output_lines.append(content_length_output_lines)
         if summary_output_lines:
             output_lines.extend(
                 [
-                    "\n" + "=" * first_line_length,
+                    "\n" + "=" * banner_width,
                     "Content Length Validation Report",
-                    "=" * first_line_length,
+                    "=" * banner_width,
                 ]
             )
             output_lines.append(summary_output_lines)
