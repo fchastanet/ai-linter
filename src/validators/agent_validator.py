@@ -15,7 +15,9 @@ class AgentValidator:
     MAX_AGENT_CONTENT_TOKEN_COUNT = 5000  # Maximum allowed token count for skill content
     MAX_AGENT_CONTENT_LINES_COUNT = 500  # Maximum allowed lines in skill content
     # Compile regex patterns once for better performance
+    # Matches markdown headers (# through ######) and captures the header text
     HEADER_PATTERN = re.compile(r'^#{1,6}\s+(.+)$', re.MULTILINE)
+    # Matches trailing hash symbols and whitespace in headers
     TRAILING_HASH_PATTERN = re.compile(r'\s*#+\s*$')
 
     def __init__(

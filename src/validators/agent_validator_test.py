@@ -266,7 +266,7 @@ Just some content.
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
 
         # Should have warnings for missing mandatory sections (default is WARNING level)
-        assert warnings == 7  # All 7 mandatory sections missing
+        assert warnings == len(validator.config.mandatory_sections)  # All mandatory sections missing
 
     def test_validate_sections_missing_mandatory_error_level(
         self, validator: AgentValidator, config: Config, tmp_path: Path
@@ -287,7 +287,7 @@ Just some content.
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
 
         # Should have errors for missing mandatory sections
-        assert errors == 7  # All 7 mandatory sections missing
+        assert errors == len(validator.config.mandatory_sections)  # All mandatory sections missing
 
     def test_validate_sections_case_insensitive(self, validator: AgentValidator, tmp_path: Path) -> None:
         """Test that section matching is case-insensitive"""

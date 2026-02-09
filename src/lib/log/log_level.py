@@ -38,7 +38,7 @@ class LogLevel(Enum):
         return cls.INFO
 
     @classmethod
-    def is_valid_string(cls, value: str) -> bool:
+    def is_valid_string(cls, value: str | None) -> bool:
         """Check if a string is a valid log level (including synonyms)."""
         if value is None:
             return False
