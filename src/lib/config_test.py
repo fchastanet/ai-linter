@@ -27,16 +27,16 @@ class TestConfig:
         assert config.missing_agents_file_level == LogLevel.WARNING
 
         # Test new defaults
-        assert config.enable_section_mandatory is True
-        assert config.enable_section_advices is True
-        assert config.missing_section_level == LogLevel.WARNING
+        assert config.enable_mandatory_sections is True
+        assert config.enable_advised_sections is True
+        assert config.mandatory_sections_log_level == LogLevel.WARNING
         assert len(config.mandatory_sections) == 8
         assert "Navigating the Codebase" in config.mandatory_sections
         assert "Build & Commands" in config.mandatory_sections
         assert "Security" in config.mandatory_sections
-        assert len(config.recommended_sections) == 4
-        assert "Git Commit Conventions" in config.recommended_sections
-        assert "Architecture" in config.recommended_sections
+        assert len(config.advised_sections) == 4
+        assert "Git Commit Conventions" in config.advised_sections
+        assert "Architecture" in config.advised_sections
 
     def test_get_log_level_from_string(self) -> None:
         """Test get_log_level_from_string function"""
@@ -94,11 +94,11 @@ class TestConfig:
         config_path = tmp_path / "config.yaml"
 
         config_data = {
-            "enable_section_mandatory": False,
-            "enable_section_advices": False,
-            "missing_section_level": "ERROR",
+            "enable_mandatory_sections": False,
+            "enable_advised_sections": False,
+            "mandatory_sections_log_level": "ERROR",
             "mandatory_sections": ["security", "testing"],
-            "recommended_sections": ["architecture", "deployment"],
+            "advised_sections": ["architecture", "deployment"],
         }
         config_path.write_text(yaml.dump(config_data))
 
@@ -106,11 +106,11 @@ class TestConfig:
             args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
         )
 
-        assert config.enable_section_advices is False
-        assert config.enable_section_mandatory is False
-        assert config.missing_section_level == LogLevel.ERROR
+        assert config.enable_advised_sections is False
+        assert config.enable_mandatory_sections is False
+        assert config.mandatory_sections_log_level == LogLevel.ERROR
         assert config.mandatory_sections == ["security", "testing"]
-        assert config.recommended_sections == ["architecture", "deployment"]
+        assert config.advised_sections == ["architecture", "deployment"]
 
     def test_load_config_with_log_level(self, tmp_path: Path) -> None:
         """Test load_config with log level in config file"""
@@ -170,11 +170,11 @@ class TestConfig:
             "prompt_max_lines": 600,
             "agent_max_tokens": 7000,
             "agent_max_lines": 700,
-            "enable_section_advices": False,
-            "enable_section_mandatory": False,
-            "missing_section_level": "ERROR",
+            "enable_advised_sections": False,
+            "enable_mandatory_sections": False,
+            "mandatory_sections_log_level": "ERROR",
             "mandatory_sections": ["testing"],
-            "recommended_sections": ["architecture"],
+            "advised_sections": ["architecture"],
         }
         config_path.write_text(yaml.dump(config_data))
 
@@ -197,11 +197,11 @@ class TestConfig:
         assert config.prompt_max_lines == 600
         assert config.agent_max_tokens == 7000
         assert config.agent_max_lines == 700
-        assert config.enable_section_advices is False
-        assert config.enable_section_mandatory is False
-        assert config.missing_section_level == LogLevel.ERROR
+        assert config.enable_advised_sections is False
+        assert config.enable_mandatory_sections is False
+        assert config.mandatory_sections_log_level == LogLevel.ERROR
         assert config.mandatory_sections == ["testing"]
-        assert config.recommended_sections == ["architecture"]
+        assert config.advised_sections == ["architecture"]
 
     def test_load_config_invalid_yaml(self, tmp_path: Path) -> None:
         """Test load_config with invalid YAML"""

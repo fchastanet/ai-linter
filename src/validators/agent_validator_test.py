@@ -276,7 +276,7 @@ Just some content.
         self, validator: AgentValidator, config: Config, tmp_path: Path
     ) -> None:
         """Test validation when mandatory sections are missing with ERROR level"""
-        config.missing_section_level = LogLevel.ERROR
+        config.mandatory_sections_log_level = LogLevel.ERROR
         validator.config = config
 
         content = """# Agent Documentation
@@ -315,12 +315,10 @@ Just some content.
         assert errors == 0
         assert warnings == 0
 
-    def test_validate_sections_recommended_missing(
-        self, validator: AgentValidator, config: Config, tmp_path: Path
-    ) -> None:
-        """Test that missing recommended sections generate advice messages"""
+    def test_validate_sections_advised_missing(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
+        """Test that missing advised sections generate advice messages"""
         # Ensure advices are enabled
-        config.enable_section_advices = True
+        config.enable_advised_sections = True
         validator.config = config
 
         content = """# Agent Documentation
@@ -344,14 +342,16 @@ Just some content.
         assert errors == 0
         assert warnings == 0
 
-    def test_validate_sections_recommended_disabled(
+    def test_validate_sections_mandatory_disabled(
         self, validator: AgentValidator, config: Config, tmp_path: Path
     ) -> None:
-        """Test that missing recommended sections do not generate advice messages when disabled"""
-        config.enable_section_mandatory = False
+        """Test that missing advised sections do not generate advice messages when disabled"""
+        config.enable_advised_sections = False
         validator.config = config
 
         content = """# Agent Documentation
+## Overview
+## Limitations
 ## Navigating the Codebase
 ## Build & Commands
 ## Using Subagents
@@ -364,15 +364,15 @@ Just some content.
         agent_file.write_text(content)
 
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
-        # Should not generate any messages when advices disabled
+        # Should not generate any messages when advised disabled
         assert errors == 0
         assert warnings == 0
 
-    def test_validate_sections_advices_disabled(
+    def test_validate_sections_advised_disabled(
         self, validator: AgentValidator, config: Config, tmp_path: Path
     ) -> None:
-        """Test that advices can be disabled"""
-        config.enable_section_advices = False
+        """Test that advised sections can be disabled"""
+        config.enable_advised_sections = False
         validator.config = config
 
         content = """# Agent Documentation
@@ -392,7 +392,7 @@ Just some content.
 
         warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
 
-        # Should not generate any messages when advices disabled
+        # Should not generate any messages when advised sections disabled
         assert errors == 0
         assert warnings == 0
 
@@ -417,11 +417,9 @@ Test info here.
         # Should warn about missing "security" section only
         assert warnings == 1
 
-    def test_validate_sections_custom_recommended(
-        self, validator: AgentValidator, config: Config, tmp_path: Path
-    ) -> None:
-        """Test validation with custom recommended sections"""
-        config.recommended_sections = ["deployment", "monitoring"]
+    def test_validate_sections_custom_advised(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
+        """Test validation with custom advised sections"""
+        config.advised_sections = ["deployment", "monitoring"]
         config.mandatory_sections = []  # No mandatory sections
         validator.config = config
 

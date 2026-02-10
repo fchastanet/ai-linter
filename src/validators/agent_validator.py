@@ -177,11 +177,11 @@ class AgentValidator:
         found_sections = self._extract_sections(content)
 
         # Check mandatory sections
-        if self.config.enable_section_mandatory:
+        if self.config.enable_mandatory_sections:
             for mandatory_section in self.config.mandatory_sections:
                 mandatory_lower = mandatory_section.lower()
                 if mandatory_lower not in found_sections:
-                    level = self.config.missing_section_level
+                    level = self.config.mandatory_sections_log_level
                     self.logger.logRule(
                         level,
                         "missing-mandatory-section",
@@ -193,17 +193,17 @@ class AgentValidator:
                     elif level == LogLevel.WARNING:
                         nb_warnings += 1
 
-        # Check recommended sections (only if advices are enabled)
-        if self.config.enable_section_advices:
-            for recommended_section in self.config.recommended_sections:
-                recommended_lower = recommended_section.lower()
-                if recommended_lower not in found_sections:
+        # Check advised sections (only if advised sections are enabled)
+        if self.config.enable_advised_sections:
+            for advised_section in self.config.advised_sections:
+                advised_lower = advised_section.lower()
+                if advised_lower not in found_sections:
                     self.logger.logRule(
                         LogLevel.ADVICE,
-                        "missing-recommended-section",
-                        f'Consider adding recommended section: "{recommended_section}"',
+                        "missing-advised-section",
+                        f'Consider adding advised section: "{advised_section}"',
                         agent_file.relative_to(project_dir),
                     )
-                    # Advices don't count as warnings or errors
+                    # Advised sections don't count as warnings or errors
 
         return nb_warnings, nb_errors
