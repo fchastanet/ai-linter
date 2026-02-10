@@ -76,3 +76,35 @@ agent_max_tokens: 5000
 
 # Maximum line count for agents in .github/agents directories
 agent_max_lines: 500
+
+# Enable or disable mandatory section checks (missing mandatory sections
+# will trigger warnings or errors based on mandatory_sections_log_level)
+enable_mandatory_sections: true
+
+# Log level for missing mandatory sections in AGENTS.md
+# Options: ERROR, WARNING
+mandatory_sections_log_level: WARNING
+
+# List of mandatory sections that must be present in AGENTS.md files
+# These sections help ensure agents have proper documentation (if enable_mandatory_sections is true)
+mandatory_sections:
+  - Overview                   # Brief summary of the agent’s purpose and scope.
+  - "Limitations"              # Known limitations or boundaries of the agent.
+  - "Navigating the Codebase"
+  - "Build & Commands"
+  - "Code Style"
+  - "Testing"
+  - "Security"
+  - "Configuration"
+
+# Agent section validation configuration
+# Enable or disable advised section checks
+enable_advised_sections: true
+
+# List of advised sections for AGENTS.md files
+# Missing these will trigger advice-level messages (if enable_advised_sections is true)
+advised_sections:
+  - "Architecture"
+  - "Build Process"
+  - "Git Commit Conventions"
+  - "Troubleshooting"          # Common issues and how to resolve them.

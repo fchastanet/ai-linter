@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Sequence
 
@@ -13,6 +14,11 @@ from validators.file_reference_validator import FileReferenceValidator
 class AgentValidator:
     MAX_AGENT_CONTENT_TOKEN_COUNT = 5000  # Maximum allowed token count for skill content
     MAX_AGENT_CONTENT_LINES_COUNT = 500  # Maximum allowed lines in skill content
+    # Compile regex patterns once for better performance
+    # Matches markdown headers (# through ######) and captures the header text
+    HEADER_PATTERN = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
+    # Matches trailing hash symbols and whitespace in headers
+    TRAILING_HASH_PATTERN = re.compile(r"\s*#+\s*$")
 
     def __init__(
         self,
@@ -86,6 +92,11 @@ class AgentValidator:
         nb_warnings += snippet_warnings
         nb_errors += snippet_errors
 
+        # Section validation
+        section_warnings, section_errors = self._validate_sections(agent_content, agent_file, project_dir)
+        nb_warnings += section_warnings
+        nb_errors += section_errors
+
         return nb_warnings, nb_errors
 
     def validate_agents_files(self, project_dir: Path, ignore_dirs: Sequence[Path] | None) -> tuple[int, int]:
@@ -122,5 +133,75 @@ class AgentValidator:
             )
             nb_warnings += agent_warnings
             nb_errors += agent_errors
+
+        return nb_warnings, nb_errors
+
+    def _extract_sections(self, content: str) -> dict[str, str]:
+        """Extract section titles from markdown content
+
+        Args:
+            content: The markdown content to parse
+
+        Returns:
+            A dictionary mapping normalized (lowercased) section titles to their original titles.
+        """
+        sections = dict()
+        # Use pre-compiled pattern for better performance
+        matches = self.HEADER_PATTERN.findall(content)
+
+        for match in matches:
+            # Remove markdown formatting and normalize
+            section_title = match.strip()
+            # Remove trailing hash symbols and whitespace using pre-compiled pattern
+            section_title = self.TRAILING_HASH_PATTERN.sub("", section_title)
+            # Normalize to lowercase for case-insensitive comparison
+            sections[section_title.lower()] = section_title
+
+        return sections
+
+    def _validate_sections(self, content: str, agent_file: Path, project_dir: Path) -> tuple[int, int]:
+        """Validate that agent content contains required sections
+
+        Args:
+            content: The agent content to validate
+            agent_file: Path to the agent file
+            project_dir: Project root directory
+
+        Returns:
+            Tuple of (warnings, errors) counts
+        """
+        nb_warnings = 0
+        nb_errors = 0
+
+        # Extract sections from content
+        found_sections = self._extract_sections(content)
+
+        # Check mandatory sections
+        if self.config.enable_mandatory_sections:
+            for mandatory_section_key, mandatory_section_label in self.config.mandatory_sections.items():
+                if mandatory_section_key not in found_sections:
+                    level = self.config.mandatory_sections_log_level
+                    self.logger.logRule(
+                        level,
+                        "missing-mandatory-section",
+                        f'Missing mandatory section: "{mandatory_section_label}"',
+                        agent_file.relative_to(project_dir),
+                    )
+                    if level == LogLevel.ERROR:
+                        nb_errors += 1
+                    elif level == LogLevel.WARNING:
+                        nb_warnings += 1
+
+        # Check advised sections (only if advised sections are enabled)
+        if self.config.enable_advised_sections:
+            for advised_section_key, advised_section_label in self.config.advised_sections.items():
+                if advised_section_key not in found_sections:
+                    self.logger.logRule(
+                        LogLevel.ADVICE,
+                        "missing-advised-section",
+                        f'Consider adding advised section: "{advised_section_label}"',
+                        agent_file.relative_to(project_dir),
+                    )
+                    # Advised sections don't count as warnings or errors
 
         return nb_warnings, nb_errors

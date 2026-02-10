@@ -7,6 +7,8 @@ from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 
+MANDATORY_SECTIONS_LOG_LEVELS = [LogLevel.ERROR, LogLevel.WARNING]
+
 
 class Config:
     """Configuration holder for AI Linter"""
@@ -28,6 +30,26 @@ class Config:
         self.prompt_max_lines: int = 500
         self.agent_max_tokens: int = 5000
         self.agent_max_lines: int = 500
+        # Agent section validation configuration
+        self.enable_advised_sections: bool = True  # Enable advice-level recommendations
+        self.enable_mandatory_sections: bool = True  # Enable mandatory section validation
+        self.mandatory_sections_log_level: LogLevel = LogLevel.WARNING  # Level for missing mandatory sections
+        self.mandatory_sections: dict[str, str] = {
+            "overview": "Overview",
+            "limitations": "Limitations",
+            "navigating the codebase": "Navigating the Codebase",
+            "build & commands": "Build & Commands",
+            "code style": "Code Style",
+            "testing": "Testing",
+            "security": "Security",
+            "configuration": "Configuration",
+        }
+        self.advised_sections: dict[str, str] = {
+            "architecture": "Architecture",
+            "build process": "Build Process",
+            "git commit conventions": "Git Commit Conventions",
+            "troubleshooting": "Troubleshooting",
+        }
 
 
 def load_config(
@@ -51,145 +73,21 @@ def load_config(
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
                 if isinstance(config, dict):
-                    # Override log level if specified in config
-                    if (
-                        args.log_level is None
-                        and "log_level" in config
-                        and config["log_level"] in [level.name for level in LogLevel]
-                    ):
-                        config_obj.log_level = get_log_level_from_string(config["log_level"], LogLevel.INFO)
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Log level set to {config_obj.log_level} from config file",
-                        )
-                    logger.set_level(config_obj.log_level)
-
-                    # Override log format if specified in config (CLI overrides config)
-                    if args.log_format is None and "log_format" in config and isinstance(config["log_format"], str):
-                        log_format = LogFormat.from_string(config["log_format"])
-                        config_obj.log_format = log_format
-                        logger.set_format(log_format)
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Log format set to {log_format.value} from config file",
-                        )
-
-                    # Override max warnings if specified in config
-                    if (
-                        args.max_warnings is None
-                        and "max_warnings" in config
-                        and isinstance(config["max_warnings"], int)
-                    ):
-                        max_warnings = config["max_warnings"]
-                        config_obj.max_warnings = max_warnings
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Max warnings set to {max_warnings} from config file",
-                        )
-                    # Add ignore directories from config
-                    if args.ignore_dirs is None and "ignore_dirs" in config and isinstance(config["ignore_dirs"], list):
-                        ignore_dirs = config["ignore_dirs"]
-                        config_obj.ignore_dirs = ignore_dirs
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Ignore directories set to {ignore_dirs} from config file",
-                        )
-
-                    # New configuration options
-                    if "code_snippet_max_lines" in config and isinstance(config["code_snippet_max_lines"], int):
-                        config_obj.code_snippet_max_lines = config["code_snippet_max_lines"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Code snippet max lines set to {config_obj.code_snippet_max_lines} from config file",
-                        )
-
-                    if "prompt_dirs" in config and isinstance(config["prompt_dirs"], list):
-                        config_obj.prompt_dirs = config["prompt_dirs"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Prompt directories set to {config_obj.prompt_dirs} from config file",
-                        )
-
-                    if "agent_dirs" in config and isinstance(config["agent_dirs"], list):
-                        config_obj.agent_dirs = config["agent_dirs"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Agent directories set to {config_obj.agent_dirs} from config file",
-                        )
-
-                    if "resource_dirs" in config and isinstance(config["resource_dirs"], list):
-                        config_obj.resource_dirs = config["resource_dirs"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Resource directories set to {config_obj.resource_dirs} from config file",
-                        )
-
-                    if "unreferenced_file_level" in config and isinstance(config["unreferenced_file_level"], str):
-                        config_obj.unreferenced_file_level = get_log_level_from_string(
-                            config["unreferenced_file_level"], LogLevel.ERROR
-                        )
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Unreferenced file level set to {config_obj.unreferenced_file_level} from config file",
-                        )
-
-                    if "missing_agents_file_level" in config and isinstance(config["missing_agents_file_level"], str):
-                        config_obj.missing_agents_file_level = get_log_level_from_string(
-                            config["missing_agents_file_level"], LogLevel.WARNING
-                        )
-                        logger.log(
-                            LogLevel.INFO,
-                            "Missing AGENTS.md file level set to "
-                            f"{config_obj.missing_agents_file_level} from config file",
-                        )
-
-                    # Report configuration options
-                    if "report_warning_threshold" in config and isinstance(
-                        config["report_warning_threshold"], (int, float)
-                    ):
-                        config_obj.report_warning_threshold = float(config["report_warning_threshold"])
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Report warning threshold set to {config_obj.report_warning_threshold} from config file",
-                        )
-
-                    if "prompt_max_tokens" in config and isinstance(config["prompt_max_tokens"], int):
-                        config_obj.prompt_max_tokens = config["prompt_max_tokens"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Prompt max tokens set to {config_obj.prompt_max_tokens} from config file",
-                        )
-
-                    if "prompt_max_lines" in config and isinstance(config["prompt_max_lines"], int):
-                        config_obj.prompt_max_lines = config["prompt_max_lines"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Prompt max lines set to {config_obj.prompt_max_lines} from config file",
-                        )
-
-                    if "agent_max_tokens" in config and isinstance(config["agent_max_tokens"], int):
-                        config_obj.agent_max_tokens = config["agent_max_tokens"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Agent max tokens set to {config_obj.agent_max_tokens} from config file",
-                        )
-
-                    if "agent_max_lines" in config and isinstance(config["agent_max_lines"], int):
-                        config_obj.agent_max_lines = config["agent_max_lines"]
-                        logger.log(
-                            LogLevel.INFO,
-                            f"Agent max lines set to {config_obj.agent_max_lines} from config file",
-                        )
-
+                    _update_config_from_dict(args, config_obj, config, logger)
+                    logger.log(
+                        LogLevel.INFO,
+                        f"Loaded config file: {config_path}",
+                    )
+                elif config is None:
+                    logger.log(
+                        LogLevel.INFO,
+                        f"Config file '{config_path}' is empty; using default settings.",
+                    )
                 else:
                     logger.log(
                         LogLevel.WARNING,
                         f"Config file '{config_path}' is not a valid YAML dictionary.",
                     )
-            logger.log(
-                LogLevel.INFO,
-                f"Loaded config file: {config_path}",
-            )
 
         except Exception as e:
             logger.log(
@@ -205,7 +103,186 @@ def load_config(
     return config_obj.ignore_dirs, config_obj.log_level, config_obj.log_format, config_obj.max_warnings, config_obj
 
 
-def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:
+def _update_config_from_dict(args: Namespace, config_obj: Config, config: dict, logger: Logger) -> None:
+    """Update Config object from a dictionary, with validation and logging"""
+    # Override log level if specified in config
+    if (
+        args.log_level is None
+        and "log_level" in config
+        and isinstance(config["log_level"], str)
+        and LogLevel.is_valid_string(config["log_level"])
+    ):
+        config_obj.log_level = get_log_level_from_string(config["log_level"], LogLevel.INFO)
+        logger.log(
+            LogLevel.INFO,
+            f"Log level set to {config_obj.log_level} from config file",
+        )
+    logger.set_level(config_obj.log_level)
+
+    # Override log format if specified in config (CLI overrides config)
+    if args.log_format is None and "log_format" in config and isinstance(config["log_format"], str):
+        log_format = LogFormat.from_string(config["log_format"])
+        config_obj.log_format = log_format
+        logger.set_format(log_format)
+        logger.log(
+            LogLevel.INFO,
+            f"Log format set to {log_format.value} from config file",
+        )
+
+    # Override max warnings if specified in config
+    if args.max_warnings is None and "max_warnings" in config and isinstance(config["max_warnings"], int):
+        max_warnings = config["max_warnings"]
+        config_obj.max_warnings = max_warnings
+        logger.log(
+            LogLevel.INFO,
+            f"Max warnings set to {max_warnings} from config file",
+        )
+    # Add ignore directories from config
+    if args.ignore_dirs is None and "ignore_dirs" in config and isinstance(config["ignore_dirs"], list):
+        ignore_dirs = config["ignore_dirs"]
+        config_obj.ignore_dirs = ignore_dirs
+        logger.log(
+            LogLevel.INFO,
+            f"Ignore directories set to {ignore_dirs} from config file",
+        )
+
+    # New configuration options
+    if "code_snippet_max_lines" in config and isinstance(config["code_snippet_max_lines"], int):
+        config_obj.code_snippet_max_lines = config["code_snippet_max_lines"]
+        logger.log(
+            LogLevel.INFO,
+            f"Code snippet max lines set to {config_obj.code_snippet_max_lines} from config file",
+        )
+
+    if "prompt_dirs" in config and isinstance(config["prompt_dirs"], list):
+        config_obj.prompt_dirs = config["prompt_dirs"]
+        logger.log(
+            LogLevel.INFO,
+            f"Prompt directories set to {config_obj.prompt_dirs} from config file",
+        )
+
+    if "agent_dirs" in config and isinstance(config["agent_dirs"], list):
+        config_obj.agent_dirs = config["agent_dirs"]
+        logger.log(
+            LogLevel.INFO,
+            f"Agent directories set to {config_obj.agent_dirs} from config file",
+        )
+
+    if "resource_dirs" in config and isinstance(config["resource_dirs"], list):
+        config_obj.resource_dirs = config["resource_dirs"]
+        logger.log(
+            LogLevel.INFO,
+            f"Resource directories set to {config_obj.resource_dirs} from config file",
+        )
+
+    if "unreferenced_file_level" in config and isinstance(config["unreferenced_file_level"], str):
+        config_obj.unreferenced_file_level = get_log_level_from_string(
+            config["unreferenced_file_level"], LogLevel.ERROR
+        )
+        logger.log(
+            LogLevel.INFO,
+            f"Unreferenced file level set to {config_obj.unreferenced_file_level} from config file",
+        )
+
+    if "missing_agents_file_level" in config and isinstance(config["missing_agents_file_level"], str):
+        config_obj.missing_agents_file_level = get_log_level_from_string(
+            config["missing_agents_file_level"], LogLevel.WARNING
+        )
+        logger.log(
+            LogLevel.INFO,
+            "Missing AGENTS.md file level set to " f"{config_obj.missing_agents_file_level} from config file",
+        )
+
+    # Report configuration options
+    if "report_warning_threshold" in config and isinstance(config["report_warning_threshold"], (int, float)):
+        config_obj.report_warning_threshold = float(config["report_warning_threshold"])
+        logger.log(
+            LogLevel.INFO,
+            f"Report warning threshold set to {config_obj.report_warning_threshold} from config file",
+        )
+
+    if "prompt_max_tokens" in config and isinstance(config["prompt_max_tokens"], int):
+        config_obj.prompt_max_tokens = config["prompt_max_tokens"]
+        logger.log(
+            LogLevel.INFO,
+            f"Prompt max tokens set to {config_obj.prompt_max_tokens} from config file",
+        )
+
+    if "prompt_max_lines" in config and isinstance(config["prompt_max_lines"], int):
+        config_obj.prompt_max_lines = config["prompt_max_lines"]
+        logger.log(
+            LogLevel.INFO,
+            f"Prompt max lines set to {config_obj.prompt_max_lines} from config file",
+        )
+
+    if "agent_max_tokens" in config and isinstance(config["agent_max_tokens"], int):
+        config_obj.agent_max_tokens = config["agent_max_tokens"]
+        logger.log(
+            LogLevel.INFO,
+            f"Agent max tokens set to {config_obj.agent_max_tokens} from config file",
+        )
+
+    if "agent_max_lines" in config and isinstance(config["agent_max_lines"], int):
+        config_obj.agent_max_lines = config["agent_max_lines"]
+        logger.log(
+            LogLevel.INFO,
+            f"Agent max lines set to {config_obj.agent_max_lines} from config file",
+        )
+
+    if "enable_mandatory_sections" in config and isinstance(config["enable_mandatory_sections"], bool):
+        config_obj.enable_mandatory_sections = config["enable_mandatory_sections"]
+        logger.log(
+            LogLevel.INFO,
+            f"Enable mandatory section validation set to " f"{config_obj.enable_mandatory_sections} from config file",
+        )
+
+    if (
+        "mandatory_sections_log_level" in config
+        and isinstance(config["mandatory_sections_log_level"], str)
+        and config["mandatory_sections_log_level"] in [level.name for level in MANDATORY_SECTIONS_LOG_LEVELS]
+    ):
+        config_obj.mandatory_sections_log_level = get_log_level_from_string(
+            config["mandatory_sections_log_level"], LogLevel.WARNING
+        )
+        logger.log(
+            LogLevel.INFO,
+            f"Mandatory sections log level set to {config_obj.mandatory_sections_log_level} from config file",
+        )
+
+    if "mandatory_sections" in config and isinstance(config["mandatory_sections"], list):
+        config_obj.mandatory_sections = _convert_str_list_to_dict(config["mandatory_sections"])
+        logger.log(
+            LogLevel.INFO,
+            f"Mandatory sections set to {config_obj.mandatory_sections} from config file",
+        )
+
+    # Agent section validation configuration
+    if "enable_advised_sections" in config and isinstance(config["enable_advised_sections"], bool):
+        config_obj.enable_advised_sections = config["enable_advised_sections"]
+        logger.log(
+            LogLevel.INFO,
+            f"Enable advised section set to {config_obj.enable_advised_sections} from config file",
+        )
+
+    if "advised_sections" in config and isinstance(config["advised_sections"], list):
+        config_obj.advised_sections = _convert_str_list_to_dict(config["advised_sections"])
+        logger.log(
+            LogLevel.INFO,
+            f"Advised sections set to {config_obj.advised_sections} from config file",
+        )
+
+
+def _convert_str_list_to_dict(value: list) -> dict[str, str]:
+    """Convert list items to lowercase stripped keys with original string values for easy lookup"""
+    converted_dict = dict()
+    for item in value:
+        item_str = item if isinstance(item, str) else str(item)
+        converted_dict[item_str.lower().strip()] = item_str
+    return converted_dict
+
+
+def get_log_level_from_string(level_str: str, default: LogLevel) -> LogLevel:
     """Convert string to LogLevel, with default fallback"""
-    levelStr = levelStr.upper()
-    return LogLevel.from_string(levelStr) if levelStr in ["ERROR", "WARNING", "INFO"] else default
+    if LogLevel.is_valid_string(level_str):
+        return LogLevel.from_string(level_str)
+    return default
