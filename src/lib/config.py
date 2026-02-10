@@ -74,15 +74,20 @@ def load_config(
                 config = yaml.safe_load(f)
                 if isinstance(config, dict):
                     _update_config_from_dict(args, config_obj, config, logger)
+                    logger.log(
+                        LogLevel.INFO,
+                        f"Loaded config file: {config_path}",
+                    )
+                elif config is None:
+                    logger.log(
+                        LogLevel.INFO,
+                        f"Config file '{config_path}' is empty; using default settings.",
+                    )
                 else:
                     logger.log(
                         LogLevel.WARNING,
                         f"Config file '{config_path}' is not a valid YAML dictionary.",
                     )
-            logger.log(
-                LogLevel.INFO,
-                f"Loaded config file: {config_path}",
-            )
 
         except Exception as e:
             logger.log(
@@ -101,7 +106,12 @@ def load_config(
 def _update_config_from_dict(args: Namespace, config_obj: Config, config: dict, logger: Logger) -> None:
     """Update Config object from a dictionary, with validation and logging"""
     # Override log level if specified in config
-    if args.log_level is None and "log_level" in config and config["log_level"] in [level.name for level in LogLevel]:
+    if (
+        args.log_level is None
+        and "log_level" in config
+        and isinstance(config["log_level"], str)
+        and LogLevel.is_valid_string(config["log_level"])
+    ):
         config_obj.log_level = get_log_level_from_string(config["log_level"], LogLevel.INFO)
         logger.log(
             LogLevel.INFO,
@@ -263,16 +273,16 @@ def _update_config_from_dict(args: Namespace, config_obj: Config, config: dict, 
 
 
 def _convert_str_list_to_dict(value: list) -> dict[str, str]:
-    """Convert list items to strings, with logging for non-string items"""
-    converted_set = dict()
+    """Convert list items to lowercase stripped keys with original string values for easy lookup"""
+    converted_dict = dict()
     for item in value:
-        itemStr = item if isinstance(item, str) else str(item)
-        converted_set[itemStr.lower().strip()] = itemStr
-    return converted_set
+        item_str = item if isinstance(item, str) else str(item)
+        converted_dict[item_str.lower().strip()] = item_str
+    return converted_dict
 
 
-def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:
+def get_log_level_from_string(level_str: str, default: LogLevel) -> LogLevel:
     """Convert string to LogLevel, with default fallback"""
-    if LogLevel.is_valid_string(levelStr):
-        return LogLevel.from_string(levelStr)
+    if LogLevel.is_valid_string(level_str):
+        return LogLevel.from_string(level_str)
     return default

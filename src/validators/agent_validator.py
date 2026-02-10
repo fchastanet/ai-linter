@@ -143,7 +143,7 @@ class AgentValidator:
             content: The markdown content to parse
 
         Returns:
-            List of section titles (normalized to lowercase)
+            A dictionary mapping normalized (lowercased) section titles to their original titles.
         """
         sections = dict()
         # Use pre-compiled pattern for better performance

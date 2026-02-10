@@ -139,7 +139,7 @@ class FileReferenceValidator:
             ref = m.group("link")
             self._add_file_reference_if_seems_valid(ref, line_number, references)
 
-        # Agents.md file style references: `@./filepath` or `@/filepath`
+        # AGENTS.md file style references: `@./filepath` or `@/filepath`
         agent_ref_pattern = r"`@(?P<link>\.?/[^`\n]+)`"
         for m, line_number in self.parser.finditer_with_line_numbers(agent_ref_pattern, content):
             ref = m.group("link")
