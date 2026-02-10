@@ -43,6 +43,13 @@ class TestFileReferenceValidator:
         references = validator._extract_file_references(content)
         assert "path/to/attachment.pdf" in references
 
+    def test_extract_agent_md_style_references(self, validator: FileReferenceValidator) -> None:
+        """Test extraction of AGENTS.md style references"""
+        content = "Refer to `@./resources/info.txt` for details or `@/absolute/path/to/info.txt`"
+        references = validator._extract_file_references(content)
+        assert "./resources/info.txt" in references
+        assert "/absolute/path/to/info.txt" in references
+
     def test_ignore_external_urls(self, validator: FileReferenceValidator) -> None:
         """Test that external URLs are ignored"""
         content = "[external](https://example.com)\n[internal](docs/file.md)"
