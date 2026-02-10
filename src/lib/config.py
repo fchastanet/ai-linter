@@ -34,22 +34,22 @@ class Config:
         self.enable_advised_sections: bool = True  # Enable advice-level recommendations
         self.enable_mandatory_sections: bool = True  # Enable mandatory section validation
         self.mandatory_sections_log_level: LogLevel = LogLevel.WARNING  # Level for missing mandatory sections
-        self.mandatory_sections: list[str] = [
-            "Overview",
-            "Limitations",
-            "Navigating the Codebase",
-            "Build & Commands",
-            "Code Style",
-            "Testing",
-            "Security",
-            "Configuration",
-        ]
-        self.advised_sections: list[str] = [
-            "Architecture",
-            "Build Process",
-            "Git Commit Conventions",
-            "Troubleshooting",
-        ]
+        self.mandatory_sections: dict[str, str] = {
+            "overview": "Overview",
+            "limitations": "Limitations",
+            "navigating the codebase": "Navigating the Codebase",
+            "build & commands": "Build & Commands",
+            "code style": "Code Style",
+            "testing": "Testing",
+            "security": "Security",
+            "configuration": "Configuration",
+        }
+        self.advised_sections: dict[str, str] = {
+            "architecture": "Architecture",
+            "build process": "Build Process",
+            "git commit conventions": "Git Commit Conventions",
+            "troubleshooting": "Troubleshooting",
+        }
 
 
 def load_config(
@@ -240,7 +240,7 @@ def _update_config_from_dict(args: Namespace, config_obj: Config, config: dict, 
         )
 
     if "mandatory_sections" in config and isinstance(config["mandatory_sections"], list):
-        config_obj.mandatory_sections = config["mandatory_sections"]
+        config_obj.mandatory_sections = _convert_str_list_to_dict(config["mandatory_sections"])
         logger.log(
             LogLevel.INFO,
             f"Mandatory sections set to {config_obj.mandatory_sections} from config file",
@@ -255,11 +255,20 @@ def _update_config_from_dict(args: Namespace, config_obj: Config, config: dict, 
         )
 
     if "advised_sections" in config and isinstance(config["advised_sections"], list):
-        config_obj.advised_sections = config["advised_sections"]
+        config_obj.advised_sections = _convert_str_list_to_dict(config["advised_sections"])
         logger.log(
             LogLevel.INFO,
             f"Advised sections set to {config_obj.advised_sections} from config file",
         )
+
+
+def _convert_str_list_to_dict(value: list) -> dict[str, str]:
+    """Convert list items to strings, with logging for non-string items"""
+    converted_set = dict()
+    for item in value:
+        itemStr = item if isinstance(item, str) else str(item)
+        converted_set[itemStr.lower().strip()] = itemStr
+    return converted_set
 
 
 def get_log_level_from_string(levelStr: str, default: LogLevel) -> LogLevel:

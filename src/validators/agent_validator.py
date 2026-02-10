@@ -136,7 +136,7 @@ class AgentValidator:
 
         return nb_warnings, nb_errors
 
-    def _extract_sections(self, content: str) -> list[str]:
+    def _extract_sections(self, content: str) -> dict[str, str]:
         """Extract section titles from markdown content
 
         Args:
@@ -145,7 +145,7 @@ class AgentValidator:
         Returns:
             List of section titles (normalized to lowercase)
         """
-        sections = []
+        sections = dict()
         # Use pre-compiled pattern for better performance
         matches = self.HEADER_PATTERN.findall(content)
 
@@ -155,7 +155,7 @@ class AgentValidator:
             # Remove trailing hash symbols and whitespace using pre-compiled pattern
             section_title = self.TRAILING_HASH_PATTERN.sub("", section_title)
             # Normalize to lowercase for case-insensitive comparison
-            sections.append(section_title.lower())
+            sections[section_title.lower()] = section_title
 
         return sections
 
@@ -178,14 +178,13 @@ class AgentValidator:
 
         # Check mandatory sections
         if self.config.enable_mandatory_sections:
-            for mandatory_section in self.config.mandatory_sections:
-                mandatory_lower = mandatory_section.lower()
-                if mandatory_lower not in found_sections:
+            for mandatory_section_key, mandatory_section_label in self.config.mandatory_sections.items():
+                if mandatory_section_key not in found_sections:
                     level = self.config.mandatory_sections_log_level
                     self.logger.logRule(
                         level,
                         "missing-mandatory-section",
-                        f'Missing mandatory section: "{mandatory_section}"',
+                        f'Missing mandatory section: "{mandatory_section_label}"',
                         agent_file.relative_to(project_dir),
                     )
                     if level == LogLevel.ERROR:
@@ -195,13 +194,12 @@ class AgentValidator:
 
         # Check advised sections (only if advised sections are enabled)
         if self.config.enable_advised_sections:
-            for advised_section in self.config.advised_sections:
-                advised_lower = advised_section.lower()
-                if advised_lower not in found_sections:
+            for advised_section_key, advised_section_label in self.config.advised_sections.items():
+                if advised_section_key not in found_sections:
                     self.logger.logRule(
                         LogLevel.ADVICE,
                         "missing-advised-section",
-                        f'Consider adding advised section: "{advised_section}"',
+                        f'Consider adding advised section: "{advised_section_label}"',
                         agent_file.relative_to(project_dir),
                     )
                     # Advised sections don't count as warnings or errors

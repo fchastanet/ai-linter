@@ -31,12 +31,12 @@ class TestConfig:
         assert config.enable_advised_sections is True
         assert config.mandatory_sections_log_level == LogLevel.WARNING
         assert len(config.mandatory_sections) == 8
-        assert "Navigating the Codebase" in config.mandatory_sections
-        assert "Build & Commands" in config.mandatory_sections
-        assert "Security" in config.mandatory_sections
+        assert "navigating the codebase" in config.mandatory_sections
+        assert "build & commands" in config.mandatory_sections
+        assert "security" in config.mandatory_sections
         assert len(config.advised_sections) == 4
-        assert "Git Commit Conventions" in config.advised_sections
-        assert "Architecture" in config.advised_sections
+        assert "git commit conventions" in config.advised_sections
+        assert "architecture" in config.advised_sections
 
     def test_get_log_level_from_string(self) -> None:
         """Test get_log_level_from_string function"""
@@ -97,8 +97,8 @@ class TestConfig:
             "enable_mandatory_sections": False,
             "enable_advised_sections": False,
             "mandatory_sections_log_level": "ERROR",
-            "mandatory_sections": ["security", "testing"],
-            "advised_sections": ["architecture", "deployment"],
+            "mandatory_sections": ["Security", "Testing"],
+            "advised_sections": ["Architecture", "Deployment"],
         }
         config_path.write_text(yaml.dump(config_data))
 
@@ -109,8 +109,8 @@ class TestConfig:
         assert config.enable_advised_sections is False
         assert config.enable_mandatory_sections is False
         assert config.mandatory_sections_log_level == LogLevel.ERROR
-        assert config.mandatory_sections == ["security", "testing"]
-        assert config.advised_sections == ["architecture", "deployment"]
+        assert config.mandatory_sections == {"security": "Security", "testing": "Testing"}
+        assert config.advised_sections == {"architecture": "Architecture", "deployment": "Deployment"}
 
     def test_load_config_with_log_level(self, tmp_path: Path) -> None:
         """Test load_config with log level in config file"""
@@ -173,8 +173,8 @@ class TestConfig:
             "enable_advised_sections": False,
             "enable_mandatory_sections": False,
             "mandatory_sections_log_level": "ERROR",
-            "mandatory_sections": ["testing"],
-            "advised_sections": ["architecture"],
+            "mandatory_sections": ["Testing"],
+            "advised_sections": ["Architecture"],
         }
         config_path.write_text(yaml.dump(config_data))
 
@@ -200,8 +200,8 @@ class TestConfig:
         assert config.enable_advised_sections is False
         assert config.enable_mandatory_sections is False
         assert config.mandatory_sections_log_level == LogLevel.ERROR
-        assert config.mandatory_sections == ["testing"]
-        assert config.advised_sections == ["architecture"]
+        assert config.mandatory_sections == {"testing": "Testing"}
+        assert config.advised_sections == {"architecture": "Architecture"}
 
     def test_load_config_invalid_yaml(self, tmp_path: Path) -> None:
         """Test load_config with invalid YAML"""

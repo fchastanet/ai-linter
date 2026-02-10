@@ -209,7 +209,7 @@ Final content.
     def test_extract_sections_empty_content(self, validator: AgentValidator) -> None:
         """Test extraction from empty content"""
         sections = validator._extract_sections("")
-        assert sections == []
+        assert sections == {}
 
     def test_validate_sections_all_present(self, validator: AgentValidator, tmp_path: Path) -> None:
         """Test validation when all mandatory sections are present"""
@@ -400,7 +400,7 @@ Just some content.
         self, validator: AgentValidator, config: Config, tmp_path: Path
     ) -> None:
         """Test validation with custom mandatory sections"""
-        config.mandatory_sections = ["testing", "security"]
+        config.mandatory_sections = {"testing": "Testing", "security": "Security"}
         validator.config = config
 
         content = """# Agent Documentation
@@ -419,8 +419,8 @@ Test info here.
 
     def test_validate_sections_custom_advised(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test validation with custom advised sections"""
-        config.advised_sections = ["deployment", "monitoring"]
-        config.mandatory_sections = []  # No mandatory sections
+        config.advised_sections = {"deployment": "Deployment", "monitoring": "Monitoring"}
+        config.mandatory_sections = {}  # No mandatory sections
         validator.config = config
 
         content = """# Agent Documentation
