@@ -118,3 +118,146 @@ class TestFrontMatterValidator:
             frontmatter, test_file, frontmatter_text, project_dir=tmp_path
         )
         assert errors == 1  # Should have 1 error for description being too long
+
+    def test_validate_name_leading_hyphen(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation of name starting with hyphen"""
+        test_file = tmp_path / "SKILL.md"
+        test_dir = tmp_path / "-test-skill"
+        test_dir.mkdir()
+
+        frontmatter = {"name": "-test-skill"}  # Invalid: starts with hyphen
+        frontmatter_text = "name: -test-skill\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_name_trailing_hyphen(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation of name ending with hyphen"""
+        test_file = tmp_path / "SKILL.md"
+        test_dir = tmp_path / "test-skill-"
+        test_dir.mkdir()
+
+        frontmatter = {"name": "test-skill-"}  # Invalid: ends with hyphen
+        frontmatter_text = "name: test-skill-\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_name_consecutive_hyphens(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation of name with consecutive hyphens"""
+        test_file = tmp_path / "SKILL.md"
+        test_dir = tmp_path / "test--skill"
+        test_dir.mkdir()
+
+        frontmatter = {"name": "test--skill"}  # Invalid: contains consecutive hyphens
+        frontmatter_text = "name: test--skill\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_name_empty_after_strip(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation of name that is empty after stripping whitespace"""
+        test_file = tmp_path / "SKILL.md"
+        test_dir = tmp_path / "test-skill"
+        test_dir.mkdir()
+
+        frontmatter = {"name": "   "}  # Empty after strip
+        frontmatter_text = "name: '   '\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_name_too_long(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation of name that exceeds maximum length"""
+        test_file = tmp_path / "SKILL.md"
+        long_name = "a" * 65  # More than max 64 characters
+        test_dir = tmp_path / long_name
+        test_dir.mkdir()
+
+        frontmatter = {"name": long_name}
+        frontmatter_text = f"name: {long_name}\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_name_directory_mismatch(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation warning when name doesn't match directory name"""
+        test_file = tmp_path / "SKILL.md"
+        test_dir = tmp_path / "my-skill"
+        test_dir.mkdir()
+
+        frontmatter = {"name": "other-skill"}  # Different from directory name
+        frontmatter_text = "name: other-skill\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert warnings >= 1
+
+    def test_validate_name_none_type(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation when name is None"""
+        test_file = tmp_path / "SKILL.md"
+        test_dir = tmp_path / "test-skill"
+        test_dir.mkdir()
+
+        frontmatter = {"name": None}
+        frontmatter_text = "name: null\n"
+
+        warnings, errors = validator.validate_name(
+            frontmatter, test_file, frontmatter_text, test_dir, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_description_empty_after_strip(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation when description is empty after stripping"""
+        test_file = tmp_path / "SKILL.md"
+        frontmatter = {"description": "   "}  # Empty after strip
+        frontmatter_text = "description: '   '\n"
+
+        warnings, errors = validator.validate_description(
+            frontmatter, test_file, frontmatter_text, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_description_with_angle_brackets(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation when description contains angle brackets"""
+        test_file = tmp_path / "SKILL.md"
+        frontmatter = {"description": "A skill <for> testing"}
+        frontmatter_text = "description: A skill <for> testing\n"
+
+        warnings, errors = validator.validate_description(
+            frontmatter, test_file, frontmatter_text, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_description_type_validation(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation when description is not a string"""
+        test_file = tmp_path / "SKILL.md"
+        frontmatter = {"description": 123}  # Not a string
+        frontmatter_text = "description: 123\n"
+
+        warnings, errors = validator.validate_description(
+            frontmatter, test_file, frontmatter_text, project_dir=tmp_path
+        )
+        assert errors >= 1
+
+    def test_validate_description_none_type(self, validator: FrontMatterValidator, tmp_path: Path) -> None:
+        """Test validation when description is None"""
+        test_file = tmp_path / "SKILL.md"
+        frontmatter = {"description": None}
+        frontmatter_text = "description: null\n"
+
+        warnings, errors = validator.validate_description(
+            frontmatter, test_file, frontmatter_text, project_dir=tmp_path
+        )
+        assert errors >= 1
