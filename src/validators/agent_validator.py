@@ -2,8 +2,7 @@ import re
 from pathlib import Path
 from typing import Sequence
 
-import pathspec
-
+from filters.filter_files import filter_files
 from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -122,23 +121,7 @@ class AgentValidator:
             elif level == LogLevel.WARNING:
                 nb_warnings += 1
 
-        # Create a pathspec from ignore patterns
-        spec = pathspec.PathSpec.from_lines("gitwildmatch", config.ignore)
-
-        # Filter files: keep only those that DON'T match any ignore pattern
-        filtered_agent_files = [f for f in agent_files if not spec.match_file(str(f.relative_to(project_dir)))]
-
-        if len(filtered_agent_files) < len(agent_files):
-            ignored_files = set(agent_files) - set(filtered_agent_files)
-            self.logger.log(
-                LogLevel.DEBUG,
-                f"Skipping AGENTS.md file as it matches ignore patterns for {ignored_files}",
-            )
-        self.logger.log(
-            LogLevel.INFO,
-            f"Found {len(filtered_agent_files)} AGENTS.md file(s) to validate after applying ignore patterns",
-        )
-        for agent_file in filtered_agent_files:
+        for agent_file in filter_files(self.logger, config.ignore, agent_files, project_dir):
             self.logger.log(
                 LogLevel.INFO,
                 f"Validating AGENTS.md file: {agent_file}",
