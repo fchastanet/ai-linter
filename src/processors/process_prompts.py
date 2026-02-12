@@ -1,5 +1,6 @@
 """Processor for validating prompt and agent markdown files"""
 
+import fnmatch
 from pathlib import Path
 from typing import Sequence
 
@@ -93,70 +94,75 @@ class ProcessPrompts:
 
     def process_sub_directories(
         self,
-        project_dirs: Sequence[Path],
-        sub_dirs: list[str],
+        project_dir: Path,
+        ignore: Sequence[str] | None,
         file_type: str,
+        sub_dirs: list[str],
         max_tokens: int,
         max_lines: int,
         warning_threshold: float,
-        ignore_dirs: Sequence[Path] | None = None,
     ) -> tuple[int, int]:
         """Process all markdown files in directories (excluding AGENTS.md/SKILL.md).
 
         Args:
-            project_dirs: Project root directories to search
+            project_dir: Project root directory to search
             sub_dirs: List of directory patterns (e.g., [".github/agents", ".github/prompts"])
             max_tokens: Maximum allowed tokens
             max_lines: Maximum allowed lines
             warning_threshold: Threshold for warning status
-            ignore_dirs: Directories to ignore
+            ignore: Directories to ignore
 
         Returns:
             Tuple of (total_warnings, total_errors)
         """
+        if ignore is None:
+            ignore = []
         nb_warnings = 0
         nb_errors = 0
 
-        for project_dir in project_dirs:
-            for sub_dir_pattern in sub_dirs:
-                sub_dir = project_dir / sub_dir_pattern
-                if not sub_dir.exists() or not sub_dir.is_dir():
+        for sub_dir_pattern in sub_dirs:
+            sub_dir = project_dir / sub_dir_pattern
+            if not sub_dir.exists() or not sub_dir.is_dir():
+                continue
+            if any(fnmatch.fnmatch(str(sub_dir), str(pattern)) for pattern in ignore):
+                self.logger.log(
+                    LogLevel.DEBUG,
+                    f"Ignoring directory '{sub_dir}' due to ignore setting: {ignore}",
+                )
+                continue
+
+            # Find all markdown files except AGENTS.md and SKILL.md
+            md_files = [f for f in sub_dir.rglob("*.md") if f.name != "AGENTS.md" and f.name != "SKILL.md"]
+
+            if md_files:
+                self.logger.log(
+                    LogLevel.INFO,
+                    f"Found {len(md_files)} {file_type} file(s) in {sub_dir}",
+                )
+
+            for md_file in md_files:
+                # Skip ignored files
+                if any(fnmatch.fnmatch(str(md_file), str(pattern)) for pattern in ignore):
+                    self.logger.log(
+                        LogLevel.DEBUG,
+                        f"Ignoring file '{md_file}' due to ignore setting: {ignore}",
+                    )
                     continue
 
-                # Find all markdown files except AGENTS.md and SKILL.md
-                md_files = [f for f in sub_dir.rglob("*.md") if f.name != "AGENTS.md" and f.name != "SKILL.md"]
+                self.logger.log(
+                    LogLevel.INFO,
+                    f"Processing {file_type} file: {md_file}",
+                )
 
-                if md_files:
-                    self.logger.log(
-                        LogLevel.INFO,
-                        f"Found {len(md_files)} {file_type} file(s) in {sub_dir}",
-                    )
-
-                for md_file in md_files:
-                    # Skip ignored directories
-                    if ignore_dirs:
-                        skip = False
-                        for ignore_dir in ignore_dirs:
-                            if ignore_dir in md_file.parents:
-                                skip = True
-                                break
-                        if skip:
-                            continue
-
-                    self.logger.log(
-                        LogLevel.INFO,
-                        f"Processing {file_type} file: {md_file}",
-                    )
-
-                    file_warnings, file_errors = self.process_markdown_file(
-                        md_file,
-                        project_dir,
-                        max_tokens,
-                        max_lines,
-                        file_type,
-                        warning_threshold,
-                    )
-                    nb_warnings += file_warnings
-                    nb_errors += file_errors
+                file_warnings, file_errors = self.process_markdown_file(
+                    md_file,
+                    project_dir,
+                    max_tokens,
+                    max_lines,
+                    file_type,
+                    warning_threshold,
+                )
+                nb_warnings += file_warnings
+                nb_errors += file_errors
 
         return nb_warnings, nb_errors

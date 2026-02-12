@@ -4,12 +4,13 @@ Quick validation script for skills - minimal version
 """
 
 import argparse
+import fnmatch
 import os
 import sys
 from pathlib import Path
 
 from lib.ai.stats import AiStats
-from lib.config import Config, load_config
+from lib.config import Arguments, load_config
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -29,7 +30,6 @@ try:
 except ImportError:
     AI_LINTER_VERSION = "dev"
 
-AI_LINTER_CONFIG_FILE = ".ai-linter-config.yaml"
 
 logger = Logger(LogLevel.INFO, LogFormat.FILE_DIGEST)
 parser = Parser(logger)
@@ -37,40 +37,33 @@ ai_stats = AiStats(logger)
 content_length_validator = ContentLengthValidator(logger, ai_stats)
 file_reference_validator = FileReferenceValidator(logger, parser)
 front_matter_validator = FrontMatterValidator(logger, parser)
+code_snippet_validator_instance = CodeSnippetValidator(logger)
+skill_validator = SkillValidator(
+    logger,
+    parser,
+    content_length_validator,
+    file_reference_validator,
+    front_matter_validator,
+    code_snippet_validator_instance,
+)
+agent_validator = AgentValidator(
+    logger,
+    parser,
+    content_length_validator,
+    file_reference_validator,
+    code_snippet_validator_instance,
+)
+process_skills = ProcessSkills(logger, parser, skill_validator)
+process_agents = ProcessAgents(logger, parser, agent_validator)
+process_prompts = ProcessPrompts(logger, parser, content_length_validator, file_reference_validator)
 
 
 def validate(
-    ignore_dirs: list[str],
-    log_level: LogLevel,
-    log_format: LogFormat,
-    config: Config,
-    skills: bool,
-    directories: list[str],
+    arguments: Arguments,
 ) -> tuple[int, int]:
-    # Update logger with config values (config file overridden by CLI args)
-    logger.set_level(log_level)
-    logger.set_format(log_format)
-    code_snippet_validator_instance = CodeSnippetValidator(logger, config.code_snippet_max_lines)
-    skill_validator = SkillValidator(
-        logger,
-        parser,
-        content_length_validator,
-        file_reference_validator,
-        front_matter_validator,
-        code_snippet_validator_instance,
-        config,
-    )
-    agent_validator = AgentValidator(
-        logger,
-        parser,
-        content_length_validator,
-        file_reference_validator,
-        code_snippet_validator_instance,
-        config,
-    )
-    process_skills = ProcessSkills(logger, parser, skill_validator)
-    process_agents = ProcessAgents(logger, parser, agent_validator)
-    process_prompts = ProcessPrompts(logger, parser, content_length_validator, file_reference_validator)
+    """Validate skills and agents in the specified directories"""
+    skills = arguments.skills
+    directories = arguments.directories
 
     # collect skill directories
     skill_directories = {}
@@ -79,7 +72,6 @@ def validate(
     for directory in directories:
         directory = os.path.abspath(directory)
         project_dirs.add(directory)
-
         if skills:
             # look for skills in .github/skills subdirectory
             skills_dir = os.path.abspath(f"{directory}/.github/skills")
@@ -119,46 +111,63 @@ def validate(
     # process skills
     if skills:
         for skill_dir, project_dir in skill_directories.items():
+            config = load_config(logger, arguments, project_dir)
+            # check if skill_dir should be ignored based on ignore patterns
+            if any(fnmatch.fnmatch(str(skill_dir), str(pattern)) for pattern in config.ignore):
+                logger.log(
+                    LogLevel.INFO,
+                    f"Skipping skill directory '{skill_dir}' as it matches ignore patterns",
+                )
+                continue
             logger.log(
                 LogLevel.INFO,
                 f"Processing skill directory: {skill_dir} (project: {project_dir})",
             )
 
-            nb_warnings, nb_errors = process_skills.process_skill(Path(skill_dir), Path(project_dir))
+            nb_warnings, nb_errors = process_skills.process_skill(Path(skill_dir), Path(project_dir), config)
             total_warnings += nb_warnings
             total_errors += nb_errors
 
-    nb_warnings, nb_errors = process_agents.process_agents(
-        [Path(d) for d in project_dirs], [Path(d) for d in ignore_dirs]
-    )
-    total_warnings += nb_warnings
-    total_errors += nb_errors
+    for project_dir in project_dirs:
+        config = load_config(logger, arguments, project_dir)
+        # check if project dir matches any ignore glob pattern
+        if any(fnmatch.fnmatch(str(project_dir), str(pattern)) for pattern in config.ignore):
+            logger.log(
+                LogLevel.DEBUG,
+                f"Ignoring project directory '{project_dir}' due to ignore setting: {config.ignore}",
+            )
+            continue
+        project_path = Path(project_dir)
+        # Process agents in AGENTS.md files
+        nb_warnings, nb_errors = process_agents.process_agents(project_path, config)
+        total_warnings += nb_warnings
+        total_errors += nb_errors
 
-    # Process prompts in .github/prompts directories
-    nb_warnings, nb_errors = process_prompts.process_sub_directories(
-        [Path(d) for d in project_dirs],
-        config.prompt_dirs,
-        "Prompt",
-        config.prompt_max_tokens,
-        config.prompt_max_lines,
-        config.report_warning_threshold,
-        [Path(d) for d in ignore_dirs],
-    )
-    total_warnings += nb_warnings
-    total_errors += nb_errors
+        # Process prompts in .github/prompts directories
+        nb_warnings, nb_errors = process_prompts.process_sub_directories(
+            project_path,
+            config.ignore,
+            "Prompt",
+            config.prompt_dirs,
+            config.prompt_max_tokens,
+            config.prompt_max_lines,
+            config.report_warning_threshold,
+        )
+        total_warnings += nb_warnings
+        total_errors += nb_errors
 
-    # Process agents in .github/agents directories (excluding AGENTS.md)
-    nb_warnings, nb_errors = process_prompts.process_sub_directories(
-        [Path(d) for d in project_dirs],
-        config.agent_dirs,
-        "Agent",
-        config.agent_max_tokens,
-        config.agent_max_lines,
-        config.report_warning_threshold,
-        [Path(d) for d in ignore_dirs],
-    )
-    total_warnings += nb_warnings
-    total_errors += nb_errors
+        # Process agents in .github/agents directories (excluding AGENTS.md)
+        nb_warnings, nb_errors = process_prompts.process_sub_directories(
+            project_path,
+            config.ignore,
+            "Agent",
+            config.agent_dirs,
+            config.agent_max_tokens,
+            config.agent_max_lines,
+            config.report_warning_threshold,
+        )
+        total_warnings += nb_warnings
+        total_errors += nb_errors
 
     # Flush buffered log messages
     logger.flush()
@@ -185,7 +194,7 @@ def main() -> int:
         type=str,
         nargs="+",
         default=None,
-        help="List of directory patterns to ignore when validating AGENTS.md files",
+        help="Glob patterns for files and directories to ignore (supports wildcards: *, ?, [seq], [!seq])",
     )
     arg_parser.add_argument(
         "--log-level",
@@ -211,22 +220,21 @@ def main() -> int:
     arg_parser.add_argument(
         "--config-file",
         type=str,
-        default=AI_LINTER_CONFIG_FILE,
         help="Path to the AI Linter configuration file",
     )
     args = arg_parser.parse_args()
 
     # log level
-    log_level = LogLevel.from_string(args.log_level) if args.log_level else LogLevel.INFO
+    log_level = LogLevel.from_string(args.log_level) if args.log_level else None
+    # temporarily set to INFO waiting for config to be loaded, which may override this log level
+    logger.set_level(LogLevel.INFO if not log_level else log_level)
 
     # log format
-    log_format = LogFormat.from_string(args.log_format) if args.log_format else LogFormat.FILE_DIGEST
-
-    # ignore directories
-    ignore_dirs = [".git", "__pycache__"]
+    log_format = LogFormat.from_string(args.log_format) if args.log_format else None
+    logger.set_format(LogFormat.FILE_DIGEST if not log_format else log_format)
 
     # max warnings
-    max_warnings = int(args.max_warnings) if args.max_warnings is not None else -1
+    max_warnings = int(args.max_warnings) if args.max_warnings is not None else None
 
     # unique directories
     args.directories = list(set(args.directories))
@@ -241,25 +249,27 @@ def main() -> int:
             )
             return 1
 
-    # config file
-    config_file = args.config_file if args.config_file else AI_LINTER_CONFIG_FILE
+    if args.config_file:
+        if not os.path.isfile(args.config_file):
+            logger.log(
+                LogLevel.ERROR,
+                f"Config file '{args.config_file}' does not exist or is not a file",
+            )
+            return 1
 
-    # Load configuration file if it exists
-    config_path = os.path.join(Path.cwd(), config_file)
-    ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-        args, logger, config_path, log_level, log_format, ignore_dirs, max_warnings
+    arguments = Arguments(
+        skills=args.skills,
+        directories=args.directories,
+        log_level=log_level,
+        log_format=log_format,
+        max_warnings=max_warnings,
+        config_file=args.config_file,
     )
 
-    nb_warnings, nb_errors = validate(
-        ignore_dirs,
-        log_level,
-        log_format,
-        config,
-        args.skills,
-        args.directories,
-    )
+    nb_warnings, nb_errors = validate(arguments)
+    config = load_config(logger, arguments, args.directories[0])
 
-    return 0 if nb_errors == 0 and (max_warnings == -1 or nb_warnings <= max_warnings) else 1
+    return 0 if nb_errors == 0 and (max_warnings == -1 or nb_warnings <= config.max_warnings) else 1
 
 
 if __name__ == "__main__":

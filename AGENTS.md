@@ -185,13 +185,17 @@ log_level: INFO  # DEBUG, INFO, WARNING, ERROR
 # Maximum warnings before failure
 max_warnings: 10
 
-# Directories to ignore
-ignore_dirs:
+# Glob patterns for both files and directories to ignore during validation
+# Supports standard glob patterns: *, ?, [seq], [!seq]
+# These patterns will be matched against directory and file paths
+# Examples: .git, __pycache__, build, dist, .vscode, .pytest_cache, venv, env
+# Use wildcards for more specific patterns: *.egg-info, **/test_*, .*/.*
+ignore:
   - ".git"
   - "__pycache__"
   - "node_modules"
-  - "build"
-  - "dist"
+  - "build/**"
+  - "dist/**"
   - ".vscode"
   - ".pytest_cache"
   - "venv"

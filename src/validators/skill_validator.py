@@ -30,7 +30,6 @@ class SkillValidator:
         file_ref_validator: FileReferenceValidator,
         front_matter_validator: FrontMatterValidator,
         code_snippet_validator: CodeSnippetValidator,
-        config: Config,
     ):
         self.logger = logger
         self.parser = parser
@@ -38,9 +37,13 @@ class SkillValidator:
         self.file_ref_validator = file_ref_validator
         self.code_snippet_validator = code_snippet_validator
         self.front_matter_validator = front_matter_validator
-        self.config = config
 
-    def validate_skill(self, skill_path: Path, project_dir: Path) -> tuple[int, int]:
+    def validate_skill(
+        self,
+        skill_path: Path,
+        project_dir: Path,
+        config: Config,
+    ) -> tuple[int, int]:
         """Basic validation of a skill"""
         skill_path = Path(skill_path)
         project_root_dir = self.deduce_project_root_dir_from_skill_dir(skill_path)
@@ -112,7 +115,7 @@ class SkillValidator:
             self.MAX_SKILL_CONTENT_LINES_COUNT,
             project_dir=project_dir,
             file_type="Skill",
-            warning_threshold=self.config.report_warning_threshold,
+            warning_threshold=config.report_warning_threshold,
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
@@ -124,7 +127,7 @@ class SkillValidator:
             skill_content,
             line_number,
             project_dir=project_dir,
-            resource_dirs=self.config.resource_dirs,
+            resource_dirs=config.resource_dirs,
         )
         nb_warnings += nb_warnings_ref
         nb_errors += nb_errors_ref

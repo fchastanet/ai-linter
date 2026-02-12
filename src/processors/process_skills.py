@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Tuple
 
+from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
@@ -13,12 +14,12 @@ class ProcessSkills:
         self.parser = parser
         self.validator = validator
 
-    def process_skill(self, skill_directory: Path, project_directory: Path) -> Tuple[int, int]:
+    def process_skill(self, skill_directory: Path, project_directory: Path, config: Config) -> Tuple[int, int]:
         # validate all skills in the skill directories
         total_warnings = 0
         total_errors = 0
         if skill_directory.is_dir():
-            nb_warnings, nb_errors = self.validator.validate_skill(skill_directory, project_directory)
+            nb_warnings, nb_errors = self.validator.validate_skill(skill_directory, project_directory, config)
             total_warnings += nb_warnings
             total_errors += nb_errors
         else:

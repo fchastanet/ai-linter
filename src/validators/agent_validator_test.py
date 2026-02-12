@@ -34,7 +34,7 @@ class TestAgentValidator:
         """Create a test config"""
         config = Config()
         config.resource_dirs = []
-        config.ignore_dirs = []
+        config.ignore = []
         config.unreferenced_file_level = LogLevel.ERROR
         config.code_snippet_max_lines = 100
         return config
@@ -45,7 +45,6 @@ class TestAgentValidator:
         logger: Logger,
         parser: Parser,
         ai_stats: AiStats,
-        config: Config,
     ) -> AgentValidator:
         """Create an AgentValidator"""
         content_length_validator = ContentLengthValidator(logger, ai_stats)
@@ -58,10 +57,9 @@ class TestAgentValidator:
             content_length_validator,
             file_reference_validator,
             code_snippet_validator,
-            config,
         )
 
-    def test_valid_agents_file(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_valid_agents_file(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test validation of a valid AGENTS.md file"""
         agents_file = tmp_path / "AGENTS.md"
         content = """# Agent Configurations
@@ -74,10 +72,10 @@ Description of agent 1.
 """
         agents_file.write_text(content)
 
-        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path)
+        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path, config)
         assert errors == 0
 
-    def test_agents_file_with_frontmatter(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_agents_file_with_frontmatter(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test that AGENTS.md with frontmatter is rejected"""
         agents_file = tmp_path / "AGENTS.md"
         content = """---
@@ -88,10 +86,10 @@ title: Agents
 """
         agents_file.write_text(content)
 
-        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path)
+        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path, config)
         assert errors >= 1
 
-    def test_agents_file_missing_content(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_agents_file_missing_content(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test when AGENTS.md has no content"""
         agents_file = tmp_path / "AGENTS.md"
         content = """---
@@ -100,19 +98,19 @@ title: Agents
 """
         agents_file.write_text(content)
 
-        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path)
+        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path, config)
         assert errors >= 1
 
-    def test_agents_file_empty(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_agents_file_empty(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test validation of an empty AGENTS.md file"""
         agents_file = tmp_path / "AGENTS.md"
         agents_file.write_text("")
 
-        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path)
+        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path, config)
         # Empty file should have some error
         assert errors >= 0
 
-    def test_agents_file_with_links(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_agents_file_with_links(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test AGENTS.md with valid file references"""
         # Create reference file
         ref_dir = tmp_path / "references"
@@ -126,21 +124,21 @@ See [reference](references/agent-ref.md) for more info.
 """
         agents_file.write_text(content)
 
-        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path)
+        warnings, errors = validator.validate_agent_file([tmp_path], agents_file, tmp_path, config)
         # Should not error due to broken reference
         assert errors == 0
 
-    def test_validate_agents_files_multiple(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_validate_agents_files_multiple(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test validation of multiple AGENTS.md files"""
         # Create first AGENTS.md
         agents1 = tmp_path / "AGENTS.md"
         agents1.write_text("# Agents 1\n\nFirst agents file")
 
-        warnings, errors = validator.validate_agents_files(tmp_path, None)
+        warnings, errors = validator.validate_agents_files(tmp_path, config)
         # Should validate without errors (one file, no references needed)
         assert errors == 0
 
-    def test_validate_agents_files_ignore_dirs(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_validate_agents_files_ignore_dirs(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test that validate_agents_files respects ignore_dirs"""
         # Create first AGENTS.md
         agents1 = tmp_path / "AGENTS.md"
@@ -152,7 +150,8 @@ See [reference](references/agent-ref.md) for more info.
         agents2 = ignored_dir / "AGENTS.md"
         agents2.write_text("---\ntitle: Should be ignored\n---\n")
 
-        warnings, errors = validator.validate_agents_files(tmp_path, [Path("ignored")])
+        config.ignore = ["ignored"]
+        warnings, errors = validator.validate_agents_files(tmp_path, config)
         # Only the first agents file should be validated (and fail due to frontmatter)
         assert errors >= 1
 
@@ -211,7 +210,7 @@ Final content.
         sections = validator._extract_sections("")
         assert sections == {}
 
-    def test_validate_sections_all_present(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_validate_sections_all_present(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
         """Test validation when all mandatory sections are present"""
         content = """# Agent Documentation
 
@@ -250,13 +249,15 @@ Config details.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # All mandatory sections present, should have no errors
         assert errors == 0
         assert warnings == 0
 
-    def test_validate_sections_missing_mandatory(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_validate_sections_missing_mandatory(
+        self, validator: AgentValidator, config: Config, tmp_path: Path
+    ) -> None:
         """Test validation when mandatory sections are missing"""
         content = """# Agent Documentation
 
@@ -267,17 +268,16 @@ Just some content.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # Should have warnings for missing mandatory sections (default is WARNING level)
-        assert warnings == len(validator.config.mandatory_sections)  # All mandatory sections missing
+        assert warnings == len(config.mandatory_sections)  # All mandatory sections missing
 
     def test_validate_sections_missing_mandatory_error_level(
         self, validator: AgentValidator, config: Config, tmp_path: Path
     ) -> None:
         """Test validation when mandatory sections are missing with ERROR level"""
         config.mandatory_sections_log_level = LogLevel.ERROR
-        validator.config = config
 
         content = """# Agent Documentation
 
@@ -288,12 +288,14 @@ Just some content.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # Should have errors for missing mandatory sections
-        assert errors == len(validator.config.mandatory_sections)  # All mandatory sections missing
+        assert errors == len(config.mandatory_sections)  # All mandatory sections missing
 
-    def test_validate_sections_case_insensitive(self, validator: AgentValidator, tmp_path: Path) -> None:
+    def test_validate_sections_case_insensitive(
+        self, validator: AgentValidator, config: Config, tmp_path: Path
+    ) -> None:
         """Test that section matching is case-insensitive"""
         content = """# Agent Documentation
 
@@ -309,7 +311,7 @@ Just some content.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # All mandatory sections present (case-insensitive match)
         assert errors == 0
@@ -319,7 +321,6 @@ Just some content.
         """Test that missing advised sections generate advice messages"""
         # Ensure advices are enabled
         config.enable_advised_sections = True
-        validator.config = config
 
         content = """# Agent Documentation
 
@@ -336,7 +337,7 @@ Just some content.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # No warnings or errors, just advice messages (not counted)
         assert errors == 0
@@ -347,7 +348,6 @@ Just some content.
     ) -> None:
         """Test that missing advised sections do not generate advice messages when disabled"""
         config.enable_advised_sections = False
-        validator.config = config
 
         content = """# Agent Documentation
 ## Overview
@@ -363,7 +363,7 @@ Just some content.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
         # Should not generate any messages when advised disabled
         assert errors == 0
         assert warnings == 0
@@ -373,7 +373,6 @@ Just some content.
     ) -> None:
         """Test that advised sections can be disabled"""
         config.enable_advised_sections = False
-        validator.config = config
 
         content = """# Agent Documentation
 
@@ -390,7 +389,7 @@ Just some content.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # Should not generate any messages when advised sections disabled
         assert errors == 0
@@ -401,7 +400,6 @@ Just some content.
     ) -> None:
         """Test validation with custom mandatory sections"""
         config.mandatory_sections = {"testing": "Testing", "security": "Security"}
-        validator.config = config
 
         content = """# Agent Documentation
 
@@ -412,7 +410,7 @@ Test info here.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # Should warn about missing "security" section only
         assert warnings == 1
@@ -421,7 +419,6 @@ Test info here.
         """Test validation with custom advised sections"""
         config.advised_sections = {"deployment": "Deployment", "monitoring": "Monitoring"}
         config.mandatory_sections = {}  # No mandatory sections
-        validator.config = config
 
         content = """# Agent Documentation
 
@@ -432,7 +429,7 @@ Deployment info.
         agent_file = tmp_path / "AGENTS.md"
         agent_file.write_text(content)
 
-        warnings, errors = validator._validate_sections(content, agent_file, tmp_path)
+        warnings, errors = validator._validate_sections(content, agent_file, tmp_path, config)
 
         # Should not error or warn, just advice about missing "monitoring"
         assert errors == 0

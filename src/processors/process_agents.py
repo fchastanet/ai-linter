@@ -1,7 +1,7 @@
-import fnmatch
 from pathlib import Path
-from typing import Sequence, Tuple
+from typing import Tuple
 
+from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
@@ -19,29 +19,17 @@ class ProcessAgents:
         self.parser = parser
         self.agent_validator = agent_validator
 
-    def process_agents(self, project_dirs: Sequence[Path], ignore_dirs: Sequence[Path] | None) -> Tuple[int, int]:
-        if ignore_dirs is None:
-            ignore_dirs = []
+    def process_agents(self, project_dir: Path, config: Config) -> Tuple[int, int]:
         total_warnings = 0
         total_errors = 0
-        # validate all AGENTS.md files in the project directories
-        for project_dir in project_dirs:
-            # check if project dir is one of the ignore directories
-            self.logger.log(
-                LogLevel.DEBUG,
-                f"Validating AGENTS.md files in project directory: {project_dir} {ignore_dirs}",
-            )
+        # validate all AGENTS.md files in the project directory and subdirectories, excluding ignored directories
+        self.logger.log(
+            LogLevel.DEBUG,
+            f"Validating AGENTS.md files in project directory: {project_dir} {config.ignore}",
+        )
 
-            # check if project dir matches any ignore_dirs glob pattern
-            if any(fnmatch.fnmatch(str(project_dir), str(pattern)) for pattern in ignore_dirs):
-                self.logger.log(
-                    LogLevel.DEBUG,
-                    f"Ignoring project directory '{project_dir}' due to ignore_dirs setting: {ignore_dirs}",
-                )
-                continue
-
-            agent_warnings, agent_errors = self.agent_validator.validate_agents_files(project_dir, ignore_dirs)
-            total_warnings += agent_warnings
-            total_errors += agent_errors
+        agent_warnings, agent_errors = self.agent_validator.validate_agents_files(project_dir, config)
+        total_warnings += agent_warnings
+        total_errors += agent_errors
 
         return total_warnings, total_errors
