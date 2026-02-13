@@ -22,7 +22,7 @@
   },
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
-      "file": "../copilot-prompts/.github/commit-message.instructions.md"
+      "file": ".github/commit-message.instructions.md"
     }
   ],
   "python.analysis.extraPaths": [

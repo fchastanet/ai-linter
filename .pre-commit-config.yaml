@@ -84,7 +84,7 @@ repos:
           - mdformat-gfm
         exclude: |
           (?x)(
-            ^\.github/prompts/|
+            ^\.github/|
             AGENTS\.md|
             SKILL\.md
           )
@@ -98,7 +98,7 @@ repos:
           - --initial-numbering=1
         exclude: |
           (?x)(
-            ^\.github/prompts/|
+            ^\.github/|
             ^doc/ai/|
             AGENTS\.md|
             SKILL\.md
@@ -114,6 +114,10 @@ repos:
           - --quiet
           - --add-toc-title=False
           - --add-horizontal-rules=False
+        exclude: |
+          (?x)(
+              ^\.github/
+          )
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.47.0
