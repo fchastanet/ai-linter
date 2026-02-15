@@ -243,13 +243,6 @@ pre-commit run black --all-files
 
 ### 6.1. Running Tests
 
-**⚠️ Network Dependency**: Tests that use tiktoken require internet access to download the `cl100k_base` encoding from
-`openaipublic.blob.core.windows.net`. In restricted environments (CI, sandboxed), these tests may fail with
-`ConnectionError`.
-
-**Workaround**: Tests will pass once tiktoken encoding is cached locally. If tests fail due to network issues, this is
-expected and not a code problem.
-
 ```bash
 # Basic test run
 make test
@@ -565,7 +558,7 @@ def validate_skill(
 - Don't refactor unrelated code
 - Don't fix unrelated bugs or tests
 - Update documentation only if directly related to your change
-- Test your changes incrementally
+- Test your changes incrementally (unit test driven development approach)
 
 ### 10.3. Adding New Validators
 
