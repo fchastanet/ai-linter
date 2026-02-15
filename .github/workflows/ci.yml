@@ -37,6 +37,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - uses: tibdex/github-app-token@v2
+        if: ${{ success() }}
+        id: generate-token
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+        id: preCommit
+        with:
+          extra_args: >-
+            -c .pre-commit-config.yaml -a
+
       - name: Install dependencies
         run: |
           make install
@@ -76,6 +90,37 @@ jobs:
         with:
           name: test-python-${{ matrix.python-version }}
           status: ${{ job.status }}
+
+      - name: Create Pull Request
+        id: cpr
+        if: >
+          (
+            github.event_name == 'push' ||
+            github.event.pull_request.head.repo.full_name ==
+            github.repository
+          )
+          && steps.preCommit.conclusion == 'failure'
+          && !contains(github.event.head_commit.message, 'skip fix')
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          committer: fchastanet <fchastanet@gmail.com>
+          branch: update/pre-commit-fixes-${{ env.branch_name }}
+          delete-branch: true
+          title: lint fixes
+          commit-message: Auto-update lint fixes
+          body: |
+            some auto fixes have been generated during pre-commit run
+          labels: pre-commit-fixes
+
+      - name: Print Pull request created
+        if: |
+          steps.cpr.outputs.pull-request-number &&
+          steps.cpr.conclusion == 'success'
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
+
 
   build:
     needs:
