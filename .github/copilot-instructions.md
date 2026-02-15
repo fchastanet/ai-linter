@@ -126,7 +126,7 @@ source venv/bin/activate # On Windows: venv\Scripts\activate
 
 # Install in development mode
 make install-dev
-# This runs: pip install -e ".[dev]" && pre-commit install
+# This runs: pip install -e ".[dev]"
 ```
 
 **⚠️ Important**: Always use `make install-dev` instead of manual pip commands to ensure pre-commit hooks are installed.
@@ -218,8 +218,9 @@ make check-all
 ### 5.5. Pre-commit Hooks
 
 ```bash
-# Install hooks (done automatically by make install-dev)
+# Install hooks (done automatically by make pre-commit-install)
 pre-commit install
+pre-commit install --hook-type pre-push
 
 # Run manually on all files
 pre-commit run --all-files

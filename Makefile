@@ -22,7 +22,7 @@ pip-upgrade:
 install: pip-upgrade
 	pip install .
 
-install-dev: pip-upgrade pre-commit-install
+install-dev: pip-upgrade
 	pip install -e ".[dev]"
 
 pre-commit-install:

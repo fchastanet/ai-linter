@@ -195,5 +195,5 @@ ci:
   autoupdate_branch: 'pre-commit-ci/autoupdate'
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
-  skip: [black, isort, flake8, mypy, ai-linter-local, test]
+  skip: [ai-linter-local, test]
   submodules: false
