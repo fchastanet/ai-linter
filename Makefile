@@ -22,12 +22,14 @@ pip-upgrade:
 install: pip-upgrade
 	pip install .
 
-install-dev: pip-upgrade
+install-dev: pip-upgrade pre-commit-install
 	pip install -e ".[dev]"
-	pre-commit install
 
-pre-commit:
+pre-commit-install:
 	pre-commit install
+	pre-commit install --hook-type pre-push
+
+pre-commit: pre-commit-install
 	pre-commit run --all-files
 
 test:
