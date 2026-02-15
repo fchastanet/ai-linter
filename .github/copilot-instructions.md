@@ -3,25 +3,11 @@
 This document provides comprehensive guidance for AI coding agents working with the AI Linter repository. Take time to
 understand this file before making changes.
 
-## 1. Table of Contents
+## 1. Project Overview
 
-- [2. Project Overview](#2-project-overview)
-- [3. Technology Stack](#3-technology-stack)
-- [4. Project Structure](#4-project-structure)
-- [5. Getting Started](#5-getting-started)
-- [6. Development Workflow](#6-development-workflow)
-- [7. Testing](#7-testing)
-- [8. Validation Rules](#8-validation-rules)
-- [9. Common Issues & Workarounds](#9-common-issues--workarounds)
-- [10. Code Style Guidelines](#10-code-style-guidelines)
-- [11. Making Changes](#11-making-changes)
-- [12. CI/CD Pipeline](#12-cicd-pipeline)
-- [13. Troubleshooting](#13-troubleshooting)
-
-## 2. Project Overview
-
-**AI Linter** is a specialized validation tool for AI skills and agent configurations. It validates markdown files
-(`SKILL.md`, `AGENTS.md`) with comprehensive checks including:
+**AI Linter** is a specialized validation tool for AI skills and agent configurations.
+It validates markdown files (`SKILL.md`, `AGENTS.md`) against the [Agent Skills Specification](https://agentskills.io/specification)
+with comprehensive checks including:
 
 - YAML frontmatter validation (skills only)
 - Content length and token count limits (500 lines, 5000 tokens)
@@ -30,11 +16,13 @@ understand this file before making changes.
 - Unreferenced resource file detection
 - Prompt/agent directory validation (`.github/prompts`, `.github/agents`)
 - Project structure validation
+- Skill name format validation (hyphen-case, 1-64 characters, no leading/trailing hyphens)
+- Description length validation (1-1024 characters)
 
-**Key Purpose**: Ensure AI skills and agent configurations are properly formatted, maintainable, and optimized for token
-usage.
+**Key Purpose**: Ensure AI skills and agent configurations comply with the Agent Skills Specification, optimized for
+token usage and progressive disclosure patterns.
 
-## 3. Technology Stack
+## 2. Technology Stack
 
 - **Language**: Python 3.10+ (supports 3.10, 3.11, 3.12)
 
@@ -59,7 +47,7 @@ usage.
   - `pytest` + `pytest-cov` - Testing with coverage
   - `pre-commit` - Git hooks automation
 
-## 4. Project Structure
+## 3. Project Structure
 
 ```text
 ai-linter/
@@ -115,7 +103,7 @@ ai-linter/
     └── QUICK_REFERENCE.md
 ```
 
-### 4.1. Key Architecture Patterns
+### 3.1. Key Architecture Patterns
 
 - **Modular Validators**: Each validation rule is a separate class in `src/validators/`
 - **Processor Pattern**: Orchestrators (`ProcessSkills`, `ProcessAgents`, `ProcessPrompts`) coordinate validators
@@ -123,9 +111,9 @@ ai-linter/
 - **Configuration Override**: CLI args > config file > defaults
 - **Dependency Injection**: Components receive dependencies in constructors for testability
 
-## 5. Getting Started
+## 4. Getting Started
 
-### 5.1. Installation
+### 4.1. Installation
 
 ```bash
 # Clone the repository
@@ -143,7 +131,7 @@ make install-dev
 
 **⚠️ Important**: Always use `make install-dev` instead of manual pip commands to ensure pre-commit hooks are installed.
 
-### 5.2. Quick Validation
+### 4.2. Quick Validation
 
 ```bash
 # Run AI Linter on current directory
@@ -158,9 +146,9 @@ make ai-linter-debug
 ai-linter --version
 ```
 
-## 6. Development Workflow
+## 5. Development Workflow
 
-### 6.1. Code Formatting
+### 5.1. Code Formatting
 
 ```bash
 # Format code (black + isort)
@@ -173,7 +161,7 @@ isort --profile black --check-only src/
 
 **Auto-format on save**: Configured in `.vscode/settings.json` (use VS Code for best experience)
 
-### 6.2. Linting
+### 5.2. Linting
 
 ```bash
 # Run all linting checks
@@ -192,7 +180,7 @@ make lint
 - Line length: Black reformats automatically with `make format`
 - Type errors: Add type hints or update `pyproject.toml` [tool.mypy] section
 
-### 6.3. Testing
+### 5.3. Testing
 
 ```bash
 # Run tests with coverage
@@ -218,7 +206,7 @@ pytest -x --no-cov -vv
 - Tests use pytest conventions (`test_*` functions in `Test*` classes)
 - Use fixtures for common setup (see existing tests)
 
-### 6.4. Full Validation
+### 5.4. Full Validation
 
 ```bash
 # Run all checks (format + lint + test + ai-linter)
@@ -227,7 +215,7 @@ make check-all
 # This is what CI runs - always pass this before committing
 ```
 
-### 6.5. Pre-commit Hooks
+### 5.5. Pre-commit Hooks
 
 ```bash
 # Install hooks (done automatically by make install-dev)
@@ -251,9 +239,9 @@ pre-commit run black --all-files
 - bandit security scanning
 - Git conflict checking
 
-## 7. Testing
+## 6. Testing
 
-### 7.1. Running Tests
+### 6.1. Running Tests
 
 **⚠️ Network Dependency**: Tests that use tiktoken require internet access to download the `cl100k_base` encoding from
 `openaipublic.blob.core.windows.net`. In restricted environments (CI, sandboxed), these tests may fail with
@@ -274,7 +262,7 @@ pytest --cov=src --cov-report=html
 # View report: open htmlcov/index.html
 ```
 
-### 7.2. Writing Tests
+### 6.2. Writing Tests
 
 **Guidelines**:
 
@@ -308,25 +296,32 @@ class TestYourClass:
         assert "error-code" in result.errors
 ```
 
-## 8. Validation Rules
+## 7. Validation Rules
 
-### 8.1. Skills Validation (`SKILL.md`)
+### 7.1. Progressive Disclosure Pattern
+
+Skills follow a progressive disclosure model for efficient context usage:
+
+1. **Metadata (~100 tokens)**: `name` and `description` loaded at startup for all skills
+2. **Instructions (< 5000 tokens)**: Full `SKILL.md` body loaded when skill is activated
+3. **Resources (as needed)**: Files in `scripts/`, `references/`, `assets/` loaded only when required
+
+Keep main `SKILL.md` under 500 lines. Move detailed reference material to separate files.
+
+### 7.2. Skills Validation (`SKILL.md`)
 
 **Required Structure**:
 
 ```markdown
 ---
-name: skill-name-in-hyphen-case
-description: Brief description
-license: MIT
-allowed-tools:
-  - tool1
-  - tool2
+name: pdf-processing
+description: Extracts text and tables from PDF files, fills forms, merges documents. Use when working with PDF documents.
+license: Apache-2.0
+compatibility: Requires Python 3.8+ and pdfplumber library
 metadata:
-  author: Author Name
-  version: "1.0.0"
-compatibility:
-  frameworks: ["anthropic", "openai"]
+  author: example-org
+  version: "1.0"
+allowed-tools: anthropic openai
 ---
 
 # Skill content here
@@ -336,14 +331,22 @@ compatibility:
 
 - ✅ Frontmatter present and valid YAML
 - ✅ Required properties: `name`, `description`
-- ✅ Name format: hyphen-case (lowercase, hyphens, digits only)
+- ✅ Name format: 1-64 characters, lowercase letters/numbers/hyphens only, no leading/trailing hyphens, no consecutive hyphens
+- ✅ Description: 1-1024 characters, should describe what it does and when to use it
 - ✅ Directory name matches skill name
-- ✅ Content ≤ 500 lines
+- ✅ Content ≤ 500 lines (recommended for token efficiency)
 - ✅ Token count ≤ 5000 tokens (cl100k_base encoding)
-- ✅ All file references exist
+- ✅ All file references exist (relative paths from skill root)
 - ✅ Code snippets ≤ 3 lines (configurable, warns if exceeded)
+- ✅ Optional fields present: `license`, `compatibility`, `metadata`, `allowed-tools`
 
-### 8.2. Agents Validation (`AGENTS.md`)
+**Optional Directories**:
+
+- `scripts/` - Executable code (Python, Bash, JavaScript) that agents can run
+- `references/` - Additional documentation (REFERENCE.md, FORMS.md, domain-specific files)
+- `assets/` - Static resources (templates, images, data files)
+
+### 7.3. Agents Validation (`AGENTS.md`)
 
 **Required Structure**:
 
@@ -370,7 +373,7 @@ Agent descriptions and configurations.
   - Security
   - Configuration
 
-### 8.3. Common Error Codes
+### 7.4. Common Error Codes
 
 | Error Code                    | Description                     | Fix                                       |
 | ----------------------------- | ------------------------------- | ----------------------------------------- |
@@ -384,10 +387,13 @@ Agent descriptions and configurations.
 | `file-reference-not-found`    | Referenced file doesn't exist   | Create file or fix path                   |
 | `agent-frontmatter-extracted` | AGENTS.md has frontmatter       | Remove frontmatter (not allowed)          |
 | `code-snippet-too-large`      | Code block > 3 lines            | Externalize to file or split              |
+| `invalid-frontmatter-format`  | Invalid field in frontmatter    | Refer to Agent Skills spec for valid      |
+|                               |                                 | fields                                    |
+| `description-too-long`        | Description exceeds 1024 chars  | Reduce description length                 |
 
-## 9. Common Issues & Workarounds
+## 8. Common Issues & Workarounds
 
-### 9.1. Issue 1: `tiktoken` Network Errors in Tests
+### 8.1. Issue 1: `tiktoken` Network Errors in Tests
 
 **Symptom**: Tests fail with `ConnectionError: Failed to resolve 'openaipublic.blob.core.windows.net'`
 
@@ -416,7 +422,7 @@ def compute_token_count(text: str) -> int:
     return len(encoding.encode(text))
 ```
 
-### 9.2. Issue 2: Pre-commit Hook Failures
+### 8.2. Issue 2: Pre-commit Hook Failures
 
 **Symptom**: `git commit` fails with validation errors
 
@@ -434,7 +440,7 @@ make ai-linter # Validate AI files
 git commit --no-verify -m "message"
 ```
 
-### 9.3. Issue 3: Import Errors After Installation
+### 8.3. Issue 3: Import Errors After Installation
 
 **Symptom**: `ModuleNotFoundError: No module named 'ai_linter'`
 
@@ -448,7 +454,7 @@ pip uninstall ai-linter
 make install-dev
 ```
 
-### 9.4. Issue 4: `examples/` Validation Failures
+### 8.4. Issue 4: `examples/` Validation Failures
 
 **Symptom**: AI Linter reports errors in `examples/` directory
 
@@ -462,7 +468,7 @@ make install-dev
 
 **Current Config**: `examples/` is NOT in the default ignore list, so validation will report errors.
 
-### 9.5. Issue 5: Type Checking Errors with mypy
+### 8.5. Issue 5: Type Checking Errors with mypy
 
 **Symptom**: `mypy` reports type errors
 
@@ -481,9 +487,9 @@ make install-dev
 
 3. Use `# type: ignore` comments sparingly for third-party issues
 
-## 10. Code Style Guidelines
+## 9. Code Style Guidelines
 
-### 10.1. General Python Style
+### 9.1. General Python Style
 
 - **Line Length**: 120 characters (configured in black/flake8)
 - **Imports**: Sorted with isort (black profile)
@@ -491,7 +497,7 @@ make install-dev
 - **Type Hints**: Required for all function signatures (mypy strict mode)
 - **Docstrings**: Use for public functions/classes (Google style preferred)
 
-### 10.2. Naming Conventions
+### 9.2. Naming Conventions
 
 - **Modules**: `lowercase_with_underscores.py`
 - **Classes**: `PascalCase`
@@ -499,7 +505,7 @@ make install-dev
 - **Constants**: `UPPER_CASE_WITH_UNDERSCORES`
 - **Private**: Prefix with `_single_underscore`
 
-### 10.3. Import Organization (isort)
+### 9.3. Import Organization (isort)
 
 ```python
 # Standard library imports
@@ -516,7 +522,7 @@ from lib.config import Config
 from validators.skill_validator import SkillValidator
 ```
 
-### 10.4. Type Hints Example
+### 9.4. Type Hints Example
 
 ```python
 from typing import List, Dict, Optional, Tuple
@@ -541,9 +547,9 @@ def validate_skill(
     return len(errors) == 0, errors
 ```
 
-## 11. Making Changes
+## 10. Making Changes
 
-### 11.1. Before Making Changes
+### 10.1. Before Making Changes
 
 1. **Understand the issue**: Read the problem statement thoroughly
 2. **Explore the code**: Use `view` or `grep` to understand affected areas
@@ -551,7 +557,7 @@ def validate_skill(
 4. **Run tests**: `make test` to establish baseline
 5. **Check current status**: `make check-all` to see if there are existing issues
 
-### 11.2. Making Minimal Changes
+### 10.2. Making Minimal Changes
 
 **Guidelines**:
 
@@ -561,7 +567,7 @@ def validate_skill(
 - Update documentation only if directly related to your change
 - Test your changes incrementally
 
-### 11.3. Adding New Validators
+### 10.3. Adding New Validators
 
 1. Create validator class in `src/validators/`
 2. Add corresponding test file `src/validators/your_validator_test.py`
@@ -570,7 +576,7 @@ def validate_skill(
 5. Update `README.md` and `AGENTS.md` with validation rules
 6. Run tests: `pytest src/validators/your_validator_test.py --no-cov`
 
-### 11.4. Modifying Validation Rules
+### 10.4. Modifying Validation Rules
 
 1. Locate validator in `src/validators/`
 2. Update validation logic
@@ -579,7 +585,7 @@ def validate_skill(
 5. Update documentation in `README.md`
 6. Run full test suite: `make check-all`
 
-### 11.5. Development Checklist
+### 10.5. Development Checklist
 
 Before committing changes:
 
@@ -591,9 +597,9 @@ Before committing changes:
 - [ ] Pre-commit hooks pass: `pre-commit run --all-files`
 - [ ] Full check passes: `make check-all`
 
-## 12. CI/CD Pipeline
+## 11. CI/CD Pipeline
 
-### 12.1. Workflow: `.github/workflows/ci.yml`
+### 11.1. Workflow: `.github/workflows/ci.yml`
 
 **Triggers**:
 
@@ -605,7 +611,7 @@ Before committing changes:
 
 **Jobs**:
 
-#### 12.1.1. Test Job (Matrix)
+#### 11.1.1. Test Job (Matrix)
 
 - **Python Versions**: 3.10, 3.11, 3.12
 - **Steps**:
@@ -615,7 +621,7 @@ Before committing changes:
   4. Run pre-commit hooks: `pre-commit-ci/lite-action`
 - **Artifacts**: Coverage reports (`.coverage`, `coverage.xml`, `htmlcov/`)
 
-#### 12.1.2. Build Job (on release/tag)
+#### 11.1.2. Build Job (on release/tag)
 
 - **Steps**:
   1. Build package: `python -m build`
@@ -629,7 +635,7 @@ Before committing changes:
 - `make test-all` - Tests + AI Linter validation
 - Coverage reporting
 
-### 12.2. Viewing CI Results
+### 11.2. Viewing CI Results
 
 ```bash
 # Check CI status on GitHub
@@ -639,9 +645,9 @@ Before committing changes:
 # Access via Actions tab > Workflow run > Artifacts
 ```
 
-## 13. Troubleshooting
+## 12. Troubleshooting
 
-### 13.1. Debug Mode
+### 12.1. Debug Mode
 
 ```bash
 # Run AI Linter with debug logging
@@ -652,7 +658,7 @@ ai-linter --log-format yaml --skills .
 ai-linter --log-format logfmt --skills .
 ```
 
-### 13.2. Common Commands
+### 12.2. Common Commands
 
 ```bash
 # Clean build artifacts
@@ -673,7 +679,7 @@ pytest -xvv src/validators/skill_validator_test.py::TestSkillValidator::test_val
 ai-linter --help
 ```
 
-### 13.3. Configuration File
+### 12.3. Configuration File
 
 `.ai-linter-config.yaml` controls all validation behavior:
 
@@ -699,7 +705,7 @@ ignore:                            # Glob patterns to skip
 ai-linter --max-warnings 5 --log-level DEBUG --skills .
 ```
 
-### 13.4. Getting Help
+### 12.4. Getting Help
 
 1. **README.md**: User-facing documentation
 2. **CONTRIBUTING.md**: Development guidelines
@@ -707,7 +713,7 @@ ai-linter --max-warnings 5 --log-level DEBUG --skills .
 4. **QUICK_REFERENCE.md**: CLI quick reference
 5. **Issue Tracker**: <https://github.com/fchastanet/ai-linter/issues>
 
-### 13.5. Useful VS Code Tasks
+### 12.5. Useful VS Code Tasks
 
 Configured in `.vscode/tasks.json`:
 
@@ -720,9 +726,9 @@ Access via: `Ctrl+Shift+P` → "Tasks: Run Task"
 
 ______________________________________________________________________
 
-## 14. Quick Reference
+## 13. Quick Reference
 
-### 14.1. Essential Commands
+### 13.1. Essential Commands
 
 ```bash
 # Setup
@@ -742,7 +748,7 @@ make check-all # Run all checks (CI equivalent)
 make clean # Remove build artifacts
 ```
 
-### 14.2. Key Files to Know
+### 13.2. Key Files to Know
 
 - `src/ai_linter.py` - Main entry point, CLI handling
 - `src/lib/config.py` - Configuration loading
@@ -752,7 +758,7 @@ make clean # Remove build artifacts
 - `pyproject.toml` - Package configuration
 - `Makefile` - Development automation
 
-### 14.3. Remember
+### 13.3. Remember
 
 - Always run `make check-all` before committing
 - Use `make format` to auto-fix formatting issues
@@ -763,10 +769,11 @@ make clean # Remove build artifacts
 
 ______________________________________________________________________
 
-**Last Updated**: 2026-02-12
+**Last Updated**: 2026-02-15
 
 For more detailed information, see:
 
 - `README.md` - User documentation
 - `AGENTS.md` - AI agent guidance (more comprehensive)
 - `CONTRIBUTING.md` - Development workflow
+- [Agent Skills Specification](https://agentskills.io/specification) - Official skill format specification
