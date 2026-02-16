@@ -128,7 +128,7 @@ repos:
           - --fix
         exclude: |
           (?x)(
-            ^\.github/prompts/|
+            ^\.github/|
             ^doc/ai/
           )
 
