@@ -37,7 +37,7 @@ test:
 
 # Run AI Linter on current directory
 ai-linter:
-	ai-linter --skills .
+	ai-linter --skills --max-warnings 23 .
 
 # Run AI Linter with debug logging
 ai-linter-debug:
