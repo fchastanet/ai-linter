@@ -69,7 +69,7 @@ def validate(
 
     # Process skills
     if arguments.skills:
-        nb_warnings, nb_errors = process_skills.process_skills_for_directories(skill_directories, None, arguments)
+        nb_warnings, nb_errors = process_skills.process_skills_for_directories(skill_directories, arguments)
         total_warnings += nb_warnings
         total_errors += nb_errors
 

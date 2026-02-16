@@ -98,7 +98,7 @@ class FileDigestFormatter(BaseLogFormatter):
             )
             output_lines.append(summary_output_lines)
 
-        return "\n".join(output_lines)
+        return "\n".join(output_lines) + "\n"
 
     def get_format(self) -> LogFormat:
         """Return FILE_DIGEST format"""

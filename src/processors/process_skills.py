@@ -1,8 +1,8 @@
-import fnmatch
 import os
 from pathlib import Path
 from typing import Tuple
 
+from filters.filter_files import is_ignored_path
 from lib.arguments import Arguments
 from lib.config import Config
 from lib.log.log_level import LogLevel
@@ -48,12 +48,15 @@ class ProcessSkills:
         skills_count = 0
 
         for directory in directories:
-            directory = os.path.abspath(directory)
-            project_dirs.add(directory)
+            project_dir = os.path.abspath(directory)
+            project_dirs.add(project_dir)
+            from lib.config import load_config
+
+            config = load_config(self.logger, arguments, project_dir)
 
             if arguments.skills:
                 # look for skills in .github/skills subdirectory
-                skills_dir = os.path.abspath(f"{directory}/.github/skills")
+                skills_dir = os.path.abspath(f"{project_dir}/.github/skills")
                 if os.path.exists(skills_dir) and os.path.isdir(skills_dir):
                     dirs = [
                         name
@@ -63,12 +66,16 @@ class ProcessSkills:
                     ]
                     for skill_dir in dirs:
                         full_skill_dir = os.path.join(skills_dir, skill_dir)
-                        if full_skill_dir not in skill_directories:
-                            skill_directories[full_skill_dir] = directory
+                        if full_skill_dir not in skill_directories and not is_ignored_path(
+                            self.logger, config.ignore, Path(full_skill_dir).relative_to(project_dir)
+                        ):
+                            skill_directories[full_skill_dir] = project_dir
                 new_skills_count = len(skill_directories.keys())
                 self.logger.log(
                     LogLevel.INFO,
-                    f"Found {new_skills_count - skills_count} skills in directory '{directory}'",
+                    "Found %d skills in directory '%s'",
+                    new_skills_count - skills_count,
+                    project_dir,
                 )
                 skills_count = new_skills_count
                 for skill_dir in skill_directories.keys():
@@ -76,18 +83,20 @@ class ProcessSkills:
                         project_dirs.add(str(self.validator.deduce_project_root_dir_from_skill_dir(skill_dir)))
             else:
                 # add the directory if not already present
-                if directory not in skill_directories:
-                    project_dirs.add(directory)
+                if project_dir not in skill_directories:
+                    project_dirs.add(project_dir)
 
         self.logger.log(
             LogLevel.INFO,
-            f"Found {len(project_dirs)} unique project directories to process: {project_dirs} ",
+            "Found %d unique project directories to process: %s",
+            len(project_dirs),
+            project_dirs,
         )
 
         return skill_directories, project_dirs
 
     def process_skills_for_directories(
-        self, skill_directories: dict[str, str], config_loader: None, arguments: Arguments
+        self, skill_directories: dict[str, str], arguments: Arguments
     ) -> Tuple[int, int]:
         """Process all skills in the collected skill directories.
 
@@ -103,21 +112,23 @@ class ProcessSkills:
         total_errors = 0
 
         for skill_dir, project_dir in skill_directories.items():
+            # check if skill_dir should be ignored based on ignore patterns
+            skill_path = Path(skill_dir)
+            project_path = Path(project_dir)
+            relative_path = skill_path.relative_to(project_path).as_posix()
+            self.logger.log(
+                LogLevel.INFO,
+                "Processing skill directory: %s (project: %s)",
+                relative_path,
+                project_dir,
+            )
+
+            # Load config for the project directory
             from lib.config import load_config
 
             config = load_config(self.logger, arguments, project_dir)
-            # check if skill_dir should be ignored based on ignore patterns
-            if any(fnmatch.fnmatch(str(skill_dir), str(pattern)) for pattern in config.ignore):
-                self.logger.log(
-                    LogLevel.INFO,
-                    f"Skipping skill directory '{skill_dir}' as it matches ignore patterns",
-                )
-                continue
-            self.logger.log(
-                LogLevel.INFO,
-                f"Processing skill directory: {skill_dir} (project: {project_dir})",
-            )
 
+            # Process the skill directory
             nb_warnings, nb_errors = self.process_skill(Path(skill_dir), Path(project_dir), config)
             total_warnings += nb_warnings
             total_errors += nb_errors

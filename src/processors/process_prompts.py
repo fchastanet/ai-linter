@@ -1,9 +1,11 @@
 """Processor for validating prompt and agent markdown files"""
 
-import fnmatch
 from collections.abc import Sequence
 from pathlib import Path
 
+import pathspec
+
+from filters.filter_files import filter_files
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
@@ -120,11 +122,15 @@ class ProcessPrompts:
         nb_warnings = 0
         nb_errors = 0
 
+        # Create pathspec from ignore patterns
+        spec = pathspec.PathSpec.from_lines("gitignore", ignore)
+
         for sub_dir_pattern in sub_dirs:
             sub_dir = project_dir / sub_dir_pattern
             if not sub_dir.exists() or not sub_dir.is_dir():
                 continue
-            if any(fnmatch.fnmatch(str(sub_dir), str(pattern)) for pattern in ignore):
+            relative_sub_dir = sub_dir.relative_to(project_dir).as_posix()
+            if spec.match_file(relative_sub_dir):
                 self.logger.log(
                     LogLevel.DEBUG,
                     f"Ignoring directory '{sub_dir}' due to ignore setting: {ignore}",
@@ -140,15 +146,7 @@ class ProcessPrompts:
                     f"Found {len(md_files)} {file_type} file(s) in {sub_dir}",
                 )
 
-            for md_file in md_files:
-                # Skip ignored files
-                if any(fnmatch.fnmatch(str(md_file), str(pattern)) for pattern in ignore):
-                    self.logger.log(
-                        LogLevel.DEBUG,
-                        f"Ignoring file '{md_file}' due to ignore setting: {ignore}",
-                    )
-                    continue
-
+            for md_file in filter_files(self.logger, ignore, md_files, project_dir):
                 self.logger.log(
                     LogLevel.INFO,
                     f"Processing {file_type} file: {md_file}",

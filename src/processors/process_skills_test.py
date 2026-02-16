@@ -276,7 +276,7 @@ class TestProcessSkills:
             ignore=None,
         )
 
-        warnings, errors = processor.process_skills_for_directories({}, None, arguments)
+        warnings, errors = processor.process_skills_for_directories({}, arguments)
 
         assert warnings == 0
         assert errors == 0
@@ -299,7 +299,7 @@ class TestProcessSkills:
             ignore=None,
         )
 
-        result = processor.process_skills_for_directories(skill_directories, None, arguments)
+        result = processor.process_skills_for_directories(skill_directories, arguments)
 
         assert isinstance(result, tuple)
         assert len(result) == 2

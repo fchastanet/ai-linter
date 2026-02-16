@@ -1,10 +1,9 @@
-import fnmatch
 from pathlib import Path
 from typing import Tuple
 
+from filters.filter_files import is_ignored_path
 from lib.arguments import Arguments
 from lib.config import load_config
-from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
 from lib.parser import Parser
 from processors.process_agents import ProcessAgents
@@ -46,12 +45,7 @@ class ProcessProjects:
 
         for project_dir in project_dirs:
             config = load_config(self.logger, arguments, project_dir)
-            # check if project dir matches any ignore glob pattern
-            if any(fnmatch.fnmatch(str(project_dir), str(pattern)) for pattern in config.ignore):
-                self.logger.log(
-                    LogLevel.DEBUG,
-                    f"Ignoring project directory '{project_dir}' due to ignore setting: {config.ignore}",
-                )
+            if is_ignored_path(self.logger, config.ignore, Path(project_dir)):
                 continue
             project_path = Path(project_dir)
 
