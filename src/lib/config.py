@@ -2,6 +2,7 @@ import os
 
 import yaml
 
+from lib.arguments import Arguments
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -9,28 +10,6 @@ from lib.log.logger import Logger
 MANDATORY_SECTIONS_LOG_LEVELS = [LogLevel.ERROR, LogLevel.WARNING]
 DEFAULT_IGNORE_PATTERNS = [".git", "__pycache__"]
 AI_LINTER_CONFIG_FILE = ".ai-linter-config.yaml"
-
-
-class Arguments:
-    """
-    Arguments that allows to override config file settings from the command line
-    """
-
-    def __init__(
-        self,
-        skills: bool,
-        directories: list[str],
-        config_file: str | None,
-        log_level: LogLevel | None,
-        log_format: LogFormat | None,
-        max_warnings: int | None,
-    ) -> None:
-        self.skills = skills
-        self.directories = directories
-        self.config_file = config_file
-        self.log_level = log_level
-        self.log_format = log_format
-        self.max_warnings = max_warnings
 
 
 class Config:
