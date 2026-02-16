@@ -20,7 +20,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     permissions:
-      statuses: write # needed by ouzi-dev/commit-status-updater@v2
+      statuses: write  # needed by ouzi-dev/commit-status-updater@v2
 
     steps:
       - uses: actions/checkout@v4
@@ -148,7 +148,7 @@ jobs:
       - test
       - lint
     permissions:
-      contents: write # needed by svenstaro/upload-release-action and ncipollo/release-action
+      contents: write  # needed by svenstaro/upload-release-action and ncipollo/release-action
     environment: Python
     runs-on: ubuntu-latest
     if: |

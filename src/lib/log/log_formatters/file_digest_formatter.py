@@ -8,6 +8,7 @@ from lib.log.log_format import LogFormat
 from lib.log.log_formatters.base_log_formatter import BaseLogFormatter
 from lib.log.log_formatters.report_entry import ReportEntry
 from lib.log.log_formatters.rule_message import RuleMessage
+from lib.log.log_level import LogLevel
 from lib.table.tabulate_adapter import TabulateAdapter
 
 
@@ -60,6 +61,11 @@ class FileDigestFormatter(BaseLogFormatter):
 
         # Format a summary report from all entries
         data = self.get_summary(entries, messages, start_time)
+        rule_warning_count = data["rule_warning_count"]
+        rule_error_count = data["rule_error_count"]
+        rule_warning_color = LogLevel.WARNING.get_level_color() if rule_warning_count > 0 else ""
+        rule_error_color = LogLevel.ERROR.get_level_color() if rule_error_count > 0 else ""
+
         summary_output_lines = TabulateAdapter.display_table(
             tabular_data=[
                 [
@@ -74,8 +80,15 @@ class FileDigestFormatter(BaseLogFormatter):
                     "Content Complexity Valid",
                     f"{data['content_complexity_valid_count']}/{data['content_complexity_files_count']}",
                 ],
-                ["Rule Warnings", data["rule_warning_count"]],
-                ["Rule Errors", data["rule_error_count"]],
+                # format in yellow if warnings exceed threshold
+                [
+                    "Rule Warnings",
+                    f"{rule_warning_color}{rule_warning_count}{RESET}",
+                ],
+                [
+                    "Rule Errors",
+                    f"{rule_error_color}{rule_error_count}{RESET}",
+                ],
                 ["Total Elapsed Time (seconds)", f"{data['total_elapsed_time_seconds']:.2f}"],
             ],
             headers=["Metric", "Value"],

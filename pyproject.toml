@@ -99,7 +99,7 @@ disallow_untyped_defs = true
 
 [tool.flake8]
 max-line-length = 120
-min_python_version = 3.12
+min_python_version = 3.10
 extend-ignore = ["E203", "W503"]
 exclude = [
     "build",

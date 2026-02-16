@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: ai-linter-local
         name: AI Linter (Local)
-        entry: python src/ai_linter.py --skills .
+        entry: python src/ai_linter.py --skills --max-warnings 23 .
         language: python
         types: [markdown]
         files: ^(.*/)?(SKILL|AGENTS)\.md$
@@ -45,6 +45,9 @@ repos:
     rev: 7.3.0
     hooks:
       - id: flake8
+        additional_dependencies:
+          - flake8-typing-imports>=1.17.0
+          - flake8-pyi>=25.5.0
         args:
           - --max-line-length=120
           - --extend-ignore=E203,W503

@@ -93,7 +93,18 @@ def main() -> int:
     nb_warnings, nb_errors = validate(arguments)
     config = load_config(logger, arguments, arguments.directories[0])
 
-    return 0 if nb_errors == 0 and (arguments.max_warnings == -1 or nb_warnings <= config.max_warnings) else 1
+    if nb_errors > 0:
+        return 1
+    if config.max_warnings != -1 and nb_warnings > config.max_warnings:
+        logger.log(
+            LogLevel.ERROR,
+            "Warning threshold exceeded: %d warnings (threshold: %d)",
+            nb_warnings,
+            config.max_warnings,
+        )
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
