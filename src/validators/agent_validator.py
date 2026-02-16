@@ -1,6 +1,6 @@
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 from filters.filter_files import filter_files
 from lib.config import Config

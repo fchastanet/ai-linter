@@ -1,8 +1,9 @@
 import logging
 import os
 import sys
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping, Tuple, Union
+from typing import Any, Tuple, Union
 
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.formatter_factory import LogFormatterFactory
