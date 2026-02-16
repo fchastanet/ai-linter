@@ -57,7 +57,7 @@ class TestAILinter:
             # We expect one warning about no agents found, but the process should complete successfully
             try:
                 args = Arguments(
-                    skills=False,
+                    skills=skills,
                     directories=[temp_dir],
                     config_file=None,
                     log_level=LogLevel.INFO,

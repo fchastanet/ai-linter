@@ -118,7 +118,7 @@ class TestConfig:
         """Test load_config with section validation settings"""
         logger = Logger(LogLevel.INFO)
         args = defaultArgs
-        config_path = tmp_path / "config.yaml"
+        config_path = tmp_path / ".ai-linter-config.yaml"
         args.config_file = str(config_path)
 
         config_data = {
@@ -205,7 +205,7 @@ class TestConfig:
         }
         config_path.write_text(yaml.dump(config_data))
 
-        config = load_config(logger, args, str(config_path))
+        config = load_config(logger, args, str(tmp_path))
 
         assert config.log_level == LogLevel.DEBUG
         assert config.log_format == LogFormat.YAML

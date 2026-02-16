@@ -129,7 +129,7 @@ make install-dev
 # This runs: pip install -e ".[dev]"
 ```
 
-**⚠️ Important**: Always use `make install-dev` instead of manual pip commands to ensure pre-commit hooks are installed.
+**⚠️ Important**: Always use `make install-dev` instead of manual pip commands.
 
 ### 4.2. Quick Validation
 
