@@ -40,7 +40,7 @@ def is_ignored_path(logger: Logger, ignore_patterns: Sequence[str], file: Path) 
     if is_ignored:
         logger.log(
             LogLevel.DEBUG,
-            "Skipping path as it matches ignore patterns",
+            "Skipping path %s as it matches ignore patterns",
             file.as_posix(),
         )
     return is_ignored

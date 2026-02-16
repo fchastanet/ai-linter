@@ -105,20 +105,19 @@ def _load_config_file(
     config_obj.ignore = list(DEFAULT_IGNORE_PATTERNS)
     config_obj.max_warnings = max_warnings
 
-    if config_path is None:
-        return config_obj
+    config = {}
 
-    if os.path.exists(config_path):
+    if config_path is not None and os.path.exists(config_path):
         try:
             with open(config_path, "r") as f:
-                config = yaml.safe_load(f)
-                if isinstance(config, dict):
-                    _update_config_from_dict(args, config_obj, config, logger)
+                config_loaded = yaml.safe_load(f)
+                if isinstance(config_loaded, dict):
+                    config = config_loaded
                     logger.log(
                         LogLevel.DEBUG,
                         f"Loaded config file: {config_path}",
                     )
-                elif config is None:
+                elif config_loaded is None:
                     logger.log(
                         LogLevel.DEBUG,
                         f"Config file '{config_path}' is empty; using default settings.",
@@ -139,6 +138,8 @@ def _load_config_file(
             LogLevel.INFO,
             f"Config file '{config_path}' not found, using default settings.",
         )
+
+    _update_config_from_dict(args, config_obj, config, logger)
 
     return config_obj
 

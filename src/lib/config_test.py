@@ -97,7 +97,7 @@ class TestConfig:
         """Test load_config with empty YAML file"""
         logger = Logger(LogLevel.INFO)
 
-        config_path = tmp_path / "empty.yaml"
+        config_path = tmp_path / ".ai-linter-config.yaml"
         config_path.write_text("")
 
         config = load_config(logger, defaultArgs, str(tmp_path))
@@ -235,7 +235,7 @@ class TestConfig:
         config_path = tmp_path / ".ai-linter-config.yaml"
         config_path.write_text("invalid: yaml: content:")
 
-        config = load_config(logger, args, str(config_path))
+        config = load_config(logger, args, str(tmp_path))
 
         # Should fallback to defaults
         assert config.log_level == LogLevel.INFO
