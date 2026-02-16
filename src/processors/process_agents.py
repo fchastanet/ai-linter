@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 from lib.config import Config
 from lib.log.log_level import LogLevel
@@ -19,7 +18,7 @@ class ProcessAgents:
         self.parser = parser
         self.agent_validator = agent_validator
 
-    def process_agents(self, project_dir: Path, config: Config) -> Tuple[int, int]:
+    def process_agents(self, project_dir: Path, config: Config) -> tuple[int, int]:
         total_warnings = 0
         total_errors = 0
         # validate all AGENTS.md files in the project directory and subdirectories, excluding ignored directories

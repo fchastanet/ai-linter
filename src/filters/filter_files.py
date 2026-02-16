@@ -22,12 +22,14 @@ def filter_files(
         logger.log(
             LogLevel.DEBUG,
             "Skipping %d file(s) as they match ignore patterns: %s",
-            (len(ignored_files), [f.relative_to(project_dir).as_posix() for f in ignored_files]),
+            len(ignored_files),
+            [f.relative_to(project_dir).as_posix() for f in ignored_files],
         )
     logger.log(
         LogLevel.INFO,
         "Found %d/%d file(s) to validate after applying ignore patterns",
-        (len(filtered_files), len(files)),
+        len(filtered_files),
+        len(files),
     )
     return filtered_files
 
@@ -39,6 +41,6 @@ def is_ignored_path(logger: Logger, ignore_patterns: Sequence[str], file: Path) 
         logger.log(
             LogLevel.DEBUG,
             "Skipping path as it matches ignore patterns",
-            (file.as_posix(),),
+            file.as_posix(),
         )
     return is_ignored

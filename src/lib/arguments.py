@@ -45,7 +45,7 @@ class Arguments:
         arg_parser.add_argument(
             "--max-warnings",
             type=int,
-            default=-1,
+            default=None,
             help="Maximum number of warnings allowed before failing, -1 for unlimited",
         )
         arg_parser.add_argument(

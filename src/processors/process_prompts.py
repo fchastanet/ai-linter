@@ -48,7 +48,7 @@ class ProcessPrompts:
             warning_threshold: Threshold for warning status
 
         Returns:
-            Tuple of (warnings, errors)
+            tuple of (warnings, errors)
         """
         nb_warnings = 0
         nb_errors = 0
@@ -115,7 +115,7 @@ class ProcessPrompts:
             ignore: Directories to ignore
 
         Returns:
-            Tuple of (total_warnings, total_errors)
+            tuple of (total_warnings, total_errors)
         """
         if ignore is None:
             ignore = []

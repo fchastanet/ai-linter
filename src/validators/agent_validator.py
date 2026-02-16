@@ -166,7 +166,7 @@ class AgentValidator:
             project_dir: Project root directory
 
         Returns:
-            Tuple of (warnings, errors) counts
+            tuple of (warnings, errors) counts
         """
         nb_warnings = 0
         nb_errors = 0

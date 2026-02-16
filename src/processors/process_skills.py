@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Tuple
 
 from filters.filter_files import is_ignored_path
 from lib.arguments import Arguments
@@ -17,7 +16,7 @@ class ProcessSkills:
         self.parser = parser
         self.validator = validator
 
-    def process_skill(self, skill_directory: Path, project_directory: Path, config: Config) -> Tuple[int, int]:
+    def process_skill(self, skill_directory: Path, project_directory: Path, config: Config) -> tuple[int, int]:
         # validate all skills in the skill directories
         total_warnings = 0
         total_errors = 0
@@ -97,7 +96,7 @@ class ProcessSkills:
 
     def process_skills_for_directories(
         self, skill_directories: dict[str, str], arguments: Arguments
-    ) -> Tuple[int, int]:
+    ) -> tuple[int, int]:
         """Process all skills in the collected skill directories.
 
         Args:

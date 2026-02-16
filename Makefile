@@ -60,7 +60,7 @@ lint:
 	isort --profile black --check-only src/
 
 	# Run flake8
-	flake8 src/ --max-line-length=120 --extend-ignore=E203,W503
+	flake8
 
 	# Run mypy
 	mypy src/

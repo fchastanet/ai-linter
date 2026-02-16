@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Tuple
 
 from filters.filter_files import is_ignored_path
 from lib.arguments import Arguments
@@ -25,7 +24,7 @@ class ProcessProjects:
         self.process_agents = process_agents
         self.process_prompts = process_prompts
 
-    def process_projects_for_directories(self, project_dirs: set[str], arguments: Arguments) -> Tuple[int, int]:
+    def process_projects_for_directories(self, project_dirs: set[str], arguments: Arguments) -> tuple[int, int]:
         """Process all projects in the given directories.
 
         Validates:

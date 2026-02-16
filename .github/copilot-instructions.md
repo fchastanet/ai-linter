@@ -519,13 +519,13 @@ from validators.skill_validator import SkillValidator
 ### 9.4. Type Hints Example
 
 ```python
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 
 def validate_skill(
     skill_path: Path,
     config: Dict[str, any],
     max_warnings: int = 10
-) -> Tuple[bool, List[str]]:
+) -> tuple[bool, List[str]]:
     """Validate a skill directory.
 
     Args:
@@ -534,7 +534,7 @@ def validate_skill(
         max_warnings: Maximum warnings before failure
 
     Returns:
-        Tuple of (success, error_messages)
+        tuple of (success, error_messages)
     """
     errors: List[str] = []
     # Implementation

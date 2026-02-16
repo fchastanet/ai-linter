@@ -192,7 +192,7 @@ Add the following task to your `.vscode/tasks.json`:
 usage: ai-linter [-h]
           [--skills]
           [--max-warnings MAX_WARNINGS]
-          [--ignore IGNORE_DIRS [IGNORE_DIRS ...]]
+          [--ignore IGNORE_PATTERN [IGNORE_PATTERNS ...]]
           [--log-level {ERROR,WARNING,INFO,DEBUG}]
           [--version]
           [--config-file CONFIG_FILE]
@@ -208,8 +208,8 @@ options:
   --skills              Indicates that the input directories contain skills
   --max-warnings MAX_WARNINGS
                         Maximum number of warnings allowed before failing
-  --ignore IGNORE_DIRS [IGNORE_DIRS ...]
-                        List of directory patterns to ignore when validating AGENTS.md files
+  --ignore IGNORE_PATTERN [IGNORE_PATTERNS ...]
+                         Glob patterns for files and directories to ignore across all validations
   --log-level {ERROR,WARNING,INFO,DEBUG}
                         Set the logging level
   --version             Show the version of the AI Linter
