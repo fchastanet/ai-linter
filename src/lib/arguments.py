@@ -19,6 +19,7 @@ class Arguments:
         log_level: LogLevel | None,
         log_format: LogFormat | None,
         max_warnings: int | None,
+        ignore: list[str] | None,
     ) -> None:
         self.skills = skills
         self.directories = directories
@@ -26,6 +27,7 @@ class Arguments:
         self.log_level = log_level
         self.log_format = log_format
         self.max_warnings = max_warnings
+        self.ignore = ignore
 
     @staticmethod
     def parse_arguments(logger: Logger, ai_linter_version: str) -> tuple["Arguments", int]:
@@ -47,9 +49,10 @@ class Arguments:
             help="Maximum number of warnings allowed before failing, -1 for unlimited",
         )
         arg_parser.add_argument(
-            "--ignore-dirs",
+            "--ignore",
             type=str,
             nargs="+",
+            action="extend",
             default=None,
             help="Glob patterns for files and directories to ignore (supports wildcards: *, ?, [seq], [!seq])",
         )
@@ -104,7 +107,7 @@ class Arguments:
                     LogLevel.ERROR,
                     f"Directory '{directory}' does not exist or is not a directory",
                 )
-                return Arguments(False, [], None, None, None, None), 1
+                return Arguments(False, [], None, None, None, None, None), 1
 
         if args.config_file:
             if not os.path.isfile(args.config_file):
@@ -112,7 +115,7 @@ class Arguments:
                     LogLevel.ERROR,
                     f"Config file '{args.config_file}' does not exist or is not a file",
                 )
-                return Arguments(False, [], None, None, None, None), 1
+                return Arguments(False, [], None, None, None, None, None), 1
 
         arguments = Arguments(
             skills=args.skills,
@@ -121,6 +124,7 @@ class Arguments:
             log_format=log_format,
             max_warnings=max_warnings,
             config_file=args.config_file,
+            ignore=args.ignore,
         )
 
         return arguments, 0

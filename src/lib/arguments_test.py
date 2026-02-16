@@ -28,6 +28,7 @@ class TestArguments:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         assert args.skills is True
@@ -36,6 +37,7 @@ class TestArguments:
         assert args.log_level == LogLevel.INFO
         assert args.log_format == LogFormat.FILE_DIGEST
         assert args.max_warnings == 10
+        assert args.ignore is None
 
     def test_arguments_with_multiple_directories(self) -> None:
         """Test Arguments with multiple directories"""
@@ -47,10 +49,12 @@ class TestArguments:
             log_level=LogLevel.DEBUG,
             log_format=LogFormat.YAML,
             max_warnings=5,
+            ignore=[".git", "node_modules"],
         )
 
         assert args.directories == dirs
         assert len(args.directories) == 3
+        assert args.ignore == [".git", "node_modules"]
 
     def test_arguments_with_none_values(self) -> None:
         """Test Arguments with None values"""
@@ -61,12 +65,14 @@ class TestArguments:
             log_level=None,
             log_format=None,
             max_warnings=None,
+            ignore=None,
         )
 
         assert args.config_file is None
         assert args.log_level is None
         assert args.log_format is None
         assert args.max_warnings is None
+        assert args.ignore is None
 
     @patch("sys.argv", ["ai-linter", "examples"])
     def test_parse_arguments_minimal(self, logger: Logger) -> None:
@@ -166,7 +172,22 @@ class TestArguments:
     @patch("sys.argv", ["ai-linter", "--skills", "--log-level", "DEBUG", "--max-warnings", "10", "examples"])
     def test_parse_arguments_combined(self, logger: Logger) -> None:
         """Test parsing with combined arguments"""
-        with patch("sys.argv", ["ai-linter", "--skills", "--log-level", "DEBUG", "--max-warnings", "10", "examples"]):
+        with patch(
+            "sys.argv",
+            [
+                "ai-linter",
+                "--skills",
+                "--log-level",
+                "DEBUG",
+                "--max-warnings",
+                "10",
+                "examples",
+                "--ignore",
+                ".git",
+                "--ignore",
+                "node_modules",
+            ],
+        ):
             args, return_code = Arguments.parse_arguments(logger, "1.0.0")
 
         assert return_code == 0
@@ -174,3 +195,4 @@ class TestArguments:
         assert args.log_level == LogLevel.DEBUG
         assert args.max_warnings == 10
         assert args.directories == ["examples"]
+        assert args.ignore == [".git", "node_modules"]

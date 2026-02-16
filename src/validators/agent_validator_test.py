@@ -138,8 +138,8 @@ See [reference](references/agent-ref.md) for more info.
         # Should validate without errors (one file, no references needed)
         assert errors == 0
 
-    def test_validate_agents_files_ignore_dirs(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
-        """Test that validate_agents_files respects ignore_dirs"""
+    def test_validate_agents_files_ignore(self, validator: AgentValidator, config: Config, tmp_path: Path) -> None:
+        """Test that validate_agents_files respects ignore"""
         # Create first AGENTS.md
         agents1 = tmp_path / "AGENTS.md"
         agents1.write_text("---\ntitle: Invalid\n---\n")

@@ -122,7 +122,7 @@ ai-linter --log-level DEBUG --skills .
 ai-linter --max-warnings 5 --skills .
 
 # Ignore specific directories
-ai-linter --ignore-dirs node_modules build --skills .
+ai-linter --ignore node_modules build --skills .
 
 # Use custom config file
 ai-linter --config-file custom.yaml --skills .

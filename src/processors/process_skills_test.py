@@ -186,6 +186,7 @@ class TestProcessSkills:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         skill_dirs, project_dirs = processor.collect_skill_directories(arguments.directories, arguments)
@@ -213,6 +214,7 @@ class TestProcessSkills:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         skill_dirs, project_dirs = processor.collect_skill_directories(arguments.directories, arguments)
@@ -229,6 +231,7 @@ class TestProcessSkills:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         skill_dirs, project_dirs = processor.collect_skill_directories(arguments.directories, arguments)
@@ -253,6 +256,7 @@ class TestProcessSkills:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         skill_dirs, project_dirs = processor.collect_skill_directories(arguments.directories, arguments)
@@ -269,6 +273,7 @@ class TestProcessSkills:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         warnings, errors = processor.process_skills_for_directories({}, None, arguments)
@@ -291,6 +296,7 @@ class TestProcessSkills:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
         result = processor.process_skills_for_directories(skill_directories, None, arguments)

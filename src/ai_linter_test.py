@@ -63,6 +63,7 @@ class TestAILinter:
                     log_level=LogLevel.INFO,
                     log_format=LogFormat.FILE_DIGEST,
                     max_warnings=10,
+                    ignore=None,
                 )
                 nb_warnings, nb_errors = validate(args)
                 out, err = capsys.readouterr()

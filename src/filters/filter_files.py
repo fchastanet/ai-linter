@@ -1,7 +1,7 @@
+from collections.abc import Sequence
 from pathlib import Path
 
 import pathspec
-from pyparsing import Sequence
 
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger

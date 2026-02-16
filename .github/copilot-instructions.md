@@ -457,7 +457,7 @@ make install-dev
 **Workaround**:
 
 - This is expected behavior
-- Use `--ignore-dirs examples` to skip validation
+- Use `--ignore examples` to skip validation
 - Or add `examples` to `ignore` list in `.ai-linter-config.yaml`
 
 **Current Config**: `examples/` is NOT in the default ignore list, so validation will report errors.

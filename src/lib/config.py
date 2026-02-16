@@ -19,7 +19,7 @@ class Config:
         self.log_level: LogLevel = LogLevel.INFO
         self.log_format: LogFormat = LogFormat.FILE_DIGEST
         self.max_warnings: int = -1
-        self.ignore: list[str] = DEFAULT_IGNORE_PATTERNS  # Glob patterns for files and directories
+        self.ignore: list[str] = list(DEFAULT_IGNORE_PATTERNS)  # Glob patterns for files and directories
         self.code_snippet_max_lines: int = 3
         self.prompt_dirs: list[str] = [".github/prompts"]
         self.agent_dirs: list[str] = [".github/agents"]
@@ -102,7 +102,7 @@ def _load_config_file(
     config_obj = Config()
     config_obj.log_level = log_level
     config_obj.log_format = log_format
-    config_obj.ignore = DEFAULT_IGNORE_PATTERNS
+    config_obj.ignore = list(DEFAULT_IGNORE_PATTERNS)
     config_obj.max_warnings = max_warnings
 
     if config_path is None:
@@ -151,7 +151,7 @@ def _update_config_from_dict(args: Arguments, config_obj: Config, config: dict, 
             LogLevel.DEBUG,
             f"Log level specified in arguments ({args.log_level}) takes precedence over config file",
         )
-        config_obj.log_level = Logger.INFO if not args.log_level else args.log_level
+        config_obj.log_level = args.log_level
     elif (
         "log_level" in config and isinstance(config["log_level"], str) and LogLevel.is_valid_string(config["log_level"])
     ):
@@ -163,23 +163,46 @@ def _update_config_from_dict(args: Arguments, config_obj: Config, config: dict, 
     logger.set_level(config_obj.log_level)
 
     # Override max warnings if specified in config
-    if (
-        (not hasattr(args, "max_warnings") or args.max_warnings is None)
-        and "max_warnings" in config
-        and isinstance(config["max_warnings"], int)
-    ):
+    if hasattr(args, "max_warnings") and args.max_warnings is not None:
+        logger.log(
+            LogLevel.DEBUG,
+            f"Max warnings specified in arguments ({args.max_warnings}) takes precedence over config file",
+        )
+        config_obj.max_warnings = args.max_warnings
+    elif "max_warnings" in config and isinstance(config["max_warnings"], int):
         max_warnings = config["max_warnings"]
         config_obj.max_warnings = max_warnings
         logger.log(
             LogLevel.INFO,
             f"Max warnings set to {max_warnings} from config file",
         )
-    # Add ignore patterns from config
-    if (
-        (not hasattr(args, "ignore") or args.ignore is None)
-        and "ignore" in config
-        and isinstance(config["ignore"], list)
+
+    # Override log format if specified in config
+    if hasattr(args, "log_format") and args.log_format is not None:
+        logger.log(
+            LogLevel.DEBUG,
+            f"Log format specified in arguments ({args.log_format}) takes precedence over config file",
+        )
+        config_obj.log_format = args.log_format
+    elif (
+        "log_format" in config
+        and isinstance(config["log_format"], str)
+        and LogFormat.is_valid_string(config["log_format"])
     ):
+        config_obj.log_format = LogFormat.from_string(config["log_format"])
+        logger.log(
+            LogLevel.INFO,
+            f"Log format set to {config_obj.log_format} from config file",
+        )
+
+    # Add ignore patterns from config
+    if hasattr(args, "ignore") and args.ignore is not None:
+        logger.log(
+            LogLevel.DEBUG,
+            f"Ignore patterns specified in arguments ({args.ignore}) takes precedence over config file",
+        )
+        config_obj.ignore = args.ignore
+    elif "ignore" in config and isinstance(config["ignore"], list):
         ignore_patterns = config["ignore"]
         config_key = "ignore"
         if ignore_patterns is not None:

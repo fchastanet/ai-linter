@@ -72,6 +72,7 @@ class TestProcessProjects:
             log_level=LogLevel.INFO,
             log_format=LogFormat.FILE_DIGEST,
             max_warnings=10,
+            ignore=None,
         )
 
     def test_process_projects_with_empty_directories(self, processor: ProcessProjects, arguments: Arguments) -> None:
@@ -144,6 +145,7 @@ class TestProcessProjects:
                 log_level=LogLevel.INFO,
                 log_format=LogFormat.FILE_DIGEST,
                 max_warnings=10,
+                ignore=None,
             )
 
             with patch("processors.process_projects.load_config") as mock_load_config:

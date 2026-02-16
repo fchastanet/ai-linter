@@ -11,6 +11,14 @@ class LogFormat(Enum):
     YAML = "yaml"
 
     @classmethod
+    def is_valid_string(cls, value: str | None) -> bool:
+        """Check if a string is a valid log format."""
+        if value is None:
+            return False
+        key = str(value).strip().lower()
+        return any(key == member.value for member in cls)
+
+    @classmethod
     def from_string(cls, value: str | None) -> "LogFormat":
         """Convert a string to a LogFormat enum (case-insensitive)."""
         if isinstance(value, cls):
