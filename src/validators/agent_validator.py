@@ -1,7 +1,8 @@
 import re
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
+from filters.filter_files import filter_files
 from lib.config import Config
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -27,16 +28,16 @@ class AgentValidator:
         content_length_validator: ContentLengthValidator,
         file_reference_validator: FileReferenceValidator,
         code_snippet_validator: CodeSnippetValidator,
-        config: Config,
     ):
         self.logger = logger
         self.parser = parser
         self.content_length_validator = content_length_validator
         self.file_reference_validator = file_reference_validator
         self.code_snippet_validator = code_snippet_validator
-        self.config = config
 
-    def validate_agent_file(self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path) -> tuple[int, int]:
+    def validate_agent_file(
+        self, base_dirs: Sequence[Path], agent_file: Path, project_dir: Path, config: Config
+    ) -> tuple[int, int]:
         """Validate a single AGENTS.md file"""
         nb_errors = 0
         nb_warnings = 0
@@ -68,7 +69,7 @@ class AgentValidator:
             agent_content,
             line_number,
             project_dir=project_dir,
-            resource_dirs=self.config.resource_dirs,
+            resource_dirs=config.resource_dirs,
         )
         nb_warnings += desc_warnings
         nb_errors += desc_errors
@@ -81,7 +82,7 @@ class AgentValidator:
             self.MAX_AGENT_CONTENT_LINES_COUNT,
             project_dir=project_dir,
             file_type="Agent",
-            warning_threshold=self.config.report_warning_threshold,
+            warning_threshold=config.report_warning_threshold,
         )
         nb_warnings += nb_warnings_content
         nb_errors += nb_errors_content
@@ -93,20 +94,22 @@ class AgentValidator:
         nb_errors += snippet_errors
 
         # Section validation
-        section_warnings, section_errors = self._validate_sections(agent_content, agent_file, project_dir)
+        section_warnings, section_errors = self._validate_sections(agent_content, agent_file, project_dir, config)
         nb_warnings += section_warnings
         nb_errors += section_errors
 
         return nb_warnings, nb_errors
 
-    def validate_agents_files(self, project_dir: Path, ignore_dirs: Sequence[Path] | None) -> tuple[int, int]:
+    def validate_agents_files(self, project_dir: Path, config: Config) -> tuple[int, int]:
         """Validate all AGENTS.md files in the project directory"""
         project_dir = Path(project_dir)
         agent_files = list(project_dir.rglob("AGENTS.md"))
+        # remove files with non case-sensitive match
+        agent_files = [f for f in agent_files if f.name == "AGENTS.md"]
         nb_warnings = 0
         nb_errors = 0
         if not agent_files:
-            level = self.config.missing_agents_file_level
+            level = config.missing_agents_file_level
             self.logger.logRule(
                 level,
                 "no-agents-found",
@@ -118,18 +121,13 @@ class AgentValidator:
             elif level == LogLevel.WARNING:
                 nb_warnings += 1
 
-        for agent_file in agent_files:
-            if ignore_dirs is not None and any(str(ignored_dir) in str(agent_file) for ignored_dir in ignore_dirs):
-                self.logger.logRule(
-                    LogLevel.DEBUG,
-                    "ignoring-agents-file",
-                    f"Ignoring AGENTS.md file due to ignore_dirs setting: {ignore_dirs}",
-                    agent_file.relative_to(project_dir),
-                )
-                continue
-            self.logger.log(LogLevel.INFO, "Validating AGENTS.md file: %s", (str(agent_file.relative_to(project_dir)),))
+        for agent_file in filter_files(self.logger, config.ignore, agent_files, project_dir):
+            self.logger.log(
+                LogLevel.INFO,
+                f"Validating AGENTS.md file: {agent_file}",
+            )
             agent_warnings, agent_errors = self.validate_agent_file(
-                [agent_file.parent, project_dir], agent_file, project_dir
+                [agent_file.parent, project_dir], agent_file, project_dir, config=config
             )
             nb_warnings += agent_warnings
             nb_errors += agent_errors
@@ -159,7 +157,7 @@ class AgentValidator:
 
         return sections
 
-    def _validate_sections(self, content: str, agent_file: Path, project_dir: Path) -> tuple[int, int]:
+    def _validate_sections(self, content: str, agent_file: Path, project_dir: Path, config: Config) -> tuple[int, int]:
         """Validate that agent content contains required sections
 
         Args:
@@ -168,7 +166,7 @@ class AgentValidator:
             project_dir: Project root directory
 
         Returns:
-            Tuple of (warnings, errors) counts
+            tuple of (warnings, errors) counts
         """
         nb_warnings = 0
         nb_errors = 0
@@ -177,10 +175,10 @@ class AgentValidator:
         found_sections = self._extract_sections(content)
 
         # Check mandatory sections
-        if self.config.enable_mandatory_sections:
-            for mandatory_section_key, mandatory_section_label in self.config.mandatory_sections.items():
+        if config.enable_mandatory_sections:
+            for mandatory_section_key, mandatory_section_label in config.mandatory_sections.items():
                 if mandatory_section_key not in found_sections:
-                    level = self.config.mandatory_sections_log_level
+                    level = config.mandatory_sections_log_level
                     self.logger.logRule(
                         level,
                         "missing-mandatory-section",
@@ -193,8 +191,8 @@ class AgentValidator:
                         nb_warnings += 1
 
         # Check advised sections (only if advised sections are enabled)
-        if self.config.enable_advised_sections:
-            for advised_section_key, advised_section_label in self.config.advised_sections.items():
+        if config.enable_advised_sections:
+            for advised_section_key, advised_section_label in config.advised_sections.items():
                 if advised_section_key not in found_sections:
                     self.logger.logRule(
                         LogLevel.ADVICE,

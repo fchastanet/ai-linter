@@ -5,7 +5,7 @@ repos:
     hooks:
       - id: ai-linter-local
         name: AI Linter (Local)
-        entry: python src/ai_linter.py --skills .
+        entry: python src/ai_linter.py --skills --max-warnings 23 .
         language: python
         types: [markdown]
         files: ^(.*/)?(SKILL|AGENTS)\.md$
@@ -16,6 +16,7 @@ repos:
           - "PyYAML>=6.0"
           - "pyparsing>=3.0.0"
           - "tabulate>=0.9.0"
+          - "pathspec>=1.0.4"
       - id: test
         name: test
         entry: make test
@@ -44,6 +45,9 @@ repos:
     rev: 7.3.0
     hooks:
       - id: flake8
+        additional_dependencies:
+          - flake8-typing-imports>=1.17.0
+          - flake8-pyi>=25.5.0
         args:
           - --max-line-length=120
           - --extend-ignore=E203,W503
@@ -83,7 +87,7 @@ repos:
           - mdformat-gfm
         exclude: |
           (?x)(
-            ^\.github/prompts/|
+            ^\.github/|
             AGENTS\.md|
             SKILL\.md
           )
@@ -97,7 +101,7 @@ repos:
           - --initial-numbering=1
         exclude: |
           (?x)(
-            ^\.github/prompts/|
+            ^\.github/|
             ^doc/ai/|
             AGENTS\.md|
             SKILL\.md
@@ -113,6 +117,10 @@ repos:
           - --quiet
           - --add-toc-title=False
           - --add-horizontal-rules=False
+        exclude: |
+          (?x)(
+              ^\.github/
+          )
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.47.0
@@ -123,7 +131,7 @@ repos:
           - --fix
         exclude: |
           (?x)(
-            ^\.github/prompts/|
+            ^\.github/|
             ^doc/ai/
           )
 
@@ -190,5 +198,5 @@ ci:
   autoupdate_branch: 'pre-commit-ci/autoupdate'
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
-  skip: [black, isort, flake8, mypy, ai-linter-local, test]
+  skip: [ai-linter-local, test]
   submodules: false

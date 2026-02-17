@@ -122,7 +122,7 @@ ai-linter --log-level DEBUG --skills .
 ai-linter --max-warnings 5 --skills .
 
 # Ignore specific directories
-ai-linter --ignore-dirs node_modules build --skills .
+ai-linter --ignore node_modules build --skills .
 
 # Use custom config file
 ai-linter --config-file custom.yaml --skills .
@@ -185,13 +185,17 @@ log_level: INFO  # DEBUG, INFO, WARNING, ERROR
 # Maximum warnings before failure
 max_warnings: 10
 
-# Directories to ignore
-ignore_dirs:
+# Glob patterns for both files and directories to ignore during validation
+# Supports standard glob patterns: *, ?, [seq], [!seq]
+# These patterns will be matched against directory and file paths
+# Examples: .git, __pycache__, build, dist, .vscode, .pytest_cache, venv, env
+# Use wildcards for more specific patterns: *.egg-info, **/test_*, .*/.*
+ignore:
   - ".git"
   - "__pycache__"
   - "node_modules"
-  - "build"
-  - "dist"
+  - "build/**"
+  - "dist/**"
   - ".vscode"
   - ".pytest_cache"
   - "venv"

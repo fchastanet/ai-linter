@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Mapping, Tuple, Union
+from typing import Any
 
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.formatter_factory import LogFormatterFactory
@@ -77,7 +77,8 @@ class Logger:
         self,
         level: LogLevel,
         message: str,
-        args: Union[Tuple[Any, ...], Mapping[str, Any]] = (),
+        *args: Any,
+        **kwargs: Any,
     ) -> None:
         """Log a general message (operational log without rule code).
 

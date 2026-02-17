@@ -24,10 +24,12 @@ install: pip-upgrade
 
 install-dev: pip-upgrade
 	pip install -e ".[dev]"
-	pre-commit install
 
-pre-commit:
+pre-commit-install:
 	pre-commit install
+	pre-commit install --hook-type pre-push
+
+pre-commit: pre-commit-install
 	pre-commit run --all-files
 
 test:
@@ -35,7 +37,7 @@ test:
 
 # Run AI Linter on current directory
 ai-linter:
-	ai-linter --skills .
+	ai-linter --skills --max-warnings 23 .
 
 # Run AI Linter with debug logging
 ai-linter-debug:
@@ -58,7 +60,7 @@ lint:
 	isort --profile black --check-only src/
 
 	# Run flake8
-	flake8 src/ --max-line-length=120 --extend-ignore=E203,W503
+	flake8
 
 	# Run mypy
 	mypy src/

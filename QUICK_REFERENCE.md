@@ -356,5 +356,5 @@ ai-linter . --log-level DEBUG
 ai-linter . --max-warnings 0
 
 # Ignore specific dirs
-ai-linter . --ignore-dirs node_modules build
+ai-linter . --ignore node_modules build
 ```

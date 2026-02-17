@@ -5,6 +5,7 @@ import unittest
 import pytest
 
 from ai_linter import AI_LINTER_VERSION
+from lib.config import Arguments
 
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -55,8 +56,16 @@ class TestAILinter:
 
             # We expect one warning about no agents found, but the process should complete successfully
             try:
-                config = Config()  # Use default config for testing
-                nb_warnings, nb_errors = validate([], LogLevel.INFO, LogFormat.FILE_DIGEST, config, skills, [temp_dir])
+                args = Arguments(
+                    skills=skills,
+                    directories=[temp_dir],
+                    config_file=None,
+                    log_level=LogLevel.INFO,
+                    log_format=LogFormat.FILE_DIGEST,
+                    max_warnings=10,
+                    ignore=None,
+                )
+                nb_warnings, nb_errors = validate(args)
                 out, err = capsys.readouterr()
                 sys.stdout.write(out)
                 sys.stderr.write(err)

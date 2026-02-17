@@ -1,9 +1,15 @@
-from argparse import Namespace
 from pathlib import Path
 
+import pytest
 import yaml
 
-from lib.config import Config, get_log_level_from_string, load_config
+from lib.config import (
+    DEFAULT_IGNORE_PATTERNS,
+    Arguments,
+    Config,
+    get_log_level_from_string,
+    load_config,
+)
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -12,6 +18,23 @@ from lib.log.logger import Logger
 class TestConfig:
     """Test Config class functionality"""
 
+    @pytest.fixture(autouse=True)
+    def change_test_dir(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.chdir(tmp_path)
+
+    @pytest.fixture
+    def defaultArgs(self) -> Arguments:
+        """Create an AiStats instance"""
+        return Arguments(
+            skills=False,
+            directories=[],
+            config_file=None,
+            log_level=None,
+            log_format=None,
+            max_warnings=None,
+            ignore=None,
+        )
+
     def test_config_defaults(self) -> None:
         """Test that Config has expected default values"""
         config = Config()
@@ -19,8 +42,8 @@ class TestConfig:
         assert config.log_level == LogLevel.INFO
         assert config.log_format == LogFormat.FILE_DIGEST
         assert config.max_warnings == -1
-        assert ".git" in config.ignore_dirs
-        assert "__pycache__" in config.ignore_dirs
+        assert ".git" in config.ignore
+        assert "__pycache__" in config.ignore
         assert config.code_snippet_max_lines == 3
         assert config.report_warning_threshold == 0.8
         assert config.unreferenced_file_level == LogLevel.ERROR
@@ -58,40 +81,45 @@ class TestConfig:
         assert get_log_level_from_string("INVALID", LogLevel.WARNING) == LogLevel.WARNING
         assert get_log_level_from_string("UNKNOWN", LogLevel.ERROR) == LogLevel.ERROR
 
-    def test_load_config_no_file(self, tmp_path: Path) -> None:
+    def test_load_config_no_file(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config when config file doesn't exist"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
         config_path = str(tmp_path / "nonexistent.yaml")
+        defaultArgs.config_file = config_path
+        config = load_config(logger, defaultArgs, str(tmp_path))
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, config_path, LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
-
-        assert log_level == LogLevel.INFO
-        assert log_format == LogFormat.FILE_DIGEST
-        assert max_warnings == -1
         assert isinstance(config, Config)
+        assert config.log_level == LogLevel.INFO
+        assert config.log_format == LogFormat.FILE_DIGEST
+        assert config.max_warnings == -1
 
-    def test_load_config_empty_file(self, tmp_path: Path) -> None:
+    def test_load_config_empty_file(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config with empty YAML file"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
-        config_path = tmp_path / "empty.yaml"
+
+        config_path = tmp_path / ".ai-linter-config.yaml"
         config_path.write_text("")
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
+        config = load_config(logger, defaultArgs, str(tmp_path))
 
-        assert log_level == LogLevel.INFO
         assert isinstance(config, Config)
+        assert config.log_level == LogLevel.INFO
+        assert config.log_format == LogFormat.FILE_DIGEST
+        assert config.max_warnings == -1
+        assert config.ignore == DEFAULT_IGNORE_PATTERNS
+        assert config.code_snippet_max_lines == 3
+        assert config.report_warning_threshold == 0.8
+        assert config.unreferenced_file_level == LogLevel.ERROR
+        assert config.missing_agents_file_level == LogLevel.WARNING
+        assert config.enable_mandatory_sections is True
+        assert config.enable_advised_sections is True
 
-    def test_load_config_with_section_settings(self, tmp_path: Path) -> None:
+    def test_load_config_with_section_settings(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config with section validation settings"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
-        config_path = tmp_path / "config.yaml"
+        args = defaultArgs
+        config_path = tmp_path / ".ai-linter-config.yaml"
+        args.config_file = str(config_path)
 
         config_data = {
             "enable_mandatory_sections": False,
@@ -102,9 +130,7 @@ class TestConfig:
         }
         config_path.write_text(yaml.dump(config_data))
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
+        config = load_config(logger, args, str(tmp_path))
 
         assert config.enable_advised_sections is False
         assert config.enable_mandatory_sections is False
@@ -112,53 +138,54 @@ class TestConfig:
         assert config.mandatory_sections == {"security": "Security", "testing": "Testing"}
         assert config.advised_sections == {"architecture": "Architecture", "deployment": "Deployment"}
 
-    def test_load_config_with_log_level(self, tmp_path: Path) -> None:
+    def test_load_config_with_log_level(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config with log level in config file"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
-        config_path = tmp_path / "config.yaml"
+        args = defaultArgs
+        config_path = tmp_path / ".ai-linter-config.yaml"
 
         config_data = {"log_level": "WARNING"}
         config_path.write_text(yaml.dump(config_data))
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
+        config = load_config(logger, args, str(tmp_path))
 
-        assert log_level == LogLevel.WARNING
         assert config.log_level == LogLevel.WARNING
 
-    def test_load_config_cli_overrides_file(self, tmp_path: Path) -> None:
+    def test_load_config_cli_overrides_file(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test that CLI arguments override config file"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level="DEBUG", log_format=None, max_warnings=5, ignore_dirs=None)
-        config_path = tmp_path / "config.yaml"
+        args = defaultArgs
+        args.max_warnings = 5
 
+        config_path = tmp_path / ".ai-linter-config.yaml"
         config_data = {
             "log_level": "WARNING",
             "max_warnings": 10,
         }
         config_path.write_text(yaml.dump(config_data))
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.DEBUG, LogFormat.FILE_DIGEST, [], 5
-        )
+        config = load_config(logger, args, str(tmp_path))
 
         # CLI overrides file
-        assert log_level == LogLevel.DEBUG
-        assert max_warnings == 5
+        assert config.log_level == LogLevel.WARNING
+        assert config.max_warnings == 5
+        assert config.log_format == LogFormat.FILE_DIGEST
+        assert config.ignore == [".git", "__pycache__"]
+        assert config.code_snippet_max_lines == 3
+        assert config.report_warning_threshold == 0.8
+        assert config.unreferenced_file_level == LogLevel.ERROR
 
-    def test_load_config_with_all_options(self, tmp_path: Path) -> None:
+    def test_load_config_with_all_options(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config with comprehensive config file"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
-        config_path = tmp_path / "config.yaml"
+        args = defaultArgs
+        config_path = tmp_path / ".ai-linter-config.yaml"
 
         config_data = {
             "log_level": "DEBUG",
             "log_format": "yaml",
             "max_warnings": 20,
-            "ignore_dirs": [".git", "build"],
+            "ignore": ["**/*.log", "build"],
             "code_snippet_max_lines": 5,
             "prompt_dirs": ["prompts"],
             "agent_dirs": ["agents"],
@@ -178,14 +205,12 @@ class TestConfig:
         }
         config_path.write_text(yaml.dump(config_data))
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
+        config = load_config(logger, args, str(tmp_path))
 
-        assert log_level == LogLevel.DEBUG
-        assert log_format == LogFormat.YAML
-        assert max_warnings == 20
-        assert ignore_dirs == [".git", "build"]
+        assert config.log_level == LogLevel.DEBUG
+        assert config.log_format == LogFormat.YAML
+        assert config.max_warnings == 20
+        assert config.ignore == ["**/*.log", "build"]
         assert config.code_snippet_max_lines == 5
         assert config.prompt_dirs == ["prompts"]
         assert config.agent_dirs == ["agents"]
@@ -203,32 +228,40 @@ class TestConfig:
         assert config.mandatory_sections == {"testing": "Testing"}
         assert config.advised_sections == {"architecture": "Architecture"}
 
-    def test_load_config_invalid_yaml(self, tmp_path: Path) -> None:
+    def test_load_config_invalid_yaml(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config with invalid YAML"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
-        config_path = tmp_path / "invalid.yaml"
+        args = defaultArgs
+        config_path = tmp_path / ".ai-linter-config.yaml"
         config_path.write_text("invalid: yaml: content:")
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
+        config = load_config(logger, args, str(tmp_path))
 
         # Should fallback to defaults
-        assert log_level == LogLevel.INFO
+        assert config.log_level == LogLevel.INFO
         assert isinstance(config, Config)
 
-    def test_load_config_non_dict_yaml(self, tmp_path: Path) -> None:
+    def test_load_config_non_dict_yaml(self, tmp_path: Path, defaultArgs: Arguments) -> None:
         """Test load_config with YAML that isn't a dictionary"""
         logger = Logger(LogLevel.INFO)
-        args = Namespace(log_level=None, log_format=None, max_warnings=None, ignore_dirs=None)
-        config_path = tmp_path / "list.yaml"
+        args = defaultArgs
+        config_path = tmp_path / ".ai-linter-config.yaml"
         config_path.write_text("- item1\n- item2")
 
-        ignore_dirs, log_level, log_format, max_warnings, config = load_config(
-            args, logger, str(config_path), LogLevel.INFO, LogFormat.FILE_DIGEST, [], -1
-        )
+        config = load_config(logger, args, str(config_path))
 
         # Should fallback to defaults
-        assert log_level == LogLevel.INFO
+        assert config.log_level == LogLevel.INFO
         assert isinstance(config, Config)
+
+    def test_load_config_with_ignore_key(self, tmp_path: Path, defaultArgs: Arguments) -> None:
+        """Test load_config with new 'ignore' key for glob patterns"""
+        logger = Logger(LogLevel.INFO)
+        args = defaultArgs
+        config_path = tmp_path / ".ai-linter-config.yaml"
+        config_data = {"ignore": ["**/*.log", "build", "*.egg-info"]}
+        config_path.write_text(yaml.dump(config_data))
+
+        config = load_config(logger, args, str(config_path))
+
+        assert config.ignore == ["**/*.log", "build", "*.egg-info"]

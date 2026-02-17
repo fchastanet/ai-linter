@@ -35,7 +35,7 @@ class TestSkillValidator:
         """Create a test config"""
         config = Config()
         config.resource_dirs = []
-        config.ignore_dirs = []
+        config.ignore = []
         config.unreferenced_file_level = LogLevel.ERROR
         config.code_snippet_max_lines = 100
         return config
@@ -61,18 +61,17 @@ class TestSkillValidator:
             file_ref_validator,
             front_matter_validator,
             code_snippet_validator,
-            config,
         )
 
-    def test_skill_not_found(self, validator: SkillValidator, tmp_path: Path) -> None:
+    def test_skill_not_found(self, validator: SkillValidator, config: Config, tmp_path: Path) -> None:
         """Test validation when SKILL.md is missing"""
         skill_dir = tmp_path / "test-skill"
         skill_dir.mkdir()
 
-        warnings, errors = validator.validate_skill(skill_dir, tmp_path)
+        warnings, errors = validator.validate_skill(skill_dir, tmp_path, config)
         assert errors == 1  # Should have 1 error
 
-    def test_valid_skill(self, validator: SkillValidator, tmp_path: Path) -> None:
+    def test_valid_skill(self, validator: SkillValidator, config: Config, tmp_path: Path) -> None:
         """Test validation of a valid skill"""
         skill_dir = tmp_path / "test-skill"
         skill_dir.mkdir()
@@ -89,11 +88,11 @@ This is a test skill with valid content.
 """
         skill_md.write_text(content)
 
-        warnings, errors = validator.validate_skill(skill_dir, tmp_path)
+        warnings, errors = validator.validate_skill(skill_dir, tmp_path, config)
         # Should pass validation (no errors expected)
         assert errors <= 0
 
-    def test_skill_missing_name(self, validator: SkillValidator, tmp_path: Path) -> None:
+    def test_skill_missing_name(self, validator: SkillValidator, config: Config, tmp_path: Path) -> None:
         """Test validation when name is missing"""
         skill_dir = tmp_path / "test-skill"
         skill_dir.mkdir()
@@ -107,10 +106,10 @@ description: A test skill
 """
         skill_md.write_text(content)
 
-        warnings, errors = validator.validate_skill(skill_dir, tmp_path)
+        warnings, errors = validator.validate_skill(skill_dir, tmp_path, config)
         assert errors >= 1
 
-    def test_skill_missing_description(self, validator: SkillValidator, tmp_path: Path) -> None:
+    def test_skill_missing_description(self, validator: SkillValidator, config: Config, tmp_path: Path) -> None:
         """Test validation when description is missing"""
         skill_dir = tmp_path / "test-skill"
         skill_dir.mkdir()
@@ -124,10 +123,10 @@ name: test-skill
 """
         skill_md.write_text(content)
 
-        warnings, errors = validator.validate_skill(skill_dir, tmp_path)
+        warnings, errors = validator.validate_skill(skill_dir, tmp_path, config)
         assert errors >= 1
 
-    def test_invalid_frontmatter(self, validator: SkillValidator, tmp_path: Path) -> None:
+    def test_invalid_frontmatter(self, validator: SkillValidator, config: Config, tmp_path: Path) -> None:
         """Test validation with invalid YAML frontmatter"""
         skill_dir = tmp_path / "test-skill"
         skill_dir.mkdir()
@@ -143,7 +142,7 @@ Content
 """
         skill_md.write_text(content)
 
-        warnings, errors = validator.validate_skill(skill_dir, tmp_path)
+        warnings, errors = validator.validate_skill(skill_dir, tmp_path, config)
         assert errors >= 1
 
     def test_deduce_project_root(self, validator: SkillValidator, tmp_path: Path) -> None:

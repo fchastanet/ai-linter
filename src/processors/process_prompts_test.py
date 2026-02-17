@@ -85,9 +85,10 @@ class TestProcessPrompts:
             temp_path = Path(temp_dir)
 
             warnings, errors = processor.process_sub_directories(
-                [temp_path],
-                [".github/prompts"],
+                temp_path,
+                [],
                 "Prompt",
+                [".github/prompts"],
                 max_tokens=5000,
                 max_lines=500,
                 warning_threshold=0.8,
@@ -116,9 +117,10 @@ class TestProcessPrompts:
             (prompt_dir / "prompt2.md").write_text("# Prompt 2\n\nTest content")
 
             warnings, errors = processor.process_sub_directories(
-                [temp_path],
-                [".github/prompts"],
+                temp_path,
+                [],
                 "Prompt",
+                [".github/prompts"],
                 max_tokens=5000,
                 max_lines=500,
                 warning_threshold=0.8,
@@ -148,9 +150,10 @@ class TestProcessPrompts:
             (agent_dir / "custom-agent.md").write_text("# Custom Agent\n\nTest content")
 
             warnings, errors = processor.process_sub_directories(
-                [temp_path],
-                [".github/agents"],
+                temp_path,
+                [],
                 "Agent",
+                [".github/agents"],
                 max_tokens=5000,
                 max_lines=500,
                 warning_threshold=0.8,

@@ -17,20 +17,23 @@ log_format: file-digest
 # Set to a number, or use -1 for unlimited warnings
 max_warnings: 10
 
-# Directories to ignore during validation
-# These patterns will be ignored when scanning for AGENTS.md files
-ignore_dirs:
+# Glob patterns for both files and directories to ignore during validation
+# Supports standard glob patterns: *, ?, [seq], [!seq]
+# These patterns will be matched against directory and file paths
+# Examples: .git, __pycache__, build, dist, .vscode, .pytest_cache, venv, env
+# Use wildcards for more specific patterns: *.egg-info, **/test_*, .*/.*
+ignore:
   - ".git"
   - "__pycache__"
   - "node_modules"
-  - "build"
-  - "dist"
+  - "build/**"
+  - "dist/**"
   - ".vscode"
   - ".pytest_cache"
   - "venv"
   - "env"
   - ".history"
-  - "doc"
+  - "doc/**"
 
 # Code snippet validation
 # Maximum number of lines allowed in a code snippet before warning

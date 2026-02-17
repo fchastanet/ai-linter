@@ -2,8 +2,7 @@
 
 import os
 from abc import ABC, abstractmethod
-
-from pyparsing import Any
+from typing import Any
 
 from lib.log.log_format import LogFormat
 from lib.log.log_formatters.report_entry import ReportEntry

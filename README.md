@@ -192,7 +192,7 @@ Add the following task to your `.vscode/tasks.json`:
 usage: ai-linter [-h]
           [--skills]
           [--max-warnings MAX_WARNINGS]
-          [--ignore-dirs IGNORE_DIRS [IGNORE_DIRS ...]]
+          [--ignore IGNORE_PATTERN [IGNORE_PATTERNS ...]]
           [--log-level {ERROR,WARNING,INFO,DEBUG}]
           [--version]
           [--config-file CONFIG_FILE]
@@ -208,8 +208,8 @@ options:
   --skills              Indicates that the input directories contain skills
   --max-warnings MAX_WARNINGS
                         Maximum number of warnings allowed before failing
-  --ignore-dirs IGNORE_DIRS [IGNORE_DIRS ...]
-                        List of directory patterns to ignore when validating AGENTS.md files
+  --ignore IGNORE_PATTERN [IGNORE_PATTERNS ...]
+                         Glob patterns for files and directories to ignore across all validations
   --log-level {ERROR,WARNING,INFO,DEBUG}
                         Set the logging level
   --version             Show the version of the AI Linter
@@ -241,7 +241,7 @@ python src/ai_linter.py --skills examples/
 ai-linter --max-warnings 5 /path/to/directory
 
 # Ignore specific directories
-ai-linter --ignore-dirs node_modules build /path/to/directory
+ai-linter --ignore node_modules build /path/to/directory
 
 # Set log level
 ai-linter --log-level DEBUG /path/to/directory
@@ -265,7 +265,7 @@ log_level: INFO  # DEBUG, INFO, WARNING, ERROR
 max_warnings: 10
 
 # Directories to ignore during validation
-ignore_dirs:
+ignore:
   - .git
   - __pycache__
   - node_modules
@@ -387,8 +387,7 @@ compatibility: object
   while encouraging proper code organization in external files.
 - **What if I have many small, rarely-used resource files?** Create an index document that lists all resources with
   their purposes. This satisfies the reference requirement and improves discoverability.
-- **Can I disable specific validators?** Yes, set severity to `INFO` in config, or use `--ignore-dirs` to skip
-  directories.
+- **Can I disable specific validators?** Yes, set severity to `INFO` in config, or use `--ignore` to skip directories.
 - **How are tokens counted?** When available, AI Linter uses the `tiktoken` library to approximate token counts. If
   `tiktoken` is not installed, it falls back to a heuristic of `len(text) // 4`. Actual model tokenization may still
   differ slightly, so the limit should be treated as a practical guideline rather than an exact value.
