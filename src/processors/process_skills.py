@@ -34,9 +34,7 @@ class ProcessSkills:
 
         return total_warnings, total_errors
 
-    def collect_skill_directories(
-        self, directories: list[str], arguments: Arguments
-    ) -> tuple[dict[str, str], set[str]]:
+    def collect_skill_directories(self, paths: list[str], arguments: Arguments) -> tuple[dict[str, str], set[str]]:
         """Collect skill directories from project directories.
 
         Returns:
@@ -46,8 +44,8 @@ class ProcessSkills:
         project_dirs: set[str] = set()
         skills_count = 0
 
-        for directory in directories:
-            project_dir = os.path.abspath(directory)
+        for path in paths:
+            project_dir = os.path.abspath(path)
             project_dirs.add(project_dir)
             from lib.config import load_config
 

@@ -40,7 +40,7 @@ class Arguments:
         arg_parser.add_argument(
             "--skills",
             action="store_true",
-            help="Indicates that the input directories contain skills",
+            help="Indicates that the input paths contain skills",
         )
         arg_parser.add_argument(
             "--max-warnings",
@@ -70,7 +70,7 @@ class Arguments:
             default=None,
             help="Set the logging format (default: file-digest)",
         )
-        arg_parser.add_argument("directories", nargs="+", help="Directories to validate")
+        arg_parser.add_argument("paths", nargs="+", help="paths to validate")
         arg_parser.add_argument(
             "--version",
             action="version",
@@ -96,16 +96,37 @@ class Arguments:
         # max warnings
         max_warnings = int(args.max_warnings) if args.max_warnings is not None else None
 
-        # unique directories
-        args.directories = list(set(args.directories))
+        # unique paths
+        directories = list()
+        paths = list(set(args.paths))
 
-        # check that directories exist
-        for directory in args.directories:
-            directory = os.path.abspath(directory)
-            if not os.path.isdir(directory):
+        # check that paths exist
+        for path in paths:
+            # Keep the original path for storage, but check existence with absolute path
+            abs_path = os.path.abspath(path)
+            if os.path.isdir(abs_path):
+                directories.append(path)
+            elif os.path.isfile(abs_path):
+                # if path ends with SKILL.md or AGENTS.md, log a specific error message
+                if abs_path.endswith("SKILL.md") or abs_path.endswith("AGENTS.md"):
+                    # get the parent directory of the skill or agent file but keep relative path
+                    parent_dir = os.path.dirname(path)
+                    if os.path.isdir(os.path.abspath(parent_dir)):
+                        logger.log(
+                            LogLevel.ERROR,
+                            f"File '{path}' does not exist, but its parent directory '{parent_dir}' exists.",
+                        )
+                    directories.append(parent_dir)
+                else:
+                    logger.log(
+                        LogLevel.ERROR,
+                        f"File '{path}' is not a valid SKILL.md or AGENTS.md file",
+                    )
+                    return Arguments(False, [], None, None, None, None, None), 1
+            else:
                 logger.log(
                     LogLevel.ERROR,
-                    f"Directory '{directory}' does not exist or is not a directory",
+                    f"Path '{path}' does not exist",
                 )
                 return Arguments(False, [], None, None, None, None, None), 1
 
@@ -119,7 +140,7 @@ class Arguments:
 
         arguments = Arguments(
             skills=args.skills,
-            directories=args.directories,
+            directories=directories,
             log_level=log_level,
             log_format=log_format,
             max_warnings=max_warnings,

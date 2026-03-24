@@ -135,6 +135,12 @@ class FileReferenceValidator:
             ref = m.group("link")
             self._add_file_reference_if_seems_valid(ref, line_number, references)
 
+        # Regular backtick-wrapped paths: `path/to/file` (but not starting with @)
+        backtick_pattern = r"`(?!@)(?P<link>[^`\n]+)`"
+        for m, line_number in self.parser.finditer_with_line_numbers(backtick_pattern, content):
+            ref = m.group("link")
+            self._add_file_reference_if_seems_valid(ref, line_number, references)
+
         return references
 
     def _add_file_reference_if_seems_valid(self, link: str, line_number: int, references: dict[str, int]) -> None:

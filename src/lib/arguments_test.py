@@ -169,6 +169,17 @@ class TestArguments:
         assert len(args.directories) == 1
         assert args.directories == ["examples"]
 
+    @patch("sys.argv", ["ai-linter", "examples", "examples"])
+    def test_parse_arguments_duplicate_skills(self, logger: Logger) -> None:
+        """Test parsing with duplicate skills (should be deduplicated)"""
+        with patch("sys.argv", ["ai-linter", "examples/sample-skill/SKILL.md", "examples/sample-skill/SKILL.md"]):
+            args, return_code = Arguments.parse_arguments(logger, "1.0.0")
+
+        assert return_code == 0
+        # Directories should be deduplicated
+        assert len(args.directories) == 1
+        assert args.directories == ["examples/sample-skill"]
+
     @patch("sys.argv", ["ai-linter", "--skills", "--log-level", "DEBUG", "--max-warnings", "10", "examples"])
     def test_parse_arguments_combined(self, logger: Logger) -> None:
         """Test parsing with combined arguments"""
