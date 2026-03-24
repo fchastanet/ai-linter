@@ -8,6 +8,7 @@ from lib.parser import Parser
 
 
 class FileReferenceValidator:
+
     def __init__(self, logger: Logger, parser: Parser):
         self.logger = logger
         self.parser = parser
@@ -106,14 +107,9 @@ class FileReferenceValidator:
         Looks for:
         - Markdown links: [text](path/to/file)
         - HTML img tags: <img src="path/to/file">
-        - Backtick-wrapped paths: `path/to/file`
         - Attachment references: <attachment filePath="path/to/file">
         """
         references: dict[str, int] = {}
-
-        for m, line_number in self.parser.finditer_with_line_numbers(r"(?<!`)`(?P<link>[^`\n]+)`(?!`)", content):
-            ref = m.group("link")
-            self._add_file_reference_if_seems_valid(ref, line_number, references)
 
         # Markdown links and images: [text](path) or ![alt](path)
         link_pattern = r"!?\[([^\]]*)\]\((?P<link>[^)]+)\)"
@@ -124,12 +120,6 @@ class FileReferenceValidator:
         # HTML img/src tags: <img src="path">
         img_pattern = r'<img[^>]+src=["\'](?P<link>[^"\']+)["\']'
         for m, line_number in self.parser.finditer_with_line_numbers(img_pattern, content):
-            ref = m.group("link")
-            self._add_file_reference_if_seems_valid(ref, line_number, references)
-
-        # Backtick-wrapped paths: `path/to/file`
-        backtick_pattern = r"(?<!`)`(?P<link>[^`\n]+)`(?!`)"
-        for m, line_number in self.parser.finditer_with_line_numbers(backtick_pattern, content):
             ref = m.group("link")
             self._add_file_reference_if_seems_valid(ref, line_number, references)
 

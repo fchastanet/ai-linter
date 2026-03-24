@@ -1,7 +1,7 @@
 """Adapter for tabulate library to generate formatted tables"""
 
 from collections.abc import Iterable, Sequence
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, cast
 
 from lib.log.log_formatters.report_entry import ReportEntry
 
@@ -83,7 +83,9 @@ class TabulateAdapter:
         )
 
         headers = ["File Path", "Type", "Tokens", "Lines", "Status"]
-        return tabulate(table_data, headers=headers, tablefmt="simple", maxcolwidths=[50, None, None, None, 30])
+        return cast(
+            str, tabulate(table_data, headers=headers, tablefmt="simple", maxcolwidths=[50, None, None, None, 30])
+        )
 
     @staticmethod
     def display_table(
@@ -103,16 +105,19 @@ class TabulateAdapter:
         except ImportError:
             print("Tabulate library is not installed, cannot display table")
             return ""
-        return tabulate(
-            tabular_data,
-            headers=headers,
-            tablefmt=tablefmt,
-            showindex=showindex,
-            disable_numparse=disable_numparse,
-            colalign=colalign,
-            maxcolwidths=maxcolwidths,
-            rowalign=rowalign,
-            maxheadercolwidths=maxheadercolwidths,
+        return cast(
+            str,
+            tabulate(
+                tabular_data,
+                headers=headers,
+                tablefmt=tablefmt,
+                showindex=showindex,
+                disable_numparse=disable_numparse,
+                colalign=colalign,
+                maxcolwidths=maxcolwidths,
+                rowalign=rowalign,
+                maxheadercolwidths=maxheadercolwidths,
+            ),
         )
 
     @staticmethod
