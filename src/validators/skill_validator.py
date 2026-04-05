@@ -11,8 +11,6 @@ from validators.front_matter_validator import FrontMatterValidator
 
 
 class SkillValidator:
-    MAX_SKILL_CONTENT_TOKEN_COUNT = 5000  # Maximum allowed token count for skill content
-    MAX_SKILL_CONTENT_LINES_COUNT = 500  # Maximum allowed lines in skill content
     ALLOWED_PROPERTIES = {
         "name",
         "description",
@@ -111,8 +109,8 @@ class SkillValidator:
             skill_content,
             skill_md,
             line_number,
-            self.MAX_SKILL_CONTENT_TOKEN_COUNT,
-            self.MAX_SKILL_CONTENT_LINES_COUNT,
+            config.skill_max_tokens,
+            config.skill_max_lines,
             project_dir=project_dir,
             file_type="Skill",
             warning_threshold=config.report_warning_threshold,

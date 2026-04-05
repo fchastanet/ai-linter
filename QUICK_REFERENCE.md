@@ -33,8 +33,7 @@
     - [7.2.5. Validation Severity Levels](#725-validation-severity-levels)
     - [7.2.6. Section Validation Configuration](#726-section-validation-configuration)
     - [7.2.7. Report Configuration](#727-report-configuration)
-  - [7.3. Property Types and Validation](#73-property-types-and-validation)
-  - [7.4. Validation Examples](#74-validation-examples)
+  - [7.3. Validation Examples](#73-validation-examples)
 - [8. Troubleshooting](#8-troubleshooting)
   - [8.1. Too Many Warnings](#81-too-many-warnings)
   - [8.2. False Positives](#82-false-positives)
@@ -301,17 +300,40 @@ The `.ai-linter-config.yaml` file follows a JSON Schema that validates all confi
 
 ### 7.1. Schema Overview
 
-The configuration schema defines the following property categories:
+| Property                       | Category        | Type    | Range                       | Default                       | Validation                          |
+| ------------------------------ | --------------- | ------- | --------------------------- | ----------------------------- | ----------------------------------- |
+| `log_level`                    | Logging         | enum    | DEBUG\|INFO\|WARNING\|ERROR | INFO                          | String enum                         |
+| `log_format`                   | Logging         | enum    | file-digest\|logfmt\|yaml   | file-digest                   | String enum                         |
+| `unreferenced_file_level`      | Severity Levels | enum    | ERROR\|WARNING\|INFO        | ERROR                         | String enum                         |
+| `missing_agents_file_level`    | Severity Levels | enum    | ERROR\|WARNING\|INFO        | WARNING                       | String enum                         |
+| `mandatory_sections_log_level` | Severity Levels | enum    | ERROR\|WARNING              | WARNING                       | String enum (ERROR or WARNING only) |
+| `max_warnings`                 | Validation      | integer | -1 to max int               | -1                            | -1 for unlimited                    |
+| `ignore`                       | Validation      | array   | -                           | \[.git, **pycache**\]         | List of glob strings                |
+| `code_snippet_max_lines`       | Content Limits  | integer | 1+                          | 3                             | Positive integer                    |
+| `skill_max_tokens`             | Content Limits  | integer | 1+                          | 5000                          | Positive integer                    |
+| `skill_max_lines`              | Content Limits  | integer | 1+                          | 500                           | Positive integer                    |
+| `prompt_max_tokens`            | Content Limits  | integer | 1+                          | 5000                          | Positive integer                    |
+| `prompt_max_lines`             | Content Limits  | integer | 1+                          | 500                           | Positive integer                    |
+| `agent_max_tokens`             | Content Limits  | integer | 1+                          | 5000                          | Positive integer                    |
+| `agent_max_lines`              | Content Limits  | integer | 1+                          | 500                           | Positive integer                    |
+| `prompt_dirs`                  | Directories     | array   | -                           | [.github/prompts]             | List of directory paths             |
+| `agent_dirs`                   | Directories     | array   | -                           | [.github/agents]              | List of directory paths             |
+| `resource_dirs`                | Directories     | array   | -                           | [references, assets, scripts] | List of directory paths             |
+| `report_warning_threshold`     | Reporting       | number  | 0.0-1.0                     | 0.8                           | Float between 0 and 1               |
+| `enable_mandatory_sections`    | Sections        | boolean | true\|false                 | true                          | Boolean                             |
+| `mandatory_sections`           | Sections        | array   | -                           | 8 default sections            | List of strings                     |
+| `enable_advised_sections`      | Sections        | boolean | true\|false                 | true                          | Boolean                             |
+| `advised_sections`             | Sections        | array   | -                           | 4 default sections            | List of strings                     |
 
-| Category               | Properties                                                                                               | Purpose                                  |
-| ---------------------- | -------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| **Logging**            | `log_level`, `log_format`                                                                                | Control output verbosity and format      |
-| **Validation**         | `max_warnings`, `ignore`                                                                                 | Set validation thresholds and exclusions |
-| **Content Limits**     | `code_snippet_max_lines`, `prompt_max_tokens`, `prompt_max_lines`, `agent_max_tokens`, `agent_max_lines` | Define size constraints                  |
-| **Directories**        | `prompt_dirs`, `agent_dirs`, `resource_dirs`                                                             | Specify validation targets               |
-| **Severity Levels**    | `unreferenced_file_level`, `missing_agents_file_level`, `mandatory_sections_log_level`                   | Configure error reporting                |
-| **Section Validation** | `enable_mandatory_sections`, `mandatory_sections`, `enable_advised_sections`, `advised_sections`         | Manage AGENTS.md sections                |
-| **Reporting**          | `report_warning_threshold`                                                                               | Set warning thresholds for reports       |
+Property types are grouped by category:
+
+- **Logging**: Control output verbosity and format
+- **Validation**: Set validation thresholds and exclusions
+- **Content Limits**: Define size constraints
+- **Directories**: Specify validation targets
+- **Severity Levels**: Configure error reporting
+- **Section Validation**: Manage AGENTS.md sections
+- **Reporting**: Set warning thresholds for reports
 
 ### 7.2. Complete Property Reference
 
@@ -353,6 +375,8 @@ ignore: [.git, __pycache__]        # list of glob patterns
 
 ```yaml
 code_snippet_max_lines: 3          # lines (1-255)
+skill_max_tokens: 5000             # tokens
+skill_max_lines: 500               # lines
 prompt_max_tokens: 5000            # tokens
 prompt_max_lines: 500              # lines
 agent_max_tokens: 5000             # tokens
@@ -362,6 +386,8 @@ agent_max_lines: 500               # lines
 **Details:**
 
 - `code_snippet_max_lines`: Warns if code blocks in markdown exceed this size. Prevents bloated AI context
+- `skill_max_tokens`: Validates skill files don't exceed token count (OpenAI's cl100k_base encoding)
+- `skill_max_lines`: Validates skill files don't exceed line count
 - `prompt_max_tokens`: Validates files in `prompt_dirs` don't exceed token count (OpenAI's cl100k_base encoding)
 - `prompt_max_lines`: Validates files in `prompt_dirs` don't exceed line count
 - `agent_max_tokens`: Validates files in `agent_dirs` don't exceed token count
@@ -437,32 +463,7 @@ report_warning_threshold: 0.8      # 0.0-1.0 (0.8 = 80%)
   - Lower values = earlier warnings (e.g., 0.5 = 50%)
   - Higher values = later warnings (e.g., 0.95 = 95%)
 
-### 7.3. Property Types and Validation
-
-| Property                       | Type    | Range                       | Default                       | Validation                          |
-| ------------------------------ | ------- | --------------------------- | ----------------------------- | ----------------------------------- |
-| `log_level`                    | enum    | DEBUG\|INFO\|WARNING\|ERROR | INFO                          | String enum                         |
-| `log_format`                   | enum    | file-digest\|logfmt\|yaml   | file-digest                   | String enum                         |
-| `max_warnings`                 | integer | -1 to max int               | -1                            | -1 for unlimited                    |
-| `ignore`                       | array   | -                           | \[.git, **pycache**\]         | List of glob strings                |
-| `code_snippet_max_lines`       | integer | 1+                          | 3                             | Positive integer                    |
-| `prompt_dirs`                  | array   | -                           | [.github/prompts]             | List of directory paths             |
-| `agent_dirs`                   | array   | -                           | [.github/agents]              | List of directory paths             |
-| `resource_dirs`                | array   | -                           | [references, assets, scripts] | List of directory paths             |
-| `unreferenced_file_level`      | enum    | ERROR\|WARNING\|INFO        | ERROR                         | String enum                         |
-| `missing_agents_file_level`    | enum    | ERROR\|WARNING\|INFO        | WARNING                       | String enum                         |
-| `report_warning_threshold`     | number  | 0.0-1.0                     | 0.8                           | Float between 0 and 1               |
-| `prompt_max_tokens`            | integer | 1+                          | 5000                          | Positive integer                    |
-| `prompt_max_lines`             | integer | 1+                          | 500                           | Positive integer                    |
-| `agent_max_tokens`             | integer | 1+                          | 5000                          | Positive integer                    |
-| `agent_max_lines`              | integer | 1+                          | 500                           | Positive integer                    |
-| `enable_mandatory_sections`    | boolean | true\|false                 | true                          | Boolean                             |
-| `mandatory_sections_log_level` | enum    | ERROR\|WARNING              | WARNING                       | String enum (ERROR or WARNING only) |
-| `mandatory_sections`           | array   | -                           | 8 default sections            | List of strings                     |
-| `enable_advised_sections`      | boolean | true\|false                 | true                          | Boolean                             |
-| `advised_sections`             | array   | -                           | 4 default sections            | List of strings                     |
-
-### 7.4. Validation Examples
+### 7.3. Validation Examples
 
 **Minimal Config (uses all defaults):**
 

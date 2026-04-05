@@ -32,6 +32,8 @@ class Config:
         self.prompt_max_lines: int = 500
         self.agent_max_tokens: int = 5000
         self.agent_max_lines: int = 500
+        self.skill_max_tokens: int = 5000
+        self.skill_max_lines: int = 500
         # Agent section validation configuration
         self.enable_advised_sections: bool = True  # Enable advice-level recommendations
         self.enable_mandatory_sections: bool = True  # Enable mandatory section validation
@@ -298,6 +300,20 @@ def _update_config_from_dict(args: Arguments, config_obj: Config, config: dict, 
         logger.log(
             LogLevel.DEBUG,
             f"Agent max lines set to {config_obj.agent_max_lines} from config file",
+        )
+
+    if "skill_max_tokens" in config and isinstance(config["skill_max_tokens"], int):
+        config_obj.skill_max_tokens = config["skill_max_tokens"]
+        logger.log(
+            LogLevel.DEBUG,
+            f"Skill max tokens set to {config_obj.skill_max_tokens} from config file",
+        )
+
+    if "skill_max_lines" in config and isinstance(config["skill_max_lines"], int):
+        config_obj.skill_max_lines = config["skill_max_lines"]
+        logger.log(
+            LogLevel.DEBUG,
+            f"Skill max lines set to {config_obj.skill_max_lines} from config file",
         )
 
     if "enable_mandatory_sections" in config and isinstance(config["enable_mandatory_sections"], bool):

@@ -81,6 +81,12 @@ agent_max_tokens: 5000
 # Maximum line count for agents in .github/agents directories
 agent_max_lines: 500
 
+# Maximum token count for skills
+skill_max_tokens: 5000
+
+# Maximum line count for skills
+skill_max_lines: 500
+
 # Enable or disable mandatory section checks (missing mandatory sections
 # will trigger warnings or errors based on mandatory_sections_log_level)
 enable_mandatory_sections: true

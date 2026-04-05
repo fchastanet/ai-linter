@@ -75,7 +75,6 @@
       "type": "integer",
       "description": "Maximum number of lines allowed in a code snippet before warning. Prevents bloated AI context",
       "minimum": 1,
-      "maximum": 255,
       "examples": [1, 2, 3, 5, 10],
       "$comment": "Encourages externalizing large code blocks to separate files",
       "default": 3
@@ -167,6 +166,22 @@
       "minimum": 1,
       "examples": [200, 300, 500, 800],
       "$comment": "Line limit for agent configuration files",
+      "default": 500
+    },
+    "skill_max_tokens": {
+      "type": "integer",
+      "description": "Maximum token count for skills. Uses cl100k_base encoding (OpenAI's GPT tokenizer)",
+      "minimum": 1,
+      "examples": [1000, 3000, 5000, 8000],
+      "$comment": "Token limit for skill files to prevent context overflow",
+      "default": 5000
+    },
+    "skill_max_lines": {
+      "type": "integer",
+      "description": "Maximum line count for skills",
+      "minimum": 1,
+      "examples": [200, 300, 500, 800],
+      "$comment": "Line limit for skill files for readability",
       "default": 500
     },
     "enable_mandatory_sections": {
