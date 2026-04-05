@@ -12,6 +12,25 @@ class FileReferenceValidator:
     def __init__(self, logger: Logger, parser: Parser):
         self.logger = logger
         self.parser = parser
+        self._file_link_ignore_patterns: list[re.Pattern] = []
+
+    def set_ignore_patterns(self, patterns: list[str]) -> None:
+        """Compile and set regex patterns to ignore for file links"""
+        self._file_link_ignore_patterns = []
+        for pattern in patterns:
+            try:
+                self._file_link_ignore_patterns.append(re.compile(pattern))
+                self.logger.log(LogLevel.DEBUG, f"Compiled ignore pattern for file links: {pattern}")
+            except re.error as e:
+                self.logger.log(LogLevel.WARNING, f"Invalid regex pattern '{pattern}' for file link exclusion: {e}")
+
+    def _should_ignore_file_link(self, link: str) -> bool:
+        """Check if a file link should be ignored based on configured patterns"""
+        for pattern in self._file_link_ignore_patterns:
+            if pattern.search(link):
+                self.logger.log(LogLevel.DEBUG, f"File link '{link}' matches ignore pattern, skipping validation")
+                return True
+        return False
 
     def validate_content_file_references(
         self,
@@ -33,6 +52,11 @@ class FileReferenceValidator:
             if isinstance(relative_link, str):
                 new_file_links[relative_link] = line_number
             else:
+                # Check if link should be ignored based on configured patterns
+                if self._should_ignore_file_link(link):
+                    self.logger.log(LogLevel.DEBUG, f"Skipping error for ignored file link: {link}")
+                    continue
+
                 self.logger.logRule(
                     LogLevel.ERROR,
                     "file-link-not-found",

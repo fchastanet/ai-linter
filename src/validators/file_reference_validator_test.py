@@ -149,6 +149,7 @@ class TestFileReferenceValidator:
         # Should not report errors for existing files that are referenced
         # File exists, so no error expected
         assert errors == 0
+        assert warnings == 0
 
     def test_validate_content_file_references_invalid(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
         """Test validation of file references in content with invalid references"""
@@ -158,6 +159,7 @@ class TestFileReferenceValidator:
         warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
         # Should report error for non-existent file
         assert errors == 1
+        assert warnings == 0
 
     def test_nested_resource_files(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
         """Test validation with nested resource files"""
@@ -180,4 +182,101 @@ class TestFileReferenceValidator:
             [skill_dir], md_file, content, 0, tmp_path, ["references"]
         )
         assert errors == 0
+        assert warnings == 0
+
+    def test_ignore_patterns_exact_match(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test that exact ignore patterns prevent errors"""
+        md_file = tmp_path / "test.md"
+        content = "See the file `linux/amd64` here"
+
+        # First test without ignore patterns - should error
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 1
+        assert warnings == 0
+
+        # Now set ignore pattern and test again
+        validator.set_ignore_patterns(["linux/amd64"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 0
+        assert warnings == 0
+
+    def test_ignore_patterns_regex(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test that regex ignore patterns work correctly"""
+        md_file = tmp_path / "test.md"
+        # Multiple links with similar patterns
+        content = """
+        Architecture: `linux/amd64`
+        Also support: `linux/arm64`
+        And `linux/arm/v7`
+        """
+
+        # Set regex pattern to ignore linux/* patterns
+        validator.set_ignore_patterns([r"^linux/.*"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 0
+        assert warnings == 0
+
+    def test_ignore_patterns_memory_paths(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test ignoring memory paths with regex"""
+        md_file = tmp_path / "test.md"
+        content = """
+        Reference: `/memories/session/mongodb-analysis-phase1.json`
+        And: `/memories/session/mongodb-analysis-phase2.json`
+        And: `/memories/session/mongodb-analysis-{phase}.json`
+        """
+
+        # Set regex pattern to ignore /memories/session/* paths
+        validator.set_ignore_patterns([r".*/memories/session/.*"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 0
+        assert warnings == 0
+
+    def test_ignore_patterns_shebang(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test ignoring shebang patterns"""
+        md_file = tmp_path / "test.md"
+        content = "Script header: `#!/bin/bash`"
+
+        # Set pattern to ignore shebang
+        validator.set_ignore_patterns([r"^#!/.*"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 0
+        assert warnings == 0
+
+    def test_ignore_patterns_mixed(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test multiple ignore patterns together"""
+        md_file = tmp_path / "test.md"
+        content = """
+        Architecture: `linux/amd64`
+        Memory: `/memories/session/test.json`
+        Script: `#!/bin/bash`
+        Valid ref: `docs/readme.md` (this should still error if file doesn't exist)
+        """
+
+        # Set multiple ignore patterns
+        validator.set_ignore_patterns([r"^linux/.*", r".*/memories/.*", r"^#!/.*"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        # Only the docs/readme.md should error, others should be ignored
+        assert errors == 1
+        assert warnings == 0
+
+    def test_ignore_patterns_multiple_matches(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test link matching multiple patterns (should only need to match one)"""
+        md_file = tmp_path / "test.md"
+        content = "Reference: `linux/amd64`"
+
+        # Multiple patterns that could match
+        validator.set_ignore_patterns([r"^linux/.*", r"amd64$", r"amd64|arm64"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 0
+        assert warnings == 0
+
+    def test_ignore_patterns_no_match_raises_error(self, validator: FileReferenceValidator, tmp_path: Path) -> None:
+        """Test that non-matching patterns still raise errors"""
+        md_file = tmp_path / "test.md"
+        content = "Reference: `linux/amd64`"
+
+        # Pattern that doesn't match
+        validator.set_ignore_patterns([r"^docker/.*"])
+        warnings, errors = validator.validate_content_file_references([tmp_path], md_file, content, 0, tmp_path, [])
+        assert errors == 1
         assert warnings == 0

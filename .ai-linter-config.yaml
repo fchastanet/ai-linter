@@ -25,6 +25,7 @@ max_warnings: 10
 ignore:
   - ".git"
   - "__pycache__"
+  - .github/skills/test-ignore-errors
   - "node_modules"
   - "build/**"
   - "dist/**"
@@ -111,3 +112,21 @@ advised_sections:
   - "Build Process"
   - "Git Commit Conventions"
   - "Troubleshooting"          # Common issues and how to resolve them.
+
+# Error pattern exclusion configuration
+# Allows excluding specific error patterns using regular expressions
+# Useful for false positives and patterns that shouldn't be validated
+ignore_errors:
+  # List of regex patterns to exclude from file-link-not-found validation
+  # Patterns are matched against the file link text
+  file_link_not_found:
+    # Architecture and platform identifiers
+    - "^linux/(amd64|arm64|arm/v7)$"
+    # Memory file paths with variables/patterns
+    - "^/memories/.*"
+    # Shell script shebangs
+    - "^#!/.*"
+    # Template paths with placeholders
+    - ".*\\{(date|phase|.*?)\\}.*"
+    # Directory paths that may not exist yet
+    - "^docs/ai/\\{date\\}"

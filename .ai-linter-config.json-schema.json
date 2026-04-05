@@ -226,6 +226,30 @@
         "Git Commit Conventions",
         "Troubleshooting"
       ]
+    },
+    "ignore_errors": {
+      "type": "object",
+      "description": "Configuration for ignoring specific error patterns using regular expressions. Useful for false positives and patterns that shouldn't be validated.",
+      "$comment": "Error exclusion patterns - each error code can have a list of regex patterns to ignore",
+      "additionalProperties": false,
+      "properties": {
+        "file_link_not_found": {
+          "type": "array",
+          "description": "List of regex patterns to exclude from file-link-not-found validation. Patterns are matched against the file link text. Use this for patterns like paths with variables, template tags, or false positives.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "$comment": "Regular expression pattern to match against file links"
+          },
+          "minItems": 0,
+          "examples": [
+            [".*/memories/.*", "^linux/(amd64|arm64)$", "^#!/.*"],
+            ["^/memories/.*", "docs/ai/\\{date\\}"],
+            ["linux/amd64", "linux/arm64", "!/memories"]
+          ],
+          "$comment": "Regex patterns to exclude file links from validation"
+        }
+      }
     }
   }
 }

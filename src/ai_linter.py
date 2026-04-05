@@ -7,7 +7,7 @@ import sys
 
 from lib.ai.stats import AiStats
 from lib.arguments import Arguments
-from lib.config import load_config
+from lib.config import Config, load_config
 from lib.log.log_format import LogFormat
 from lib.log.log_level import LogLevel
 from lib.log.logger import Logger
@@ -59,8 +59,13 @@ process_projects = ProcessProjects(logger, parser, process_agents, process_promp
 
 def validate(
     arguments: Arguments,
+    config: Config | None = None,
 ) -> tuple[int, int]:
     """Validate skills and agents in the specified directories"""
+    # Set ignore patterns from config if provided
+    if config is not None:
+        file_reference_validator.set_ignore_patterns(config.ignore_errors.get("file_link_not_found", []))
+
     # Collect skill directories from project directories
     skill_directories, project_dirs = process_skills.collect_skill_directories(arguments.directories, arguments)
 
@@ -90,8 +95,10 @@ def main() -> int:
     if return_code != 0:
         return return_code
 
-    nb_warnings, nb_errors = validate(arguments)
+    # Load config first so ignore patterns can be applied
     config = load_config(logger, arguments, arguments.directories[0])
+
+    nb_warnings, nb_errors = validate(arguments, config)
 
     if nb_errors > 0:
         return 1

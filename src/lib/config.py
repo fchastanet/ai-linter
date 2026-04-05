@@ -52,6 +52,10 @@ class Config:
             "git commit conventions": "Git Commit Conventions",
             "troubleshooting": "Troubleshooting",
         }
+        # Error pattern exclusion configuration
+        self.ignore_errors: dict[str, list[str]] = {
+            "file_link_not_found": [],  # List of regex patterns to exclude file links
+        }
 
 
 def load_config(logger: Logger, args: Arguments, project_dir: str) -> Config:
@@ -337,6 +341,19 @@ def _update_config_from_dict(args: Arguments, config_obj: Config, config: dict, 
             LogLevel.DEBUG,
             f"Advised sections set to {config_obj.advised_sections} from config file",
         )
+
+    # Error pattern exclusion configuration
+    if "ignore_errors" in config and isinstance(config["ignore_errors"], dict):
+        ignore_errors_config = config["ignore_errors"]
+        if "file_link_not_found" in ignore_errors_config and isinstance(
+            ignore_errors_config["file_link_not_found"], list
+        ):
+            patterns = ignore_errors_config["file_link_not_found"]
+            config_obj.ignore_errors["file_link_not_found"] = [p for p in patterns if isinstance(p, str)]
+            logger.log(
+                LogLevel.DEBUG,
+                f"file_link_not_found {len(config_obj.ignore_errors['file_link_not_found'])} exclusion patterns set",
+            )
 
 
 def _convert_str_list_to_dict(value: list) -> dict[str, str]:

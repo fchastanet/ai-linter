@@ -27,5 +27,4 @@ customCatalog:
     - name: ai-linter config
       description: AI Linter Configuration
       fileMatch: [".ai-linter-config*.yml", ".ai-linter-config*.yaml"]
-      location: |
-        https://raw.githubusercontent.com/fchastanet/ai-linter/refs/heads/master/.ai-linter-config.json-schema.json
+      location: ./.ai-linter-config.json-schema.json
