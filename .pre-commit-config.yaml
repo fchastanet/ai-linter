@@ -189,6 +189,27 @@ repos:
         additional_dependencies: [types-PyYAML, types-tabulate]
         exclude: ^(tests|docs)/
 
+  - repo: local
+    hooks:
+      - id: v8r
+        name: v8r
+        entry: npx -y v8r
+        language: system
+        pass_filenames: true
+        stages: [pre-commit, pre-push, manual]
+        files: |
+          (?x)(
+            \.(yaml|yml|json)$
+          )
+        exclude: |
+          (?x)(
+            ^.v8rrc.yaml$|
+            ^\.vscode\/.*\.json$|
+            ^\.github\/workflows\/.*\.yml$|
+            ^\.github\/dependabot\.yml$|
+            ^\.ai-linter-config\.json-schema\.json$
+          )
+
 ci:
   autofix_commit_msg: |
     [pre-commit.ci] auto fixes from pre-commit.com hooks
