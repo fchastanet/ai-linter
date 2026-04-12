@@ -1,14 +1,17 @@
 ---
-name: CI/CD
+# Lint the code base and launch unit test at each push or pull request
+name: Lint, Test, Build and Deploy
 
 "on":
-  workflow_dispatch:
   push:
+    # execute when pushing only branches and tags
     branches:
-      - master
-      - develop
+      - "**"
+      # avoid infinite loop for auto created PRs
+      - "!update/pre-commit-*"
     tags:
       - "[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
   pull_request:
     branches:
       - master
@@ -16,43 +19,56 @@ name: CI/CD
     types:
       - published
 
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    permissions:
-      statuses: write  # needed by ouzi-dev/commit-status-updater@v2
+env:
+  COND_PUSH_OR_PR: ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
+jobs:
+  # -------------------------------------------------------
+  # Pre-commit
+  # -------------------------------------------------------
+  pre-commit:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Forces Node 24 runtime
+    permissions:
+      # needed by guibranco/github-status-action-v2@v1
+      statuses: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - uses: tibdex/github-app-token@v2
+      - uses: actions/create-github-app-token@v3.1.1
         if: ${{ success() }}
         id: generate-token
         with:
-          app_id: ${{ secrets.APP_ID }}
-          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: lint
-          status: pending
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: lint
+          state: pending
 
       - name: Run pre-commit
-        uses: pre-commit/action@v3.0.1
+        uses: j178/prek-action@v2
         id: preCommit
         with:
-          extra_args: >-
+          extra-args: >-
             -c .pre-commit-config.yaml -a
 
-      - uses: ouzi-dev/commit-status-updater@v2
+      - uses: guibranco/github-status-action-v2@v1
+        if: ${{ env.COND_PUSH_OR_PR }}
         with:
-          name: lint
-          status: ${{ job.status }}
+          authToken: ${{ secrets.GITHUB_TOKEN }}
+          context: lint
+          state: ${{ job.status }}
 
       - name: Create Pull Request
         id: cpr
@@ -64,10 +80,10 @@ jobs:
           )
           && steps.preCommit.conclusion == 'failure'
           && !contains(github.event.head_commit.message, 'skip fix')
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ steps.generate-token.outputs.token }}
-          committer: fchastanet <fchastanet@gmail.com>
+          committer: fchastanet <237869+fchastanet@users.noreply.github.com>
           branch: update/pre-commit-fixes-${{ env.branch_name }}
           delete-branch: true
           title: lint fixes
@@ -77,17 +93,24 @@ jobs:
           labels: pre-commit-fixes
 
       - name: Print Pull request created
-        if: |
-          steps.cpr.outputs.pull-request-number &&
-          steps.cpr.conclusion == 'success'
+        if: |-
+          ${{
+            steps.cpr.outputs.pull-request-number &&
+            steps.cpr.conclusion == 'success'
+          }}
         run: |
           echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
           echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
 
-  test:
+  # -------------------------------------------------------
+  # Unit tests
+  # -------------------------------------------------------
+  unit-tests:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Forces Node 24 runtime
     needs:
-      - lint
+      - pre-commit
     strategy:
       matrix:
         python-version:
@@ -128,7 +151,7 @@ jobs:
 
       - name: Publish coverage report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: code-coverage-${{ github.job }}-${{ github.run_number }}-${{ matrix.python-version }}
           path: |
@@ -144,19 +167,27 @@ jobs:
           status: ${{ job.status }}
 
   build:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true # Forces Node 24 runtime
     needs:
-      - test
-      - lint
+      - unit-tests
+      - pre-commit
+    if: |-
+      ${{
+        github.event_name == 'release' ||
+        (
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags/')
+        )
+      }}
+
     permissions:
       contents: write  # needed by svenstaro/upload-release-action and ncipollo/release-action
     environment: Python
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'release' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
         uses: actions/setup-python@v6
